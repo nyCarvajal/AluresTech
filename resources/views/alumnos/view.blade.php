@@ -1,0 +1,233 @@
+{{-- resources/views/alumnos/show.blade.php --}}
+@extends('layouts.vertical', ['subtitle' => 'Perfil Alumno'])
+
+@section('css')
+  <style>
+    :root {
+      --color-white: #ffffff;
+      --color-gray: #f5f5f5;
+      --color-light-gray: #e0e0e0;
+      --color-lilac: rgba(96,66,245,0.35);
+	  --color-verde: rgba(0,168,89,0.35);
+      --text-dark: #3C4A60;
+      --text-light: #9CA3AF;
+      --font-family: 'Arial', sans-serif;
+    }
+    .profile-body {
+      background-color: var(--color-gray);
+      font-family: var(--font-family);
+      color: var(--text-dark);
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .profile-container {
+      max-width: 900px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card-custom {
+      background-color: var(--color-white);
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-custom .card-header {
+      background-color: var(--color-lilac);
+      padding: 15px;
+      color: var(--color-white);
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    .card-custom .card-body {
+      padding: 15px;
+      flex: 1;
+    }
+    .profile-info img {
+      width: 100%;
+      height: auto;
+      border-bottom: 1px solid var(--color-light-gray);
+    }
+    .info-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .info-list li {
+      margin-bottom: 8px;
+      font-size: 0.95em;
+      color: var(--text-dark);
+    }
+    .info-list li span {
+      color: var(--text-light);
+    }
+    .badge-custom {
+      display: inline-block;
+      background-color: var(--color-lilac);
+      color: var(--color-white);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .subscription-info .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .subscription-info .stat {
+      background-color: var(--color-light-gray);
+      padding: 10px;
+      border-radius: 6px;
+      flex: 1;
+      text-align: center;
+      margin-right: 10px;
+      color: var(--text-dark);
+    }
+    .subscription-info .stat:last-child {
+      margin-right: 0;
+    }
+    .reservations-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .reservations-list li {
+      background-color: var(--color-light-gray);
+      margin-bottom: 8px;
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95em;
+      color: var(--text-dark);
+    }
+    .reservations-list li .status {
+    
+      color: var(--color-white);
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: bold;
+    }
+	.confirmada {
+      background-color: var(--color-verde);
+      
+    }
+	.pendiente{
+		background-color: rgba(255, 193, 7, 0.35);
+	}
+	.cancelada{
+	   background-color: rgba(220, 53, 69, 0.35);
+	}
+	
+  </style>
+@endsection
+
+@section('content')
+<div class="profile-body">
+  <div class="profile-container">
+
+    <!-- Tarjeta 1: Información de Usuario -->
+    <div class="card-custom profile-info">
+      <div class="card-header" style="background: linear-gradient(to center, #0053BF, #6366F1);">Perfil de Usuario</div>
+@if ($alumno->foto)
+  <img
+    src="{{ cloudinary()->image($alumno->foto)->toUrl() }}"
+    alt="Foto de {{ $alumno->nombres }}"
+    class="avatar-sm rounded-circle d-block mx-auto my-3"
+    style="width:250px;height:250px;object-fit:cover;">
+@endif
+
+      <div class="card-body">
+        <ul class="info-list">
+          <li><strong>Nombre:</strong> <span>{{ $alumno->nombres }} {{ $alumno->apellidos }}</span></li>
+          <li><strong>Tipo de identificación:</strong> <span>{{ optional($alumno->tipoIdentificacion)->tipo }}</span></li>
+          <li><strong>Número de identificación:</strong> <span>{{ $alumno->numero_identificacion }}</span></li>
+          <li><strong>Correo:</strong> <span>{{ $alumno->correo }}</span></li>
+          <li><strong>WhatsApp:</strong> <span>{{ $alumno->whatsapp }}</span></li>
+          <li><strong>Nivel:</strong> <span class="badge-custom">{{ optional($alumno->nivel)->nivel }}</span></li>
+        </ul>
+      </div>
+    </div>
+	
+	
+    <!-- Tarjeta 2: Suscripción y Clases -->
+    <div class="card-custom profile-info">
+      <div class="card-header" style="background: linear-gradient(to right, #0053BF, #6366F1);">Información de Suscripción</div>
+	  
+	  @if($ultimaMembresia)
+		  
+	  {{-- $suscripcion es una instancia de MembresiaAlumno --}}
+<a href="{{ route('membresia-alumno.edit', $ultimaMembresia) }}"
+   class="btn btn-sm btn-warning">
+   Editar suscripción
+</a>
+
+		  
+      <div class="card-body">
+        <p><strong>Paquete:</strong>  {{ $ultimaMembresia->paquete->descripcion ?? '—' }}
+</p>
+        <p><strong>Fecha último pago:</strong>  {{ optional($ultimaMembresia->created_at)->format('d M Y') ?? '—' }}</p>
+        <div class="stats">
+          <div class="stat">
+            <div><strong>Clases mensuales:</strong></div>
+            <div> {{ $clases }}</div>
+          </div>
+          <div class="stat">
+            <div><strong>Clases vistas:</strong></div>
+            <div> {{ $clasesVistas }}</div>
+          </div>
+		  <div class="stat">
+            <div><strong>Plan de juego:</strong></div>
+            <div> {{ $res }}</div>
+          </div>
+          <div class="stat">
+            <div><strong>Juegos consumidos:</strong></div>
+            <div> {{ $numReservas }}</div>
+          </div>
+        </div>
+      </div>
+	  @endif
+    </div>
+
+    <!-- Tarjeta 3: Últimas Reservas -->
+    <div class="card-custom profile-info">
+  <div class="card-header" style="background: linear-gradient(to right, #0053BF, #6366F1);">Últimas Reservas</div>
+  <div class="card-body">
+    <ul class="reservations-list list-unstyled mb-0">
+      @forelse($reservas as $reserva)
+        <li class="d-flex justify-content-between align-items-center mb-2">
+          {{-- Fecha formateada --}}
+			  
+          <span>
+            {{ \Carbon\Carbon::parse($reserva->fecha)->format('d M Y') }}
+          </span>
+		  <br> {{$reserva->tipo}}
+          {{-- Estado con clase dinámica --}}
+          <span class="status {{ strtolower($reserva->estado) }}">
+            {{ ucfirst(strtolower($reserva->estado)) }}
+          </span>
+        </li>
+      @empty
+        <li class="text-center text-muted">No hay reservas recientes.</li>
+      @endforelse
+    </ul>
+  </div>
+</div>
+
+  </div>
+
+
+
+  
+
+  </div>
+</div>
+@endsection

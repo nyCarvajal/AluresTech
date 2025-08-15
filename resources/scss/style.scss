@@ -1,0 +1,326 @@
+//
+// app.scss
+//
+
+// Core files
+@import "./node_modules/bootstrap/scss/functions";
+@import "./node_modules/bootstrap/scss/variables";
+
+@import "config/variables";
+@import "config/variables-dark";
+@import "config/theme-mode";
+
+@import "./node_modules/bootstrap/scss/bootstrap";
+
+// Structure
+@import "structure/general";
+@import "structure/topbar";
+@import "structure/sidebar";
+@import "structure/footer";
+@import "structure/page-title";
+
+// Bootstrap
+@import "components/accordion";
+@import "components/alerts";
+@import "components/avatar";
+@import "components/backgrounds";
+@import "components/badge";
+@import "components/breadcrumb";
+@import "components/buttons";
+@import "components/card";
+@import "components/dropdown";
+@import "components/forms";
+@import "components/helper";
+@import "components/list-group";
+@import "components/modal";
+@import "components/nav";
+@import "components/pagination";
+@import "components/popover";
+@import "components/print";
+@import "components/progress";
+@import "components/reboot";
+@import "components/switch";
+@import "components/tables";
+@import "components/type";
+@import "components/tooltip";
+@import "components/widgets";
+
+
+// Plugin
+@import "plugins/simplebar";
+@import "plugins/dropzone";
+@import "plugins/editors";
+@import "plugins/gridjs";
+@import "plugins/apexcharts";
+@import "plugins/google-map";
+@import "plugins/vector-map";
+@import "plugins/flatpicker";
+
+// Pages
+@import "pages/icon-demo";
+@import "pages/authentication";
+
+/* ————— Cambiar color de fondo y texto del botón “Hoy” ————— */
+#calendar .fc-toolbar .fc-button.fc-today-button {
+  background-color:  #1E90FF !important;   /* color de fondo deseado */
+  color:            #FFFFFF !important;   /* color del texto */
+  border:           none   !important;
+}
+
+/* Hover sobre “Hoy” */
+#calendar .fc-toolbar .fc-button.fc-today-button:hover {
+  background-color: #E67E22 !important;
+  color:            #FFFFFF !important;
+}
+
+/* ————— Cambiar color de fondo y texto del botón “Semana” ————— */
+#calendar .fc-toolbar .fc-button.fc-timeGridWeek-button {
+  background-color: #1E90FF !important;
+  color:            #FFFFFF !important;
+  border:           none   !important;
+}
+
+/* Hover sobre “Semana” */
+#calendar .fc-toolbar .fc-button.fc-timeGridWeek-button:hover {
+  background-color: #1C86EE !important;
+  color:            #FFFFFF !important;
+}
+
+/* ————— Cambiar color de fondo y texto del botón “Día” ————— */
+#calendar .fc-toolbar .fc-button.fc-timeGridDay-button {
+  background-color: #28A745 !important;
+  color:            #FFFFFF !important;
+  border:           none   !important;
+}
+
+/* Hover sobre “Día” */
+#calendar .fc-toolbar .fc-button.fc-timeGridDay-button:hover {
+  background-color: #218838 !important;
+  color:            #FFFFFF !important;
+}
+.calendar-wrapper {
+  position: relative;
+  /* Si tu calendario ya tiene bordes redondeados, alinea esta propiedad */
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* La “barrita” amarilla oscura */
+.calendar-wrapper .calendar-top-bar {
+  width: 100%;
+  height: 5px;                     /* ajusta el grosor que quieras */
+  background-color: #D4A017;       /* un amarillo oscuro; cámbialo si prefieres otro tono */
+}
+
+/* Opcional: separar el calendario de la barrita, si tu #calendar no tiene margin interno */
+#calendar {
+  margin-top: 1; /* o 0 si quieres que el calendario quede justo debajo de la barrita */
+}
+
+/* En tu app.css */
+/* === Variables generales (opcional) === */
+:root {
+  
+  --fc-today-button-bg-color: #3B82F6;
+  --fc-today-button-text-color: #FFFFFF;
+  --fc-daygrid-day-bg-color: rgba(255,255,255,0.85);
+  //--fc-daygrid-day-dot-color:  #0053BF;
+ // --fc-event-bg-color: #2E86C1;
+ // --fc-event-border-color: #21618C;
+  --fc-event-text-color: #FFFFFF;
+}
+
+/* === Fondo general detrás del calendario === */
+.wrapper-calendar {
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+/* === Contenedor del calendario === */
+#calendar {
+  background-color: transparent;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* === Toolbar (cabecera) === */
+#calendar .fc-toolbar {
+  background-color: var(--fc-toolbar-bg-color) !important;
+  padding: 0.5rem 1rem;
+}
+
+#calendar .fc-toolbar-title {
+  color: var(--fc-theme-contrast-text-color) !important;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+#calendar .fc-toolbar button {
+  background-color: var(--fc-today-button-bg-color) !important;
+  color: var(--fc-today-button-text-color) !important;
+  border: none !important;
+  border-radius: 0.3rem;
+  margin: 0 0.25rem;
+  padding: 0.3rem 0.6rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+#calendar .fc-toolbar button:hover {
+  background-color: #E67E22 !important;
+}
+
+/* === Celdas de día (dayGrid) === */
+#calendar .fc-daygrid-day {
+  border: 1px solid var(--fc-border-color);
+  background-color: var(--fc-daygrid-day-bg-color) !important;
+}
+
+#calendar .fc-daygrid-day:hover {
+  background-color: rgba(255,255,255,1) !important;
+}
+
+#calendar .fc-day-today {
+  background-color: #FFF1E0 !important;
+  border: 2px solid var(--fc-today-button-bg-color) !important;
+}
+
+/* Día “out-of-month” (gris) */
+#calendar .fc-daygrid-day-other {
+  background-color: #F8F8F8;
+  color: #A0A0A0;
+}
+
+/* === Eventos === */
+#calendar .fc-event {
+
+ 
+  font-size: 0.80rem;
+  font-weight: 500;
+  letter-spacing: .2px;
+
+ 
+ 
+ // box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+ // font-size: 0.85rem !important;
+ // padding: 0.2rem 0.4rem !important;
+ // border: 2px solid rgba(0,0,0,0.1) !important;
+//  background-color: var(--fc-event-bg-color) !important;
+  border-color: none !important;
+  //color: var(--fc-event-text-color) !important;
+ // transition: transform 0.1s, opacity 0.1s;
+}
+
+#calendar .fc-event:hover {
+  transform: scale(1.02);
+  opacity: 0.9;
+}
+
+/* Ajustar puntito indicador en vista mes */
+#calendar .fc-daygrid-event-dot {
+  width: 8px !important;
+  height: 8px !important;
+  //background-color: var(--fc-daygrid-day-dot-color) !important;
+}
+
+/* Texto dentro del evento */
+#calendar .fc-event-title {
+  font-weight: 500 !important;
+}
+
+/* === Ajustes de espaciado === */
+#calendar .fc-daygrid-day-frame {
+  padding: 0.3rem !important;
+}
+
+#calendar .fc-daygrid-event-harness {
+  margin-bottom: 2px !important;
+}
+
+/* === Tooltip (si usas tooltips de Bootstrap) === */
+#calendar .fc-event[data-bs-toggle="tooltip"] {
+  cursor: pointer;
+}
+
+/* === Responsive: en móviles hace más alto cada celda === */
+@media (max-width: 768px) {
+  #calendar .fc-daygrid-day {
+    min-height: 80px;
+  }
+}
+
+/* Estilo para la caja que muestra “No hay eventos para mostrar” */
+.fc-theme-standard .fc-list-empty,
+.fc-list-empty {                   /* por si usas otro theme */
+  background-color: #fff !important;   /* fondo blanco */
+  border: none !important;             /* sin borde */
+  box-shadow: none !important;         /* sin sombra */
+}
+
+/* Ajusta el texto interno si lo necesitas */
+.fc-theme-standard .fc-list-empty-cushion,
+.fc-list-empty-cushion {
+  color: #6c757d;      /* gris Bootstrap */
+  font-style: italic;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* public/css/app.css */
+
+/* Contenedor específico */
+.schedule-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Tabla específica */
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+/* Solo esta tabla: encabezado */
+.schedule-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: linear-gradient(to right, #0053BF, #6366F1);
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 12px 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Alineaciones */
+.schedule-table thead th.center,
+.schedule-table tbody td.center {
+  text-align: center;
+}
+.schedule-table thead th.left,
+.schedule-table tbody td.left {
+  text-align: left;
+}
+
+/* Filas alternas y hover */
+.schedule-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+.schedule-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Celdas del cuerpo */
+.schedule-table tbody td {
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: #374151;
+  border-top: 1px solid #e5e8ee;
+}
+
+

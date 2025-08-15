@@ -1,0 +1,50 @@
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=base64:b/Y5+1cSZaTn+PRT4rGvRMpXOzeYRK3HnucKAPyCDsU=
+APP_DEBUG=true
+APP_URL=
+
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=es
+APP_FAKER_LOCALE=es_CO
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=comun
+DB_USERNAME=root
+DB_PASSWORD=
+
+# Conexión “tenant”
+TENANCY_TENANT_CONNECTION=tenant
+TENANCY_LANDLORD_CONNECTION=mysql
+
+# Opción A: apuntar al mismo servidor MySQL
+TENANCY_TENANT_HOST=${DB_HOST}
+TENANCY_TENANT_PORT=${DB_PORT}
+TENANCY_TENANT_USERNAME=${DB_USERNAME}
+TENANCY_TENANT_PASSWORD=${DB_PASSWORD} 
+
+
+CLOUDINARY_URL=cloudinary://443357921792524:8TTXzNUvSsWut7ftCnInF1h0RTs@dpikkji3p
+
+###################################
+# WhatsApp – 1MSG.IO (Canal oficial)
+##################################
+ONEMSG_CHANNEL_ID=VID163266002          # ← el ID que ves en 1msg.io › Channel
+ONEMSG_TOKEN=Janvm5RU48Ss3czhAFYDnaQE9NN9YxLY7ASA81Vz8dDSJZrAKDVxaKXeMshFiUjKC2Rw4HSdahR458CHCh87XJv       # ← tu token completo, incluye el “:”
+
+# ── Plantillas (nombre EXACTO en 1msg.io) ───────────────────────────
+ONEMSG_TPL_BIENVENIDA=bienvenida      # {{1}} nombre  {{2}} clases
+ONEMSG_TPL_RESERVA=reserva
+ONEMSG_TPL_CAMBIO_CLASE=cambio_clase            # {{1}} nombre  {{2}} dep  {{3}} fecha_ant  {{4}} fecha_nueva
+ONEMSG_TPL_CANCELACION=cancelacion        # {{1}} nombre  {{2}} dep  {{3}} fecha
+ONEMSG_TPL_PAQUETE=paquete            # {{1}} nombre  {{2}} nº clases
+ONEMSG_TPL_NAMESPACE=36f05a4b_f53a_4676_a95e_239e854de795
+ONEMSG_TPL_LANG=es
+
+# …añade las que necesites…
+
+# Idioma por defecto (si todas son igual)
+ONEMSG_TPL_LANG=es
+

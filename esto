@@ -1,0 +1,6 @@
+
+> build
+> vite build # = crea /public/build con los archivos versionados
+
+[36mvite v5.4.11 [32mbuilding for production...[36m[39m
+[32m✓[39m 0 modules transformed.

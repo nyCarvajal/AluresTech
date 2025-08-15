@@ -1,0 +1,538 @@
+<?php
+
+namespace App\Http\Controllers;
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\Reserva;
+use App\Models\User;
+use App\Models\clase;
+use App\Models\Club;
+use App\Models\Cancha; 
+use App\Models\Alumno;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Carbon\Carbon; 
+use Illuminate\Support\Facades\Validator;
+use App\Notifications\OneMsgTemplateNotification;
+use Illuminate\Support\Facades\Log;
+use App\Models\MembresiaAlumno;
+
+
+class ReservaController extends Controller
+{
+	
+	public function calendar()
+{
+	 $canchas = Cancha::all();
+    $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
+    return view('reservas.calendar', compact('canchas', 'entrenadores'));
+  
+}
+
+ public function horario(Request $request)
+    {
+        $date = $request->input('date', Carbon::today()->toDateString());
+        $prevDate = Carbon::parse($date)->subDay()->toDateString();
+        $nextDate = Carbon::parse($date)->addDay()->toDateString();
+		 $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
+    
+        $canchas = Cancha::all();
+        $canchaIds = $canchas->pluck('id')->toArray();
+
+        $startOfDay = Carbon::parse("{$date} 06:00");
+        $endOfDay   = Carbon::parse("{$date} 22:00");
+
+        // Generar slots de 30 minutos
+        $timeslots = [];
+        for ($time = $startOfDay->copy(); $time->lte($endOfDay); $time->addMinutes(30)) {
+            $timeslots[] = $time->format('H:i:s');
+        }
+
+        $reservas = Reserva::whereDate('fecha', $date)
+            ->whereIn('cancha_id', $canchaIds)
+			->where('estado', '<>', 'Cancelada')
+            ->get();
+
+        // Inicializar eventos
+        $events = [];
+        foreach ($canchas as $cancha) {
+            foreach ($timeslots as $slot) {
+                $events[$cancha->id][$slot] = null;
+            }
+        }
+
+        // Mapear reservas en todos los slots que dura
+        foreach ($reservas as $reserva) {
+            $time = Carbon::parse($reserva->fecha);
+            $minutesFromStart = $startOfDay->diffInMinutes($time);
+            if ($minutesFromStart < 0 || $minutesFromStart > $startOfDay->diffInMinutes($endOfDay)) {
+                continue;
+            }
+            $startIndex = intdiv($minutesFromStart, 30);
+            $spanSlots = (int) ceil(($reserva->duracion ?? $reserva->duration) / 30);
+
+            for ($i = 0; $i < $spanSlots; $i++) {
+                $index = $startIndex + $i;
+                if (isset($timeslots[$index])) {
+                    $slotKey = $timeslots[$index];
+                    $events[$reserva->cancha_id][$slotKey] = $reserva;
+                }
+            }
+        }
+
+        return view('reservas.horario', compact(
+            'canchas', 'timeslots', 'events', 'prevDate', 'nextDate', 'entrenadores'
+        ));
+    }
+
+
+
+
+	public function events(Request $request)
+{
+    // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
+    $query = Reserva::with(['alumnos', 'entrenador']);
+    if ($request->filled('cancha_id')) {
+        $query->where('cancha_id', $request->cancha_id);
+		
+    }
+	$query->where('estado', '<>', 'Cancelada');
+    $reservas = $query->get();
+	
+	  
+
+    // 2) Mapea y reindexa con values()
+    $eventos = $reservas->map(function($r) {
+        $start    = Carbon::parse($r->fecha)->toIso8601String();
+        $end      = Carbon::parse($r->fecha)
+                          ->addMinutes($r->duracion)
+                          ->toIso8601String();
+						  
+						  $rgba = match ($r->tipo) {
+            'Reserva' => 'rgba(96,66,245,0.35)',   // morado-azulado translúcido
+            'Torneo'  => 'rgba(128,128,128,0.30)', // gris translúcido
+            'Clase'   => 'rgba(0,168,89,0.35)',    // verde translúcido
+        };
+
+        $base = [
+            'id'              => $r->id,
+            'start'           => $start,
+            'end'             => $end,
+            'type'            => $r->tipo,
+            'status'          => $r->estado,
+            'duration'        => $r->duracion,
+			
+            'title' => match($r->tipo) {
+                'Reserva' => optional($r->alumnos->first())->nombres . ' ' . optional($r->alumnos->first())->apellidos,
+                'Clase'   => optional($r->entrenador)->nombre,
+                'Torneo'   => optional($r->responsable)->nombres,
+            },
+			'borderColor'     => str_replace('0.35', '1', $rgba), // mismo color, opaco
+            'textColor'       => '#121212', 
+            'backgroundColor' => $rgba,
+			 'extendedProps'   => [
+                'tipo'   => $r->tipo,              // reserva | torneo | clase
+                'estado' => $r->estado,            // confirmada | pendiente
+				
+				 
+            ],
+            'cancha_id'       => $r->cancha_id,
+			
+        ];
+
+        // Si necesitas campos extra:
+        if ($r->tipo === 'Clase' || $r->tipo === 'Reserva' ) {
+            $base['alumnos'] = $r->alumnos->pluck('id')->toArray();
+            $base['entrenador_id'] = $r->entrenador_id;
+        }
+
+        return $base;
+    })
+    ->values();  // ← aquí reindexas para que el JSON sea un array
+
+    return response()->json($eventos);
+}
+    /**
+     * Marca una reserva como cobrada.
+     */
+    public function cobrar(Reserva $reserva)
+    {
+        $reserva->estado = 'cobrada';
+        $reserva->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+public function store(Request $request)
+{
+    // 1) Validación, ahora con repeat_enabled y repeat_until
+    $data = $request->validate([
+        'type'           => 'required|in:Reserva,Clase,Torneo',
+        'start'          => 'required|date',                // "YYYY-MM-DD HH:MM"
+        'duration'       => 'nullable|integer|min:1',
+        'cancha_id'      => 'required_if:type,Reserva,Clase',
+        'entrenador_id'  => 'required_if:type,Clase|nullable',
+        'responsable_id' => 'nullable',
+        'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
+        'alumnos'        => 'required_if:type,Reserva,Clase|array',
+        'alumnos.*'      => 'integer|exists:alumnos,id',
+        'canchas'        => 'required_if:type,Torneo|array',
+        'canchas.*'      => 'integer|exists:canchas,id',
+        // estos dos para la repetición
+        'repeat_enabled' => 'nullable|sometimes|boolean',
+        'repeat_until'   => 'nullable|date|after_or_equal:start',
+    ]);
+
+    // 2) Preparamos la serie de fechas
+    $start = Carbon::parse($data['start']);
+    $dates = [ $start ];
+
+    if (!empty($data['repeat_enabled']) && $data['repeat_until']) {
+        $until = Carbon::parse($data['repeat_until'])->endOfDay();
+        $cursor = $start->copy()->addWeek();
+        while ($cursor->lte($until)) {
+            $dates[] = $cursor->copy();
+            $cursor->addWeek();
+        }
+    }
+
+    $created = 0;
+    foreach ($dates as $dt) {
+        // 3) Creamos cada reserva en función del tipo
+        switch ($data['type']) {
+            case 'Reserva':
+                $res = Reserva::create([
+                    'fecha'       => $dt->toDateTimeString(),
+                    'cancha_id'   => $data['cancha_id'],
+                    'estado'      => $data['estado'],
+                    'duracion'    => $data['duration'] ?? 60,
+                    'tipo'        => $data['type'],
+                    'repeat_enabled' => !empty($data['repeat_enabled']),
+                    'repeat_until'   => $data['repeat_until'] ?? null,
+                ]);
+                $res->alumnos()->sync($data['alumnos']);
+                break;
+
+            case 'Clase':
+                $res = Reserva::create([
+                    'fecha'         => $dt->toDateTimeString(),
+                    'entrenador_id' => $data['entrenador_id'],
+                    'cancha_id'     => $data['cancha_id'],
+                    'estado'        => $data['estado'],
+                    'duracion'      => $data['duration'] ?? 60,
+                    'tipo'          => $data['type'],
+                    'repeat_enabled'=> !empty($data['repeat_enabled']),
+                    'repeat_until'  => $data['repeat_until'] ?? null,
+                ]);
+                $res->alumnos()->sync($data['alumnos']);
+                break;
+
+            case 'Torneo':
+                $res = Reserva::create([
+                    'fecha'       => $dt->toDateTimeString(),
+                    'responsable' => $data['responsable_id'],
+                    'duracion'    => $data['duration'] ?? 60,
+                    'estado'      => $data['estado'],
+                    'tipo'        => $data['type'],
+                    'repeat_enabled'=> !empty($data['repeat_enabled']),
+                    'repeat_until'  => $data['repeat_until'] ?? null,
+                ]);
+                $res->canchas()->sync($data['canchas']);
+                break;
+        }
+		  $club    = Auth::user()->club; // o where('id', …)
+    
+
+        // 4) Actualiza membresías
+        if (in_array($data['type'], ['Reserva','Clase'])) {
+            foreach ($data['alumnos'] as $alId) {
+				
+                $m = MembresiaAlumno::where('alumno_id', $alId)
+					->orderBy('id', 'desc')
+                    ->where('estado',1)
+                    ->first();
+					
+				if($m){
+					
+					$oldClase   = $m->clasesVistas;
+$oldReserva = $m->numReservas;
+
+if ($data['type'] === 'Clase') {
+    $m->increment('clasesVistas');           // no requiere save()
+} elseif ($data['type'] === 'Reserva') {
+    $m->increment('numReservas');
+}
+
+$m->refresh(); // asegura leer los valores actualizados desde BD
+/*
+if($oldClase==$m->clasesVistas){
+	$al = Alumno::find($alId);
+						
+			 $payload = [
+            $club->msj_finalizado ?? 'Tu paquete ha finalizado', // {{4}}
+            "https://wa.me/{$club->telefono}?text=Hola",  // {{5}}
+						
+						];
+						
+						 if ($al && $al->whatsapp) {
+				
+                $al->notify(new OneMsgTemplateNotification('finalizado', array_merge(
+                    $payload
+                )));
+            }
+			
+				}
+				*/
+		}
+                
+            
+	}
+        }
+
+        // 5) Notificaciones WhatsApp (si lo quieres por cada reserva)
+        
+       
+        foreach ($data['alumnos'] as $alId) {
+			
+			$al = Alumno::find($alId);
+			 $payload = [
+            ucfirst($al->nombres),                     // {{0}} Tipo
+            ucfirst($data['type']),                     // {{1}}
+            $dt->format('d/m/Y H:i'),                   // {{2}}
+            ($data['duration'] ?? 60).' min',           // {{3}}
+            $club->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
+            "https://wa.me/{$club->telefono}?text=Hola"  // {{5}}
+        ];
+			
+            $al = Alumno::find($alId);
+			
+            if ($al && $al->whatsapp) {
+				
+                $al->notify(new OneMsgTemplateNotification('reserva', array_merge(
+                    $payload,
+                    ['nombre'=>$al->nombres]
+                )));
+            }
+        }
+
+        $created++;
+    }
+
+    return redirect()
+        ->route('reservas.calendar')
+        ->with('success', "$created {$data['type']}(s) creadas correctamente.");
+}
+
+
+
+public function availability(Request $request)
+{
+    $date      = $request->query('date');
+    $canchaId  = $request->query('cancha_id');
+
+    if (! $date || ! $canchaId) {
+        return response()->json(['error' => 'Falta parámetro date o cancha_id'], 422);
+    }
+
+    try {
+        $workStart = Carbon::parse("$date 05:00");
+        $workEnd   = Carbon::parse("$date 22:00");
+        $interval  = 30; // minutos
+
+        // Trae reservas del día para esa cancha (excluye canceladas)
+        $reservas = Reserva::query()
+    ->where('cancha_id', $canchaId)
+    ->whereRaw('TRIM(LOWER(estado)) <> ?', ['cancelada'])
+    ->whereDate('fecha', $date)
+    ->get(['fecha as start', 'duracion as duration'])
+    ->map(function ($r) {
+        $start = Carbon::parse($r->start);
+        $mins  = max(0, (int) $r->duration);
+
+        // Si quieres un "colchón" después de cada reserva, súmalo aquí (en minutos).
+        // $bufferAfter = 0; // p.ej. 30 para bloquear también el siguiente slot completo
+        // $end = (clone $start)->addMinutes($mins + $bufferAfter);
+
+        $end = (clone $start)->addMinutes($mins); // sin colchón
+        return compact('start', 'end');
+    });
+
+        $slots  = [];
+        $cursor = $workStart->copy();
+
+        while ($cursor->lt($workEnd)) {
+    $next = $cursor->copy()->addMinutes($interval);
+
+    // Hacemos el final inclusivo:
+    // bloquea el slot si [cursor,next) ∩ [start,end] ≠ ∅
+    $ocupado = $reservas->first(function ($r) use ($cursor, $next) {
+        return $cursor->lte($r['end']) && $next->gt($r['start']);
+    });
+
+    if (! $ocupado) {
+        $slots[] = $cursor->format('H:i');
+    }
+    $cursor->addMinutes($interval);
+}
+
+        return response()->json([
+            'slots'   => $slots,
+            'minTime' => $workStart->format('H:i:s'),
+            'maxTime' => $workEnd->format('H:i:s'),
+        ], 200);
+
+    } catch (\Throwable $e) {
+        \Log::error("Availability error: {$e->getMessage()}");
+        return response()->json(['error' => 'Error interno'], 500);
+    }
+}
+
+
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Reserva $reserva)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Reserva $reserva)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+   
+public function update(Request $request, Reserva $reserva)
+{
+	
+   $oldEstado=$reserva->estado;
+   $oldfecha=$reserva->fecha;
+        $data = $request->validate([
+            'type'          => ['required', Rule::in(['Reserva','Clase','Torneo'])],
+            'start'         => 'required|date',
+            'duration'      => 'integer|min:1',
+            'estado'        => 'required|in:Confirmada,Pendiente,Cancelada',
+            'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
+          //  'alumno_id'     => 'required_if:type,Reserva|exists:alumnos,id',
+          //  'entrenador_id' => 'required_if:type,Clase|exists:usuarios,id',
+            'alumnos'       => 'required_if:type,Clase,Reserva|array',
+            'alumnos.*'     => 'exists:alumnos,id',
+            'responsable_id'=> 'required_if:type,Torneo|exists:alumnos,id',
+            'canchas'       => 'required_if:type,Torneo|array',
+            'canchas.*'     => 'exists:canchas,id',
+        ]);
+    
+	 $newEstado = $data['estado'];
+	  $club    = Auth::user()->club; // o where('id', …)
+    
+	 
+	 $start = Carbon::parse($data['start']);
+	  foreach ($data['alumnos'] as $alId) {
+			$al = Alumno::find($alId);
+			 $payload = [
+            ucfirst($al->nombres),                     // {{0}} Tipo
+            ucfirst($data['type']),                     // {{1}}
+            $start->format('d/m/Y H:i'),                   // {{2}}
+            ($data['duration'] ?? 60).' min',           // {{3}}
+            $club->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
+            "https://wa.me/{$club->telefono}?text=Hola"  // {{5}}
+        ];
+			
+            $al = Alumno::find($alId);
+            if ($al && $al->whatsapp) {
+                $al->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
+                    $payload,
+                    ['nombre'=>$al->nombres]
+                )));
+            }
+        }
+	 
+	
+ 
+if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) {
+    // Para cada alumno afectado
+	
+    foreach ($data['alumnos'] ?? [] as $alumnoId) {
+        // Buscamos la membresía de este alumno
+        $memb = MembresiaAlumno::where('alumno_id', $alumnoId)
+		->where('estado', 1)
+		 ->latest() 
+		->first();
+
+        // Determinamos el campo a modificar
+        $campo = $data['type'] === 'Clase' ? 'clasesVistas' : 'numReservas';
+
+        if ($newEstado === 'Cancelada') {
+            if ($memb) {
+                $memb->decrement($campo);
+            }
+
+        }
+        elseif ($newEstado === 'Confirmada') {
+            if ($memb) {
+                $memb->increment($campo);
+            }
+            Log::info("Reserva #{$reserva->id} CONFIRMADA: -" .
+                      ($memb ? "1 en {$campo}" : "(sin membresía)") .
+                      " para alumno {$alumnoId}.");
+        }
+    }
+}
+
+// 2) Actualizar los campos de la reserva
+    $reserva->fill([
+        'tipo'          => $data['type'],
+        'fecha'         => $data['start'],
+        'duracion'      => $data['duration'] ?? $reserva->duration,
+        'estado'        => $data['estado'],
+        'cancha_id'     => $data['cancha_id'] ?? null,
+        'responsable_id'=> $data['responsable_id'] ?? $reserva->responsable_id,
+    ])->save();
+
+    // 3) Sincronizar relaciones pivote
+    // (asegúrate de tener definidas en el modelo Reserva: alumnos() y canchas())
+    if (in_array($data['type'], ['Reserva','Clase'])) {
+        $reserva->alumnos()->sync($data['alumnos']);
+    }
+    if ($data['type'] === 'Torneo') {
+        $reserva->alumnos()->sync([$data['responsable_id']]); // si aplica
+        $reserva->canchas()->sync($data['canchas']);
+    }
+
+    return redirect()
+           ->route('reservas.calendar')
+           ->with('success', "{$data['type']} actualizada correctamente.");
+}
+
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Reserva $reserva)
+    {
+		 $reserva->estado = 'Cancelada';
+
+    // 3. Guardas los cambios en la BD
+    $reserva->save();
+		
+         return redirect()
+           ->route('reservas.horario')
+           ->with('success', "Reserva cancelada correctamente.");
+    }
+}
