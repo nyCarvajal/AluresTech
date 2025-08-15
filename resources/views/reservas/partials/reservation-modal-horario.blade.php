@@ -13,7 +13,7 @@
         <input type="hidden" name="_method" id="horarioReservationMethod" value="POST">
 
         <div class="modal-header">
-          <h5 class="modal-title">Nueva Reserva(Horario)</h5>
+         <h5 class="modal-title">Nueva Cita (Horario)</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 		
@@ -21,10 +21,10 @@
 
 
         <div class="modal-body">
-		 <label for="reservaDuracion" class="form-label">Tipo de Reserva</label>
+              <label for="reservaDuracion" class="form-label">Tipo de Cita</label>
             <input type="hidden" id="eventId" name="id">
 			<select id="eventType" name="type" class="form-select mb-3">
-  <option value="Reserva">Reserva</option>
+  <option value="Reserva">Cita</option>
   <option value="Clase">Clase</option>
   <option value="Torneo">Torneo</option>
 </select>
@@ -77,7 +77,7 @@
          value="1"
          class="form-check-input">
   <label for="repeatReservation" class="form-check-label">
-    Reserva periódica
+    Cita periódica
   </label>
 </div>
 @php
@@ -107,9 +107,9 @@
               </select>
             </div>
 
-  <!-- Entrenador -->
+  <!-- Estilista -->
           <div id="fieldEntrenador" class="mb-3 d-none">
-            <label for="entrenador" class="form-label">Entrenador</label>
+            <label for="entrenador" class="form-label">Estilista</label>
             <select id="entrenador"
                     name="entrenador_id"
                     class="form-select">

@@ -1,5 +1,5 @@
 {{-- resources/views/alumnos/create.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Crear Alumno'])
+@extends('layouts.vertical', ['subtitle' => 'Crear Cliente'])
 
 @section('css')
   <!-- Flatpickr CSS -->
@@ -21,7 +21,7 @@
   <div class="col-12">
     <div class="card">
       <div class="card-header">
-        <h4 class="card-title">Nuevo Alumno</h4>
+        <h4 class="card-title">Nuevo Cliente</h4>
       </div>
       <div class="card-body">
 	  @if($errors->any())

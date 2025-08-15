@@ -45,7 +45,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
-                        <p class="text-muted mb-0 text-truncate">Jugadores</p>
+                       <p class="text-muted mb-0 text-truncate">Clientes</p>
                         <h3 class="text-dark mt-2 mb-0">{{$totalAlumnos}}</h3>
                     </div>
 
@@ -111,7 +111,7 @@
     <div class="col-xl-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Nuevos Jugadores</h4>
+               <h4 class="card-title mb-0">Nuevos Clientes</h4>
                 <a href="{{ route('alumnos.index') }}" class="btn btn-sm btn-light">
                     Ver Todos
                 </a>
@@ -179,7 +179,7 @@
                         <thead>
                             <th class="py-1">ID</th>
                             <th class="py-1">Fecha</th>
-                            <th class="py-1">Jugador</th>
+                            <th class="py-1">Cliente</th>
                             <th class="py-1">Monto</th>
                            
                         </thead>

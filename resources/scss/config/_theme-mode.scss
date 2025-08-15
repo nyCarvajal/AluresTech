@@ -67,7 +67,7 @@ html[data-bs-theme="dark"],
 
 /* Main sidebar Light */
 html[data-sidebar-color="light"]{
-    --#{$prefix}sidebar-bg:                               #ffffff;
+    --#{$prefix}sidebar-bg:                               #E6E6FA;
     --#{$prefix}sidebar-item-color:                       #6e708c;
     --#{$prefix}sidebar-item-hover-bg:                    #f4f3f6;
     --#{$prefix}sidebar-item-hover-color:                 #3d4756;
@@ -98,7 +98,7 @@ html[data-bs-theme="dark"][data-sidebar-color="light"] {
 
 /* Topbar Light */
 html[data-topbar-color="light"] {
-    --#{$prefix}topbar-bg:                                 #ffffff;
+    --#{$prefix}topbar-bg:                                 #E6E6FA;
     --#{$prefix}topbar-item-color:                         #707793;
     --#{$prefix}topbar-search-bg:                          #f8f7fa;
 }

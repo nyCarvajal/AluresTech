@@ -14,7 +14,7 @@
     <h1>Usuarios</h1>
     <div>
       <a href="{{ route('users.trainers.create') }}" class="btn btn-primary me-2">
-        + Nuevo Entrenador
+        + Nuevo Estilista
       </a>
       @if(auth()->user()->role == 18)
         <a href="{{ route('users.admins.create') }}" class="btn btn-success">
@@ -50,7 +50,7 @@
           <td>
 		  
             @if($user->role == 11)
-              Entrenador
+              Estilista
             @elseif($user->role == 18)
               Administrador
             @else

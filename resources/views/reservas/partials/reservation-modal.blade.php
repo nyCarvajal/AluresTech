@@ -7,20 +7,20 @@
           @csrf
           <input type="hidden" name="_method" id="reservationMethod" value="POST">
           <div class="modal-header">
-            <h5 class="modal-title" id="reservationModalLabel">Nueva Reserva</h5>
+           <h5 class="modal-title" id="reservationModalLabel">Nueva Cita</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
 		  
-  <label for="reservaDuracion" class="form-label">Tipo de Reserva</label>
+ <label for="reservaDuracion" class="form-label">Tipo de Cita</label>
             <input type="hidden" id="eventId" name="id">
 			<select id="eventType" name="type" class="form-select mb-3">
-  <option value="Reserva">Reserva</option>
+ <option value="Reserva">Cita</option>
   <option value="Clase">Clase</option>
   <option value="Torneo">Torneo</option>
 </select>
 
-<!-- Reserva & Clase: cancha -->
+<!-- Cita & Clase: cancha -->
 <div id="fieldCancha" class="mb-3">
   <label>Cancha</label>
   <select id="cancha" name="cancha_id" class="form-select">
@@ -69,11 +69,11 @@
 			
 
 
-<!-- Reserva & Clase: alumnos -->
+<!-- Cita & Clase: alumnos -->
  <!-- === CAMPOS PARA “Clase” === -->
-          <!-- Entrenador -->
-          <div id="fieldEntrenador" class="mb-3 d-none">
-            <label for="entrenador" class="form-label">Entrenador</label>
+         <!-- Estilista -->
+         <div id="fieldEntrenador" class="mb-3 d-none">
+           <label for="entrenador" class="form-label">Estilista</label>
             <select id="entrenador"
                     name="entrenador_id"
                     class="form-select">
