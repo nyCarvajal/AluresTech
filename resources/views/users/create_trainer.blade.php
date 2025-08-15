@@ -1,11 +1,11 @@
-@extends('layouts.vertical', ['subtitle' => 'Crear Entrenador'])
+@extends('layouts.vertical', ['subtitle' => 'Crear Estilista'])
 
 
 
 
 @section('content')
   <div class="container">
-    <h1>Crear Entrenador</h1>
+    <h1>Crear Estilista</h1>
 
     @if(session('success'))
       <div class="alert alert-success">{{ session('success') }}</div>
@@ -16,7 +16,7 @@
 
       @include('users.partials.form-fields')
 
-      <button type="submit" class="btn btn-primary">Crear Entrenador</button>
+      <button type="submit" class="btn btn-primary">Crear Estilista</button>
     </form>
 	</div>
   </div>

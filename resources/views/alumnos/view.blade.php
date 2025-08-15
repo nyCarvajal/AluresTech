@@ -1,5 +1,5 @@
 {{-- resources/views/alumnos/show.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Perfil Alumno'])
+@extends('layouts.vertical', ['subtitle' => 'Perfil Cliente'])
 
 @section('css')
   <style>
@@ -164,7 +164,7 @@
 	  
 	  @if($ultimaMembresia)
 		  
-	  {{-- $suscripcion es una instancia de MembresiaAlumno --}}
+	  {{-- $suscripcion es una instancia de MembresiaCliente --}}
 <a href="{{ route('membresia-alumno.edit', $ultimaMembresia) }}"
    class="btn btn-sm btn-warning">
    Editar suscripción

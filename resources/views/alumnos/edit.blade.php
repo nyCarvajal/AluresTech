@@ -1,5 +1,5 @@
 {{-- resources/views/alumnos/edit.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Editar Alumno'])
+@extends('layouts.vertical', ['subtitle' => 'Editar Cliente'])
 
 @section('css')
   <!-- Flatpickr CSS -->
@@ -13,7 +13,7 @@
   <div class="col-12">
     <div class="card">
       <div class="card-header">
-        <h4 class="card-title">Editar Alumno</h4>
+        <h4 class="card-title">Editar Cliente</h4>
       </div>
       <div class="card-body">
         <form method="POST" action="{{ route('alumnos.update', $alumno) }}"  enctype="multipart/form-data">
@@ -147,7 +147,7 @@
             @error('sexo')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          <button type="submit" class="btn btn-primary">Actualizar Alumno</button>
+          <button type="submit" class="btn btn-primary">Actualizar Cliente</button>
           <a href="{{ route('alumnos.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
         </form>
       </div>

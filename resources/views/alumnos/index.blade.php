@@ -1,5 +1,5 @@
 {{-- resources/views/alumnos/index.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Alumnos'])
+@extends('layouts.vertical', ['subtitle' => 'Clientes'])
 
 @section('css')
   <!-- Si necesitas algún CSS extra, añádelo aquí -->
@@ -8,12 +8,12 @@
 @section('content')
 <div class="card">
   <div class="card-header">
-    <h5 class="card-title">Lista de Alumnos</h5>
-    <p class="card-subtitle">Todos los alumnos registrados en el sistema.</p>
+    <h5 class="card-title">Lista de Clientes</h5>
+    <p class="card-subtitle">Todos los clientes registrados en el sistema.</p>
   </div>
   <div class="card-header d-flex justify-content-between align-items-center">
     
-    <a href="{{ route('alumnos.create') }}" class="btn btn-primary">Nuevo Alumno</a>
+    <a href="{{ route('alumnos.create') }}" class="btn btn-primary">Nuevo Cliente</a>
   </div>
 
   <div class="card-body">
@@ -21,7 +21,7 @@
       <table class="table table-hover table-centered">
         <thead class="table-light">
           <tr>
-            <th scope="col">Alumno</th>
+            <th scope="col">Cliente</th>
             <th scope="col">Correo</th>
             <th scope="col">WhatsApp</th>
             <th scope="col">Acciones</th>
@@ -53,7 +53,7 @@
   @if($alumno->tipo==1)
     <h5>Socio</h5>
   @endif
-	<h5>	Alumno </h5>
+	<h5>	Cliente </h5>
 					 <span class="badge bg-success">{{ optional($alumno->nivel)->nivel ?? '—' }}</span>
                   </div>
                 </div>
