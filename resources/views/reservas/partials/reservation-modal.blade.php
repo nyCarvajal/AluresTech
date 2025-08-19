@@ -69,7 +69,9 @@
 			
 
 
+
 <!-- Cita & Clase: clientes -->
+
  <!-- === CAMPOS PARA “Clase” === -->
          <!-- Estilista -->
          <div id="fieldEntrenador" class="mb-3 d-none">

@@ -1,4 +1,5 @@
 {{-- resources/views/clientes/show.blade.php --}}
+
 @extends('layouts.vertical', ['subtitle' => 'Perfil Cliente'])
 
 @section('css')
@@ -165,7 +166,9 @@
 	  @if($ultimaMembresia)
 		  
 	  {{-- $suscripcion es una instancia de MembresiaCliente --}}
+
 <a href="{{ route('membresia-cliente.edit', $ultimaMembresia) }}"
+
    class="btn btn-sm btn-warning">
    Editar suscripción
 </a>

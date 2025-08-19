@@ -46,7 +46,9 @@
                 <div class="row">
                     <div class="col-6">
                        <p class="text-muted mb-0 text-truncate">Clientes</p>
+
                         <h3 class="text-dark mt-2 mb-0">{{$totalClientes}}</h3>
+
                     </div>
 
                     <div class="col-6">
@@ -112,7 +114,9 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                <h4 class="card-title mb-0">Nuevos Clientes</h4>
+
                 <a href="{{ route('clientes.index') }}" class="btn btn-sm btn-light">
+
                     Ver Todos
                 </a>
             </div>

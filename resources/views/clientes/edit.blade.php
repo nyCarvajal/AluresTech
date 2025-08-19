@@ -1,4 +1,5 @@
 {{-- resources/views/clientes/edit.blade.php --}}
+
 @extends('layouts.vertical', ['subtitle' => 'Editar Cliente'])
 
 @section('css')
@@ -148,7 +149,9 @@
           </div>
 
           <button type="submit" class="btn btn-primary">Actualizar Cliente</button>
+
           <a href="{{ route('clientes.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+
         </form>
       </div>
     </div>

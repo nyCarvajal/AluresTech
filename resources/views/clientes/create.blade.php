@@ -1,4 +1,5 @@
 {{-- resources/views/clientes/create.blade.php --}}
+
 @extends('layouts.vertical', ['subtitle' => 'Crear Cliente'])
 
 @section('css')

@@ -1,4 +1,6 @@
+
 {{-- resources/views/clientes/index.blade.php --}}
+
 @extends('layouts.vertical', ['subtitle' => 'Clientes'])
 
 @section('css')
@@ -13,7 +15,9 @@
   </div>
   <div class="card-header d-flex justify-content-between align-items-center">
     
+
     <a href="{{ route('clientes.create') }}" class="btn btn-primary">Nuevo Cliente</a>
+
   </div>
 
   <div class="card-body">
@@ -54,7 +58,9 @@
     <h5>Socio</h5>
   @endif
 	<h5>	Cliente </h5>
+
 					 <span class="badge bg-success">{{ optional($cliente->nivel)->nivel ?? '—' }}</span>
+
                   </div>
                 </div>
               </td>
