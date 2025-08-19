@@ -16,7 +16,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(RouteMatched::class, function (RouteMatched $event) {
             if ($user = Auth::user()) {
-                $db = $user->club->db;
+                $db = $user->peluqueria->db;
                 Config::set('database.connections.tenant.database', $db);
                 DB::purge('tenant');
                 DB::reconnect('tenant');

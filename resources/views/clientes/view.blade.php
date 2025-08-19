@@ -1,5 +1,5 @@
-{{-- resources/views/alumnos/show.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Perfil Alumno'])
+{{-- resources/views/clientes/show.blade.php --}}
+@extends('layouts.vertical', ['subtitle' => 'Perfil Cliente'])
 
 @section('css')
   <style>
@@ -137,22 +137,22 @@
     <!-- Tarjeta 1: Información de Usuario -->
     <div class="card-custom profile-info">
       <div class="card-header" style="background: linear-gradient(to center, #0053BF, #6366F1);">Perfil de Usuario</div>
-@if ($alumno->foto)
+@if ($cliente->foto)
   <img
-    src="{{ cloudinary()->image($alumno->foto)->toUrl() }}"
-    alt="Foto de {{ $alumno->nombres }}"
+    src="{{ cloudinary()->image($cliente->foto)->toUrl() }}"
+    alt="Foto de {{ $cliente->nombres }}"
     class="avatar-sm rounded-circle d-block mx-auto my-3"
     style="width:250px;height:250px;object-fit:cover;">
 @endif
 
       <div class="card-body">
         <ul class="info-list">
-          <li><strong>Nombre:</strong> <span>{{ $alumno->nombres }} {{ $alumno->apellidos }}</span></li>
-          <li><strong>Tipo de identificación:</strong> <span>{{ optional($alumno->tipoIdentificacion)->tipo }}</span></li>
-          <li><strong>Número de identificación:</strong> <span>{{ $alumno->numero_identificacion }}</span></li>
-          <li><strong>Correo:</strong> <span>{{ $alumno->correo }}</span></li>
-          <li><strong>WhatsApp:</strong> <span>{{ $alumno->whatsapp }}</span></li>
-          <li><strong>Nivel:</strong> <span class="badge-custom">{{ optional($alumno->nivel)->nivel }}</span></li>
+          <li><strong>Nombre:</strong> <span>{{ $cliente->nombres }} {{ $cliente->apellidos }}</span></li>
+          <li><strong>Tipo de identificación:</strong> <span>{{ optional($cliente->tipoIdentificacion)->tipo }}</span></li>
+          <li><strong>Número de identificación:</strong> <span>{{ $cliente->numero_identificacion }}</span></li>
+          <li><strong>Correo:</strong> <span>{{ $cliente->correo }}</span></li>
+          <li><strong>WhatsApp:</strong> <span>{{ $cliente->whatsapp }}</span></li>
+          <li><strong>Nivel:</strong> <span class="badge-custom">{{ optional($cliente->nivel)->nivel }}</span></li>
         </ul>
       </div>
     </div>
@@ -164,8 +164,8 @@
 	  
 	  @if($ultimaMembresia)
 		  
-	  {{-- $suscripcion es una instancia de MembresiaAlumno --}}
-<a href="{{ route('membresia-alumno.edit', $ultimaMembresia) }}"
+	  {{-- $suscripcion es una instancia de MembresiaCliente --}}
+<a href="{{ route('membresia-cliente.edit', $ultimaMembresia) }}"
    class="btn btn-sm btn-warning">
    Editar suscripción
 </a>

@@ -19,7 +19,7 @@ class Controller extends BaseController
         // Este closure se ejecuta antes de cada método de cualquier controlador hijo
         $this->middleware(function ($request, $next) {
             if ($user = Auth::user()) {
-                $database = $user->club->db;
+                $database = $user->peluqueria->db;
 
                 // Inyecta la base tenant y la hace default
                 config(['database.connections.tenant.database' => $database]);

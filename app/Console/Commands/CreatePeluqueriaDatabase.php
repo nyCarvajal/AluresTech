@@ -7,19 +7,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 
-class CreateClubDatabase extends Command
+class CreatePeluqueriaDatabase extends Command
 {
-    protected $signature = 'club:create 
-                            {name : Nombre del club (ej: "Academia Padel")} 
+    protected $signature = 'peluqueria:create 
+                            {name : Nombre del peluqueria (ej: "Academia Padel")} 
                             {--migrate : Ejecutar migraciones tras crearla}';
 
-    protected $description = 'Crea la base de datos de un club y, opcionalmente, corre sus migraciones.';
+    protected $description = 'Crea la base de datos de un peluqueria y, opcionalmente, corre sus migraciones.';
 
     public function handle()
     {
         $name = $this->argument('name');
         // Generamos un nombre de BD seguro:
-        $dbName = 'club_' . Str::slug($name, '_');
+        $dbName = 'peluqueria_' . Str::slug($name, '_');
 
         // 1) Creamos la base de datos:
         $this->info("Creando base de datos `$dbName` …");
@@ -43,6 +43,6 @@ class CreateClubDatabase extends Command
             $this->info("Migraciones finalizadas.");
         }
 
-        $this->info("✅ Club `$name` provisoned: database=$dbName");
+        $this->info("✅ Peluqueria `$name` provisoned: database=$dbName");
     }
 }

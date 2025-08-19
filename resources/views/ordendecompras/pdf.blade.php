@@ -39,17 +39,17 @@
 
     <h3 class="mb-2">Cliente</h3>
     <table class="mb-3">
-        @if(is_array($orden->alumno) || is_object($orden->alumno))
+        @if(is_array($orden->cliente) || is_object($orden->cliente))
         <tr>
-            <td><span class="fw-bold">ID:</span> {{ data_get($orden->alumno, 'numero_identificacion', '—') }}</td>
-            <td><span class="fw-bold">Nombre:</span> {{ trim((data_get($orden->alumno, 'nombres', '')) . ' ' . (data_get($orden->alumno, 'apellidos', ''))) ?: '—' }}</td>
-            <td><span class="fw-bold">Correo:</span> {{ data_get($orden->alumno, 'correo', '—') }}</td>
+            <td><span class="fw-bold">ID:</span> {{ data_get($orden->cliente, 'numero_identificacion', '—') }}</td>
+            <td><span class="fw-bold">Nombre:</span> {{ trim((data_get($orden->cliente, 'nombres', '')) . ' ' . (data_get($orden->cliente, 'apellidos', ''))) ?: '—' }}</td>
+            <td><span class="fw-bold">Correo:</span> {{ data_get($orden->cliente, 'correo', '—') }}</td>
         </tr>
         <tr>
-            <td colspan="3"><span class="fw-bold">WhatsApp:</span> {{ data_get($orden->alumno, 'whatsapp', '—') }}</td>
+            <td colspan="3"><span class="fw-bold">WhatsApp:</span> {{ data_get($orden->cliente, 'whatsapp', '—') }}</td>
         </tr>
         @else
-        <tr><td colspan="3">{{ $orden->alumno ?: '—' }}</td></tr>
+        <tr><td colspan="3">{{ $orden->cliente ?: '—' }}</td></tr>
         @endif
     </table>
 

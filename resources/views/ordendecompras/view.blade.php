@@ -107,14 +107,14 @@
             <h5 class="mb-0">Cliente</h5>
         </div>
         <div class="card-body">
-            @if(is_array($orden->alumno) || is_object($orden->alumno))
-                <p class="mb-1"><strong>ID:</strong> {{ data_get($orden->alumno, 'numero_identificacion', '—') }}</p>
-                <p class="mb-1"><strong>Nombre:</strong> {{ trim((data_get($orden->alumno, 'nombres', '')) . ' ' . (data_get($orden->alumno, 'apellidos', ''))) ?: '—' }}</p>
-                <p class="mb-1"><strong>Correo:</strong> {{ data_get($orden->alumno, 'correo', '—') }}</p>
-                <p class="mb-0"><strong>WhatsApp:</strong> {{ data_get($orden->alumno, 'whatsapp', '—') }}</p>
+            @if(is_array($orden->cliente) || is_object($orden->cliente))
+                <p class="mb-1"><strong>ID:</strong> {{ data_get($orden->cliente, 'numero_identificacion', '—') }}</p>
+                <p class="mb-1"><strong>Nombre:</strong> {{ trim((data_get($orden->cliente, 'nombres', '')) . ' ' . (data_get($orden->cliente, 'apellidos', ''))) ?: '—' }}</p>
+                <p class="mb-1"><strong>Correo:</strong> {{ data_get($orden->cliente, 'correo', '—') }}</p>
+                <p class="mb-0"><strong>WhatsApp:</strong> {{ data_get($orden->cliente, 'whatsapp', '—') }}</p>
             @else
                 {{-- Si es string/JSON plano guardado --}}
-                <p class="mb-0">{{ $orden->alumno ?: '—' }}</p>
+                <p class="mb-0">{{ $orden->cliente ?: '—' }}</p>
             @endif
         </div>
     </div>
@@ -218,8 +218,8 @@
 
     {{-- Modal Enviar por correo --}}
     @php
-        $emailSugerido = is_array($orden->alumno) || is_object($orden->alumno)
-            ? data_get($orden->alumno, 'correo')
+        $emailSugerido = is_array($orden->cliente) || is_object($orden->cliente)
+            ? data_get($orden->cliente, 'correo')
             : null;
     @endphp
     <div class="modal fade" id="enviarCorreoModal" tabindex="-1" aria-labelledby="enviarCorreoModalLabel" aria-hidden="true">

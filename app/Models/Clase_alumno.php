@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
-class Clase_alumno extends Model
+class Clase_cliente extends Model
 {
 	   protected $connection = 'tenant';
 	   public function resolveRouteBinding($value, $field = null)
     {
         // 1) Ajusta la conexión tenant según el usuario autenticado
         if ($user = Auth::user()) {
-            $dbName = $user->club->db;                               // el nombre dynamic de la BD
+            $dbName = $user->peluqueria->db;                               // el nombre dynamic de la BD
             Config::set('database.connections.tenant.database', $dbName);
             DB::purge('tenant');
             DB::reconnect('tenant');

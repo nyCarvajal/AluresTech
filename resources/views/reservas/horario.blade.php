@@ -76,11 +76,11 @@
                             <td style="background-color: {{$bg}}" class="border p-1 align-top">
   @if($event)
     <div class="d-flex justify-content-between align-items-center">
-      <!-- Nombres de alumnos y estado -->
+      <!-- Nombres de clientes y estado -->
       <div class="d-flex align-items-center">
         <a href="{{ route('reservas.edit', $event->id) }}">
           <span class="text-sm">
-            {{ $event->alumnos
+            {{ $event->clientes
                 ->map(fn($a) => $a->nombres . ' ' . $a->apellidos)
                 ->implode(', ')
             }}
@@ -104,7 +104,7 @@
         <button type="button"
                 class="btn p-0 text-green-500 hover:text-green-700 me-1"
                 title="Facturar"
-                onclick='facturarReserva({{ $event->id }}, @json($event->alumnos->pluck("id")))'>
+                onclick='facturarReserva({{ $event->id }}, @json($event->clientes->pluck("id")))'>
           <i class='bx bx-receipt'></i>
         </button>
 
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dateInp   = document.getElementById('horarioFecha');
   const timeSel   = document.getElementById('horarioHora');
   const canchaSel = document.getElementById('horarioCancha');
-  const alumnosSel= document.getElementById('alumnos');
+  const clientesSel= document.getElementById('clientes');
 
   // Cuando se abra el modal desde el botón
   modalEl.addEventListener('show.bs.modal', event => {
@@ -216,9 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const ventasIndexUrl = "{{ route('ventas.index') }}";
-function facturarReserva(reservaId, alumnos) {
-  alumnos.forEach(id => {
-    window.open(`${ventasIndexUrl}?alumno_id=${id}`, '_blank');
+function facturarReserva(reservaId, clientes) {
+  clientes.forEach(id => {
+    window.open(`${ventasIndexUrl}?cliente_id=${id}`, '_blank');
   });
 
   axios.post(`/reservas/${reservaId}/cobrar`)
@@ -232,7 +232,7 @@ function facturarReserva(reservaId, alumnos) {
 <script>
   $(function() {
     const $modal  = $('#horarioReservationModal');
-    const $select = $('#alumnos');
+    const $select = $('#clientes');
     let initDone  = false;
 
     // Inicializar solo una vez, cuando el modal ya esté visible

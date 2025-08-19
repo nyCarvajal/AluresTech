@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Models\clase;
-use App\Models\Club;
+use App\Models\Peluqueria;
 use App\Models\Cancha; 
-use App\Models\Alumno;
+use App\Models\Cliente;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,7 +16,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\OneMsgTemplateNotification;
 use Illuminate\Support\Facades\Log;
-use App\Models\MembresiaAlumno;
+use App\Models\MembresiaCliente;
 
 
 class ReservaController extends Controller
@@ -92,7 +92,7 @@ class ReservaController extends Controller
 	public function events(Request $request)
 {
     // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
-    $query = Reserva::with(['alumnos', 'entrenador']);
+    $query = Reserva::with(['clientes', 'entrenador']);
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
 		
@@ -124,7 +124,7 @@ class ReservaController extends Controller
             'duration'        => $r->duracion,
 			
             'title' => match($r->tipo) {
-                'Reserva' => optional($r->alumnos->first())->nombres . ' ' . optional($r->alumnos->first())->apellidos,
+                'Reserva' => optional($r->clientes->first())->nombres . ' ' . optional($r->clientes->first())->apellidos,
                 'Clase'   => optional($r->entrenador)->nombre,
                 'Torneo'   => optional($r->responsable)->nombres,
             },
@@ -143,7 +143,7 @@ class ReservaController extends Controller
 
         // Si necesitas campos extra:
         if ($r->tipo === 'Clase' || $r->tipo === 'Reserva' ) {
-            $base['alumnos'] = $r->alumnos->pluck('id')->toArray();
+            $base['clientes'] = $r->clientes->pluck('id')->toArray();
             $base['entrenador_id'] = $r->entrenador_id;
         }
 
@@ -183,8 +183,8 @@ public function store(Request $request)
         'entrenador_id'  => 'required_if:type,Clase|nullable',
         'responsable_id' => 'nullable',
         'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
-        'alumnos'        => 'required_if:type,Reserva,Clase|array',
-        'alumnos.*'      => 'integer|exists:alumnos,id',
+        'clientes'        => 'required_if:type,Reserva,Clase|array',
+        'clientes.*'      => 'integer|exists:clientes,id',
         'canchas'        => 'required_if:type,Torneo|array',
         'canchas.*'      => 'integer|exists:canchas,id',
         // estos dos para la repetición
@@ -219,7 +219,7 @@ public function store(Request $request)
                     'repeat_enabled' => !empty($data['repeat_enabled']),
                     'repeat_until'   => $data['repeat_until'] ?? null,
                 ]);
-                $res->alumnos()->sync($data['alumnos']);
+                $res->clientes()->sync($data['clientes']);
                 break;
 
             case 'Clase':
@@ -233,7 +233,7 @@ public function store(Request $request)
                     'repeat_enabled'=> !empty($data['repeat_enabled']),
                     'repeat_until'  => $data['repeat_until'] ?? null,
                 ]);
-                $res->alumnos()->sync($data['alumnos']);
+                $res->clientes()->sync($data['clientes']);
                 break;
 
             case 'Torneo':
@@ -249,14 +249,14 @@ public function store(Request $request)
                 $res->canchas()->sync($data['canchas']);
                 break;
         }
-		  $club    = Auth::user()->club; // o where('id', …)
+		  $peluqueria    = Auth::user()->peluqueria; // o where('id', …)
     
 
         // 4) Actualiza membresías
         if (in_array($data['type'], ['Reserva','Clase'])) {
-            foreach ($data['alumnos'] as $alId) {
+            foreach ($data['clientes'] as $alId) {
 				
-                $m = MembresiaAlumno::where('alumno_id', $alId)
+                $m = MembresiaCliente::where('cliente_id', $alId)
 					->orderBy('id', 'desc')
                     ->where('estado',1)
                     ->first();
@@ -275,11 +275,11 @@ if ($data['type'] === 'Clase') {
 $m->refresh(); // asegura leer los valores actualizados desde BD
 /*
 if($oldClase==$m->clasesVistas){
-	$al = Alumno::find($alId);
+	$al = Cliente::find($alId);
 						
 			 $payload = [
-            $club->msj_finalizado ?? 'Tu paquete ha finalizado', // {{4}}
-            "https://wa.me/{$club->telefono}?text=Hola",  // {{5}}
+            $peluqueria->msj_finalizado ?? 'Tu paquete ha finalizado', // {{4}}
+            "https://wa.me/{$peluqueria->telefono}?text=Hola",  // {{5}}
 						
 						];
 						
@@ -301,19 +301,19 @@ if($oldClase==$m->clasesVistas){
         // 5) Notificaciones WhatsApp (si lo quieres por cada reserva)
         
        
-        foreach ($data['alumnos'] as $alId) {
+        foreach ($data['clientes'] as $alId) {
 			
-			$al = Alumno::find($alId);
+			$al = Cliente::find($alId);
 			 $payload = [
             ucfirst($al->nombres),                     // {{0}} Tipo
             ucfirst($data['type']),                     // {{1}}
             $dt->format('d/m/Y H:i'),                   // {{2}}
             ($data['duration'] ?? 60).' min',           // {{3}}
-            $club->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
-            "https://wa.me/{$club->telefono}?text=Hola"  // {{5}}
+            $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
+            "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
         ];
 			
-            $al = Alumno::find($alId);
+            $al = Cliente::find($alId);
 			
             if ($al && $al->whatsapp) {
 				
@@ -429,32 +429,32 @@ public function update(Request $request, Reserva $reserva)
             'duration'      => 'integer|min:1',
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada',
             'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
-          //  'alumno_id'     => 'required_if:type,Reserva|exists:alumnos,id',
+          //  'cliente_id'     => 'required_if:type,Reserva|exists:clientes,id',
           //  'entrenador_id' => 'required_if:type,Clase|exists:usuarios,id',
-            'alumnos'       => 'required_if:type,Clase,Reserva|array',
-            'alumnos.*'     => 'exists:alumnos,id',
-            'responsable_id'=> 'required_if:type,Torneo|exists:alumnos,id',
+            'clientes'       => 'required_if:type,Clase,Reserva|array',
+            'clientes.*'     => 'exists:clientes,id',
+            'responsable_id'=> 'required_if:type,Torneo|exists:clientes,id',
             'canchas'       => 'required_if:type,Torneo|array',
             'canchas.*'     => 'exists:canchas,id',
         ]);
     
 	 $newEstado = $data['estado'];
-	  $club    = Auth::user()->club; // o where('id', …)
+	  $peluqueria    = Auth::user()->peluqueria; // o where('id', …)
     
 	 
 	 $start = Carbon::parse($data['start']);
-	  foreach ($data['alumnos'] as $alId) {
-			$al = Alumno::find($alId);
+	  foreach ($data['clientes'] as $alId) {
+			$al = Cliente::find($alId);
 			 $payload = [
             ucfirst($al->nombres),                     // {{0}} Tipo
             ucfirst($data['type']),                     // {{1}}
             $start->format('d/m/Y H:i'),                   // {{2}}
             ($data['duration'] ?? 60).' min',           // {{3}}
-            $club->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
-            "https://wa.me/{$club->telefono}?text=Hola"  // {{5}}
+            $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
+            "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
         ];
 			
-            $al = Alumno::find($alId);
+            $al = Cliente::find($alId);
             if ($al && $al->whatsapp) {
                 $al->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
                     $payload,
@@ -466,11 +466,11 @@ public function update(Request $request, Reserva $reserva)
 	
  
 if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) {
-    // Para cada alumno afectado
+    // Para cada cliente afectado
 	
-    foreach ($data['alumnos'] ?? [] as $alumnoId) {
-        // Buscamos la membresía de este alumno
-        $memb = MembresiaAlumno::where('alumno_id', $alumnoId)
+    foreach ($data['clientes'] ?? [] as $clienteId) {
+        // Buscamos la membresía de este cliente
+        $memb = MembresiaCliente::where('cliente_id', $clienteId)
 		->where('estado', 1)
 		 ->latest() 
 		->first();
@@ -490,7 +490,7 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
             }
             Log::info("Reserva #{$reserva->id} CONFIRMADA: -" .
                       ($memb ? "1 en {$campo}" : "(sin membresía)") .
-                      " para alumno {$alumnoId}.");
+                      " para cliente {$clienteId}.");
         }
     }
 }
@@ -506,12 +506,12 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
     ])->save();
 
     // 3) Sincronizar relaciones pivote
-    // (asegúrate de tener definidas en el modelo Reserva: alumnos() y canchas())
+    // (asegúrate de tener definidas en el modelo Reserva: clientes() y canchas())
     if (in_array($data['type'], ['Reserva','Clase'])) {
-        $reserva->alumnos()->sync($data['alumnos']);
+        $reserva->clientes()->sync($data['clientes']);
     }
     if ($data['type'] === 'Torneo') {
-        $reserva->alumnos()->sync([$data['responsable_id']]); // si aplica
+        $reserva->clientes()->sync([$data['responsable_id']]); // si aplica
         $reserva->canchas()->sync($data['canchas']);
     }
 

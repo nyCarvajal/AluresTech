@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;   
 use App\Models\Membresia;
 use App\Models\Item;
-use App\Models\Alumno;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 
 class MembresiaController extends Controller
@@ -90,7 +90,7 @@ class MembresiaController extends Controller
 	
 	 public function show(Request $request)
     {
-        $jugadores   = Alumno::all();
+        $jugadores   = Cliente::all();
         $membresias  = Membresia::all();
         // Si ya generaste/almacenaste la orden de compra antes, podrías recuperarla:
         $ordenCompra = session('orden_compra_id') ?? null;

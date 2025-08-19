@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Alumno;
-use App\Models\Club;
+use App\Models\Cliente;
+use App\Models\Peluqueria;
 use Illuminate\Support\Facades\DB;
 use App\Models\TipoIdentificacion;
 use App\Models\Paises;
@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use App\Notifications\OneMsgTemplateNotification;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
-class AlumnosController extends Controller
+class ClientesController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -23,13 +23,13 @@ class AlumnosController extends Controller
     public function index()
     {
 		
-        $alumnos = Alumno::with([
+        $clientes = Cliente::with([
         'nivel',
         'pais',
         'departamento',
         'municipio',
     ])->get(); // o paginate()
-    return view('alumnos.index', compact('alumnos'));
+    return view('clientes.index', compact('clientes'));
     }
 
     /**
@@ -46,7 +46,7 @@ class AlumnosController extends Controller
     $colombia = $paises->firstWhere('nombre', 'Colombia');
     $defaultPais = $colombia ? $colombia->id : $paises->pluck('id')->first();
 
-    return view('alumnos.create', compact(
+    return view('clientes.create', compact(
         'tipoIdentificaciones',
         'paises',
         'defaultPais',
@@ -66,7 +66,7 @@ class AlumnosController extends Controller
         'numero_identificacion'  => 'required|string|max:50',
         'nombres'                => 'required|string|max:255',
         'apellidos'              => 'nullable|string|max:255',
-        'correo'                 => 'nullable|email|unique:alumnos,correo',
+        'correo'                 => 'nullable|email|unique:clientes,correo',
         'whatsapp'               => 'nullable|string',
         'fecha_nacimiento'       => 'nullable|date',
         'direccion'              => 'nullable|string',
@@ -92,41 +92,41 @@ class AlumnosController extends Controller
 }
 
 // 3) Construir mensaje dinámico desde la BD 
-    $club    = Auth::user()->club; // o where('id', …)
-    $texto   = $club->msj_bienvenida;
+    $peluqueria    = Auth::user()->peluqueria; // o where('id', …)
+    $texto   = $peluqueria->msj_bienvenida;
 
     // 4) Enviar por WhatsApp (se va a la cola) 
     $payload = [
 	'0'   =>$texto,
-    '1'   =>$club->nombre,               // {{1}}
+    '1'   =>$peluqueria->nombre,               // {{1}}
 ];
 
 
-   $alumno= Alumno::create($data);
-	 DB::connection('mysql')->table('alumnos')->insert($data);
+   $cliente= Cliente::create($data);
+	 DB::connection('mysql')->table('clientes')->insert($data);
 	
 	
 	if ($data && $data['whatsapp']) {
-        $alumno->notify(new OneMsgTemplateNotification('bienvenida', array_merge(
+        $cliente->notify(new OneMsgTemplateNotification('bienvenida', array_merge(
             $payload,
-            ['nombre' => $alumno->nombre]  // por si tu plantilla incluye {{nombre}}
+            ['nombre' => $cliente->nombre]  // por si tu plantilla incluye {{nombre}}
         )));
     }
 
     return redirect()
-           ->route('alumnos.index')
-           ->with('success', 'Alumno creado correctamente.');
+           ->route('clientes.index')
+           ->with('success', 'Cliente creado correctamente.');
 }
 
 
     /**
      * Display the specified resource.
      */
-    public function show(Alumno $alumno)
+    public function show(Cliente $cliente)
 {
 	// Trae las últimas 10 reservas (ordenadas por fecha descendente)
-    $reservas = $alumno
-        ->clases()              // relación hasMany Reserva en el modelo Alumno
+    $reservas = $cliente
+        ->clases()              // relación hasMany Reserva en el modelo Cliente
         ->orderBy('fecha', 'desc')
         ->take(10)
         ->get();
@@ -134,10 +134,10 @@ class AlumnosController extends Controller
 		
 		
 	 // Trae la última membresía comprada (suponiendo relación hasMany Membresia)
-    $ultimaMembresia = $alumno
+    $ultimaMembresia = $cliente
           
-        ->membresiasAlumnos()
-		->with('paquete')		// relación hasMany Membresia en el modelo Alumno
+        ->membresiasClientes()
+		->with('paquete')		// relación hasMany Membresia en el modelo Cliente
         ->orderBy('id', 'desc')
 		->where('estado', 1)
         ->first();
@@ -153,14 +153,14 @@ $clasesVistas = $ultimaMembresia->clasesVistas ?? 0;   // o lo que sea tu lógic
 $numReservas  = $ultimaMembresia->numReservas;
 $res=$ultimaMembresia->reservas;
 		}
-    return view('alumnos.view', compact('clases','clasesVistas','numReservas', 'alumno', 'reservas', 'ultimaMembresia', 'res'));
+    return view('clientes.view', compact('clases','clasesVistas','numReservas', 'cliente', 'reservas', 'ultimaMembresia', 'res'));
 }
 
 
     /**
      * Muestra el formulario de edición.
      */
-   public function edit(Alumno $alumno)
+   public function edit(Cliente $cliente)
 {
     $tipoIdentificaciones = TipoIdentificacion::all();
     $paises               = Paises::orderBy('nombre')->get();
@@ -170,8 +170,8 @@ $res=$ultimaMembresia->reservas;
     $colombia = $paises->firstWhere('nombre', 'Colombia');
     $defaultPais = $colombia ? $colombia->id : $paises->pluck('id')->first();
 
-    return view('alumnos.edit', compact(
-        'alumno',
+    return view('clientes.edit', compact(
+        'cliente',
         'tipoIdentificaciones',
         'paises',
 		'tipos',
@@ -182,9 +182,9 @@ $res=$ultimaMembresia->reservas;
 
 
     /**
-     * Procesa la actualización del alumno.
+     * Procesa la actualización del cliente.
      */
-    public function update(Request $request, Alumno $alumno)
+    public function update(Request $request, Cliente $cliente)
     {
         // Validación (ajusta reglas según tus columnas)
         $data = $request->validate([
@@ -192,7 +192,7 @@ $res=$ultimaMembresia->reservas;
             'numero_identificacion' => 'required|string|max:50',
             'nombres'               => 'required|string|max:255',
             'apellidos'             => 'required|string|max:255',
-            'correo'                => "required|email|unique:alumnos,correo,{$alumno->id}",
+            'correo'                => "required|email|unique:clientes,correo,{$cliente->id}",
             'whatsapp'              => 'required|string',
             'fecha_nacimiento'      => 'required|date',
             'direccion'             => 'nullable|string',
@@ -219,17 +219,17 @@ $res=$ultimaMembresia->reservas;
 }
 
         // Actualiza y redirige
-        $alumno->update($data);
+        $cliente->update($data);
 
         return redirect()
-               ->route('alumnos.index')
-               ->with('success', 'Alumno actualizado correctamente.');
+               ->route('clientes.index')
+               ->with('success', 'Cliente actualizado correctamente.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Alumno $alumno)
+    public function destroy(Cliente $cliente)
     {
         //
     }
@@ -241,7 +241,7 @@ $res=$ultimaMembresia->reservas;
         $q = $request->input('q', '');
 
         // Devuelve id y nombre completo (máx. 20 resultados)
-        $alumnos= Alumno::when($q, function ($query) use ($q) {
+        $clientes= Cliente::when($q, function ($query) use ($q) {
                     $query->whereRaw("CONCAT(nombres,' ',apellidos) LIKE ?", ["%{$q}%"]);
                 })
                 ->selectRaw("id, CONCAT(nombres,' ',apellidos) AS nombre")
@@ -250,7 +250,7 @@ $res=$ultimaMembresia->reservas;
                 ->get();
     
 	
-	 return response()->json($alumnos);   
+	 return response()->json($clientes);   
 
 	}
 }

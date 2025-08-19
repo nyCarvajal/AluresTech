@@ -104,7 +104,7 @@ class TenancyServiceProvider extends ServiceProvider
             $dbName = $tenant->data['database'] ?? null;
 
             if ($dbName) {
-                // Reconfigura la conexión tenant para apuntar a la BD del club
+                // Reconfigura la conexión tenant para apuntar a la BD del peluqueria
                 config(['database.connections.tenant.database' => $dbName]);
                 DB::purge('tenant');
                 DB::reconnect('tenant');

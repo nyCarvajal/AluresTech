@@ -24,7 +24,7 @@
                 <tr>
                     <td>{{ $orden->id }}</td>
                     <td>{{ $orden->fecha_hora}}</td>
-                    <td>{{ $orden->alumno->nombres }} {{ $orden->alumno->apellidos }}</td>
+                    <td>{{ $orden->cliente->nombres }} {{ $orden->cliente->apellidos }}</td>
                     <td>
                         @if($orden->activa)
                             <span class="badge bg-success">Sí</span>

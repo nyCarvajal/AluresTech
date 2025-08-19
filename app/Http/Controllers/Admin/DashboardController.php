@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Alumno;
+use App\Models\Cliente;
 use App\Models\Pago;
 use App\Models\Reserva;
 use App\Models\OrdenDeCompra; 
@@ -23,7 +23,7 @@ class DashboardController extends Controller
         }
 
         // 2) Cargamos métricas y tablas ============================
-        $totalAlumnos = Alumno::whereYear('created_at', now()->year)
+        $totalClientes = Cliente::whereYear('created_at', now()->year)
                          ->whereMonth('created_at', now()->month)
                          ->count();
         $totalPagosMes = Pago::whereYear('fecha_hora', now()->year)   // o el nombre de tu timestamp
@@ -44,13 +44,13 @@ class DashboardController extends Controller
     ->whereMonth('fecha', now()->month)
     ->count();
         // últimos 10 (cambia a ->paginate(10) si quieres paginación)
-        $alumnos = Alumno::latest()->take(10)->get();
-        $cuentas =  OrdenDeCompra::with('alumno')  
+        $clientes = Cliente::latest()->take(10)->get();
+        $cuentas =  OrdenDeCompra::with('cliente')  
 		->whereYear('fecha_hora', now()->year)       // ← año actual
         ->whereMonth('fecha_hora', now()->month) 
 		->whereNotNull('cliente')          
 		->where('activa', 1)// columna llena
-		->whereHas('alumno')  		// eager-load del cliente
+		->whereHas('cliente')  		// eager-load del cliente
         ->withSum('ventas as monto', 'valor_total')  // suma de sus ventas
         ->latest('fecha_hora')                       // orden cronológico
         ->take(10)
@@ -61,7 +61,7 @@ class DashboardController extends Controller
         // 3) Enviamos directamente a la vista
         //    ──> ¡Ya no redirigimos!
         return view('admin.index', compact(
-            'totalReservas', 'totalClases', 'totalAlumnos', 'totalPagosMes', 'alumnos', 'cuentas'
+            'totalReservas', 'totalClases', 'totalClientes', 'totalPagosMes', 'clientes', 'cuentas'
         ));
     }
 }

@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
+use App\Models\Peluqueria;
 use Illuminate\Http\Request;
 
-class ClubController extends Controller
+class PeluqueriaController extends Controller
 {
    
-   // app/Http/Controllers/ClubController.php
+   // app/Http/Controllers/PeluqueriaController.php
 
 public function editOwn()
 {
-    // Asumo que tu modelo User tiene relación club()
-   $club=auth()->user()->club;
-    return view('clubes.edit', compact('club'));
+    // Asumo que tu modelo User tiene relación peluqueria()
+   $peluqueria=auth()->user()->peluqueria;
+    return view('peluquerias.edit', compact('peluqueria'));
 }
 
 public function updateOwn(Request $request)
 {
-    $club = auth()->user()->club;
+    $peluqueria = auth()->user()->peluqueria;
 
     $data = $request->validate([
         'nombre'           => 'required|string',
@@ -38,14 +38,14 @@ public function updateOwn(Request $request)
     $data['cuentaCobro'] = $request->has('cuentaCobro');
     $data['electronica'] = $request->has('electronica');
 
-    $club->update($data);
+    $peluqueria->update($data);
 
     return redirect()
-        ->route('clubes.show', $club->id)
-        ->with('success', 'Datos de tu club actualizados.');
+        ->route('peluquerias.show', $peluqueria->id)
+        ->with('success', 'Datos de tu peluqueria actualizados.');
 }
 
- public function update(Request $request, Club $club)
+ public function update(Request $request, Peluqueria $peluqueria)
     {
         $data = $request->validate([
             'nombre'           => 'required|string',
@@ -65,25 +65,25 @@ public function updateOwn(Request $request)
         $data['cuentaCobro'] = $request->has('cuentaCobro');
         $data['electronica'] = $request->has('electronica');
 
-        $club->update($data);
-        return redirect()->route('clubes.show', compact('club'));
+        $peluqueria->update($data);
+        return redirect()->route('peluquerias.show', compact('peluqueria'));
     }
 	
 	public function showOwn(){
 		
-		return view('clubes.show');
+		return view('peluquerias.show');
 	}
 	
 	public function show(){
-		 $club=auth()->user()->club;
-		return view('clubes.show', compact('club'));
+		 $peluqueria=auth()->user()->peluqueria;
+		return view('peluquerias.show', compact('peluqueria'));
 	}
 
  
 
-    public function destroy(Club $club)
+    public function destroy(Peluqueria $peluqueria)
     {
-        $club->delete();
+        $peluqueria->delete();
         return back();
     }
 }

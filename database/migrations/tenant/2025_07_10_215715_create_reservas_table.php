@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('cancha_id')->nullable()->index('cancha2');
             $table->dateTime('fecha')->nullable();
             $table->integer('duracion')->nullable();
-            $table->integer('alumno_id')->nullable()->index('alumno');
+            $table->integer('cliente_id')->nullable()->index('cliente');
             $table->string('estado', 200)->nullable();
             $table->integer('entrenador_id')->nullable()->index('entrenador1');
             $table->dateTime('updated_at')->nullable();

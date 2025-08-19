@@ -15,7 +15,7 @@ return new class extends Migration
             $table->integer('id', true);
             $table->dateTime('fecha_hora');
             $table->integer('responsable')->nullable()->index('usuario1');
-            $table->integer('cliente')->nullable()->index('alumno6');
+            $table->integer('cliente')->nullable()->index('cliente6');
             $table->integer('activa')->default(1);
             $table->dateTime('updated_at')->nullable();
             $table->dateTime('created_at')->nullable();

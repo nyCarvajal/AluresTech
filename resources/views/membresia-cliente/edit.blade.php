@@ -8,7 +8,7 @@
 
       <div class="card-body">
         <form method="POST"
-              action="{{ route('membresia-alumno.update', $membresia_alumno) }}">
+              action="{{ route('membresia-cliente.update', $membresia_cliente) }}">
           @csrf
           @method('PUT')
 
@@ -16,7 +16,7 @@
           <div class="mb-3">
             <b>Plan: 
           
-                  {{ $membresia_alumno->paquete->descripcion  }} 
+                  {{ $membresia_cliente->paquete->descripcion  }} 
             
 </b>
           {{-- Clases y Reservas --}}
@@ -24,7 +24,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Clases </label>
               <input type="number" name="clases"
-                     value="{{ old('clases', $membresia_alumno->clases) }}"
+                     value="{{ old('clases', $membresia_cliente->clases) }}"
                      class="form-control @error('clases') is-invalid @enderror">
               @error('clases')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -32,7 +32,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Reservas </label>
               <input type="number" name="reservas"
-                     value="{{ old('reservas', $membresia_alumno->reservas) }}"
+                     value="{{ old('reservas', $membresia_cliente->reservas) }}"
                      class="form-control @error('reservas') is-invalid @enderror">
               @error('reservas')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -43,7 +43,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Clases Vistas</label>
               <input type="number" name="clasesVistas"
-                     value="{{ old('clases', $membresia_alumno->clasesVistas) }}"
+                     value="{{ old('clases', $membresia_cliente->clasesVistas) }}"
                      class="form-control @error('clases') is-invalid @enderror">
               @error('clases')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -51,7 +51,7 @@
             <div class="col-md-6 mb-3">
               <label class="form-label">Reservas Usadas</label>
               <input type="number" name="numReservas"
-                     value="{{ old('reservas', $membresia_alumno->numReservas) }}"
+                     value="{{ old('reservas', $membresia_cliente->numReservas) }}"
                      class="form-control @error('reservas') is-invalid @enderror">
               @error('reservas')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -71,7 +71,7 @@
 
     @foreach ($estados as $valor => $etiqueta)
       <option value="{{ $valor }}"
-              {{ old('estado', $membresia_alumno->estado) == $valor ? 'selected' : '' }}>
+              {{ old('estado', $membresia_cliente->estado) == $valor ? 'selected' : '' }}>
         {{ $etiqueta }}
       </option>
     @endforeach

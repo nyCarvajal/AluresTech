@@ -20,7 +20,7 @@ class SetTenantFromUser
     {
         // 1) Solo si hay usuario autenticado
         if ($user = Auth::user()) {
-            $tenantId = $user->club_id;
+            $tenantId = $user->peluqueria_id;
 
             // 2) Inicializa el tenant
             $this->tenancy->initialize($tenantId);

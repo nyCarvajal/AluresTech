@@ -14,7 +14,7 @@ class ConnectTenantDB
 	//dd( Auth::user());
         if ($user = Auth::user()) {
             
-			 $database = $user->club->db;
+			 $database = $user->peluqueria->db;
 
             // 1) Inyecta en la conexión tenant
             config(['database.connections.tenant.database' => $database]);

@@ -52,7 +52,7 @@ class UsuarioController extends Controller
             'direccion'             => $data['direccion'],
             'whatsapp'              => $data['whatsapp'],
             'password'              => Hash::make($data['password']),
-            'club_id'               => Auth::user()->club_id,
+            'peluqueria_id'               => Auth::user()->peluqueria_id,
             'role'                  => 11,  // entranador
         ]);
 
@@ -85,7 +85,7 @@ class UsuarioController extends Controller
             'direccion'             => $data['direccion'],
             'whatsapp'              => $data['whatsapp'],
             'password'              => Hash::make($data['password']),
-            'club_id'               => Auth::user()->club_id,
+            'peluqueria_id'               => Auth::user()->peluqueria_id,
             'role'                  => 18,  // administrador
         ]);
 
@@ -104,9 +104,9 @@ class UsuarioController extends Controller
 	
 	public function index()
 {
-	$clubId=Auth::user()->club_id;
+	$peluqueriaId=Auth::user()->peluqueria_id;
 	
-    $users = User::with('club') ->where('club_id', $clubId)->orderBy('nombre')->paginate(15);
+    $users = User::with('peluqueria') ->where('peluqueria_id', $peluqueriaId)->orderBy('nombre')->paginate(15);
     return view('users.index', compact('users'));
 }
 

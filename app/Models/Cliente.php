@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
   
 
-class Alumno extends Model
+class Cliente extends Model
 {
 	   protected $connection = 'tenant';
 	   
@@ -20,7 +20,7 @@ class Alumno extends Model
     {
         // 1) Ajusta la conexión tenant según el usuario autenticado
         if ($user = Auth::user()) {
-            $dbName = $user->club->db;                               // el nombre dynamic de la BD
+            $dbName = $user->peluqueria->db;                               // el nombre dynamic de la BD
             Config::set('database.connections.tenant.database', $dbName);
             DB::purge('tenant');
             DB::reconnect('tenant');
@@ -53,8 +53,8 @@ class Alumno extends Model
 
  use Notifiable; 
 /**
-     * Nivel académico del alumno.
-     * La columna 'nivel' en alumnos es la FK hacia la tabla niveles.id
+     * Nivel académico del cliente.
+     * La columna 'nivel' en clientes es la FK hacia la tabla niveles.id
      */
     public function nivel()
     {
@@ -87,8 +87,8 @@ class Alumno extends Model
     {
 		 return $this->belongsToMany(
         Reserva::class,
-        'clase_alumno', // pivote
-        'alumno_id',    // FK a alumnos en la pivote
+        'clase_cliente', // pivote
+        'cliente_id',    // FK a clientes en la pivote
         'reserva_id'    // FK a reservas en la pivote
     )->withTimestamps();
 		
@@ -105,18 +105,18 @@ class Alumno extends Model
 {
     return $this->belongsToMany(
             Membresia::class,
-            'membresia_alumno',
-            'alumno_id',
+            'membresia_cliente',
+            'cliente_id',
             'membresia_id'
         )
-        ->using(MembresiaAlumno::class)
+        ->using(MembresiaCliente::class)
         ->withPivot('clases','reservas')
         ->withTimestamps();
 }
 
-public function membresiasAlumnos()
+public function membresiasClientes()
 {
-    return $this->hasMany(MembresiaAlumno::class);
+    return $this->hasMany(MembresiaCliente::class);
 }
 
                       // ← añade el trait

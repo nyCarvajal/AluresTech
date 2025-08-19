@@ -15,7 +15,7 @@ class Nivel extends Model
     {
         // 1) Ajusta la conexión tenant según el usuario autenticado
         if ($user = Auth::user()) {
-            $dbName = $user->club->db;                               // el nombre dynamic de la BD
+            $dbName = $user->peluqueria->db;                               // el nombre dynamic de la BD
             Config::set('database.connections.tenant.database', $dbName);
             DB::purge('tenant');
             DB::reconnect('tenant');

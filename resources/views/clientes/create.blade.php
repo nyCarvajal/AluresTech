@@ -1,5 +1,5 @@
-{{-- resources/views/alumnos/create.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Crear Alumno'])
+{{-- resources/views/clientes/create.blade.php --}}
+@extends('layouts.vertical', ['subtitle' => 'Crear Cliente'])
 
 @section('css')
   <!-- Flatpickr CSS -->
@@ -21,7 +21,7 @@
   <div class="col-12">
     <div class="card">
       <div class="card-header">
-        <h4 class="card-title">Nuevo Alumno</h4>
+        <h4 class="card-title">Nuevo Cliente</h4>
       </div>
       <div class="card-body">
 	  @if($errors->any())
@@ -34,7 +34,7 @@
   </div>
 @endif
 
-        <form method="POST" action="{{ route('alumnos.store') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('clientes.store') }}" enctype="multipart/form-data">
           @csrf
 		  
 		 {{-- tu input de foto --}}

@@ -35,7 +35,7 @@ class User extends Authenticatable
         'whatsapp',
         'ciudad',
         'password',
-        'club_id',
+        'peluqueria_id',
         'role',
     ];
 
@@ -62,9 +62,9 @@ class User extends Authenticatable
         ];
     }
 	// Aquí definimos la relación "item" (o como prefieras nombrarla):
-    public function club()
+    public function peluqueria()
     {
         // 'producto' es la FK en 'ventas' que apunta a 'id' de 'items'
-        return $this->belongsTo(\App\Models\Club::class, 'club_id', 'id');
+        return $this->belongsTo(\App\Models\Peluqueria::class, 'peluqueria_id', 'id');
     }
 }

@@ -7,41 +7,41 @@
 <div class="container">
 
     {{-- ==============================================================
-         1) SECCIÓN: Dropdown para elegir “Cliente” (Alumno)
+         1) SECCIÓN: Dropdown para elegir “Cliente” (Cliente)
          ——————————————————————————————————————————————————————————————
-         Si el usuario selecciona un alumno, se envía GET a ventas.index?alumno_id=XX.
+         Si el usuario selecciona un cliente, se envía GET a ventas.index?cliente_id=XX.
          Como no existe orden_id, el controlador creará la orden automáticamente y
-         luego redirigirá a ventas.index?alumno_id=XX&orden_id=YY.
+         luego redirigirá a ventas.index?cliente_id=XX&orden_id=YY.
        ============================================================== --}}
     <div class="row mb-4">
         <div class="col-md-6">
             <form method="GET" action="{{ route('ventas.index') }}">
                 <div class="input-group">
-                    <label class="input-group-text" for="alumno_id">
+                    <label class="input-group-text" for="cliente_id">
                         <i class="fa fa-user-graduate me-1"></i> Cliente
                     </label>
                     <select
-                        name="alumno_id"
-                        id="alumno_id"
+                        name="cliente_id"
+                        id="cliente_id"
                         class="form-select"
                         onchange="this.form.submit()"
                     >
-                        <option value="" {{ $alumnoSeleccionado ? '' : 'selected' }} disabled>
+                        <option value="" {{ $clienteSeleccionado ? '' : 'selected' }} disabled>
                             -- Seleccione un cliente --
                         </option>
-                        @foreach($alumnos as $alumno)
+                        @foreach($clientes as $cliente)
                             <option
-                                value="{{ $alumno->id }}"
-                                {{ $alumnoSeleccionado && $alumnoSeleccionado->id === $alumno->id ? 'selected' : '' }}
+                                value="{{ $cliente->id }}"
+                                {{ $clienteSeleccionado && $clienteSeleccionado->id === $cliente->id ? 'selected' : '' }}
                             >
-                                {{ $alumno->nombres }}
-                                {{ $alumno->apellidos ?? '' }}
+                                {{ $cliente->nombres }}
+                                {{ $cliente->apellidos ?? '' }}
                             </option>
                         @endforeach
                     </select>
-                    {{-- Como estamos enviando solo alumno_id en GET, 
+                    {{-- Como estamos enviando solo cliente_id en GET, 
                          el controlador se encarga de crear la orden y redirigir 
-                         con ?alumno_id=XX&orden_id=YY --}}
+                         con ?cliente_id=XX&orden_id=YY --}}
                 </div>
             </form>
         </div>
@@ -97,14 +97,14 @@
                                     </button>
       
 
-    @if(auth()->user()->club && auth()->user()->club->pos == 1)
+    @if(auth()->user()->peluqueria && auth()->user()->peluqueria->pos == 1)
       <button id="btn-factura_post" class="btn btn-shadow-success btn-success" style="height: 80px;">
         <i class="fa fa-fw me-1" title="Finalizar factura pos"></i>
         Finalizar factura pos
       </button>
     @endif
 
-    @if(auth()->user()->club && auth()->user()->club->cuentaCobro == 1)
+    @if(auth()->user()->peluqueria && auth()->user()->peluqueria->cuentaCobro == 1)
   <a href="{{ route('orden_de_compras.show', $ordenSeleccionada->id) }}"
      class="btn btn-warning text-white"
 	 style="height: 80px;"
@@ -115,7 +115,7 @@
 @endif
 
 
-    @if(auth()->user()->club && auth()->user()->club->electronica == 1)
+    @if(auth()->user()->peluqueria && auth()->user()->peluqueria->electronica == 1)
       <button id="btn-factura_electronica" class="btn btn-shadow-primary btn-primary" style="width: 80px;">
         <i class="pe-7s-news-paper me-1"></i>
         Generar factura electrónica
@@ -130,13 +130,13 @@
          2) SECCIÓN: Si ya hay “ordenSeleccionada”, mostramos formulario 
             para “Agregar Venta” (seleccionar ítem).
        ============================================================== --}}
-    @if($ordenSeleccionada && $alumnoSeleccionado)
+    @if($ordenSeleccionada && $clienteSeleccionado)
         <div class="row mb-12">
             <div class="col-md-8">
                 <form method="POST" action="{{ route('ventas.storeByItem') }}">
                     @csrf
-                    {{-- Enviamos hidden el alumno_id para que el redirect preserve ese parámetro --}}
-                    <input type="hidden" name="alumno_id" value="{{ $alumnoSeleccionado->id }}">
+                    {{-- Enviamos hidden el cliente_id para que el redirect preserve ese parámetro --}}
+                    <input type="hidden" name="cliente_id" value="{{ $clienteSeleccionado->id }}">
                     {{-- Enviamos hidden la orden para asociar la venta a esa orden --}}
                     <input type="hidden" name="orden_de_compra_id" value="{{ $ordenSeleccionada->id }}">
 

@@ -2,13 +2,13 @@
 
 use App\Http\Controllers\RoutingController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AlumnosController;
+use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\ClaseController;
 use App\Http\Controllers\CanchaController;
 
 use App\Http\Controllers\DeporteController;
 use App\Http\Controllers\CajaController;
-use App\Http\Controllers\ClubController;
+use App\Http\Controllers\PeluqueriaController;
 use App\Http\Controllers\MembresiaController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\OrdendecompraController;
@@ -108,16 +108,16 @@ Route::delete('users/{user}', [UsuarioController::class,'destroy'])
 Route::get('reservas/horario', [ReservaController::class, 'horario'])->name('reservas.horario');
 Route::resource('proveedores', ProveedorController::class);
 Route::resource('salidas', SalidaController::class);
-Route::get('/alumnosb', [AlumnosController::class, 'search'])->name('alumnos.search');
+Route::get('/clientesb', [ClientesController::class, 'search'])->name('clientes.search');
 Route::resource('tipo-usuarios', TipoUsuarioController::class);
-Route::resource('clubes', ClubController::class)
+Route::resource('peluquerias', PeluqueriaController::class)
      ->except(['edit','update']);
-Route::get('club/editar',     [ClubController::class, 'editOwn'])
-         ->name('clubes.edit');
-Route::put('club/editar',     [ClubController::class, 'updateOwn'])
-         ->name('clubes.update');
-Route::get('club/perfil', [ClubController::class,'showOwn'])
-     ->name('clubes.perfil');
+Route::get('peluqueria/editar',     [PeluqueriaController::class, 'editOwn'])
+         ->name('peluquerias.edit');
+Route::put('peluqueria/editar',     [PeluqueriaController::class, 'updateOwn'])
+         ->name('peluquerias.update');
+Route::get('peluqueria/perfil', [PeluqueriaController::class,'showOwn'])
+     ->name('peluquerias.perfil');
 Route::post('/ventas/storememb', [VentaController::class, 'storeMemb'])
      ->name('ventas.storememb');
 Route::get('/ventas/relacion', [VentaController::class, 'relacion'])->name('ventas.relacion');
@@ -141,9 +141,9 @@ Route::resource('canchas', CanchaController::class);
     Route::resource('nivels', NivelController::class);
 	Route::resource('usuario', UsuarioController::class);
 	Route::resource('clase', ClaseController::class);
-	Route::resource('alumnos', AlumnosController::class);
+	Route::resource('clientes', ClientesController::class);
 	Route::resource('caja', CajaController::class);
-	Route::resource('club', ClubController::class);
+	Route::resource('peluqueria', PeluqueriaController::class);
 	Route::resource('membresias', MembresiaController::class);
 	Route::resource('pagos', PagoController::class);
 	Route::resource('orden_de_compras', OrdendecompraController::class);
@@ -162,7 +162,7 @@ Route::get('/pagos/cuenta/{cuenta}', [PagoController::class, 'porCuenta'])
 	 
 	 // routes/web.php
 Route::middleware(['auth'])
-      ->resource('membresia-alumno', \App\Http\Controllers\MembresiaAlumnoController::class)
+      ->resource('membresia-cliente', \App\Http\Controllers\MembresiaClienteController::class)
       ->only(['edit','update']);    // solo las que necesitamos
 
 	 
@@ -171,7 +171,7 @@ Route::middleware(['auth'])
 	 
 	 
 Route::get('reserva/availability', [ReservaController::class, 'availability']);
-Route::get('/', [AlumnosController::class, 'create']);
+Route::get('/', [ClientesController::class, 'create']);
 Route::get('/departamentos', [LocationController::class, 'departamentos']);
 	Route::get('/municipios',    [LocationController::class, 'municipios']);
 	

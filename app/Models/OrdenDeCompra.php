@@ -15,7 +15,7 @@ class OrdenDeCompra extends Model
     {
         // 1) Ajusta la conexión tenant según el usuario autenticado
         if ($user = Auth::user()) {
-            $dbName = $user->club->db;                               // el nombre dynamic de la BD
+            $dbName = $user->peluqueria->db;                               // el nombre dynamic de la BD
             Config::set('database.connections.tenant.database', $dbName);
             DB::purge('tenant');
             DB::reconnect('tenant');
@@ -42,10 +42,10 @@ class OrdenDeCompra extends Model
     ];
 	
 	// Aquí definimos la relación "item" (o como prefieras nombrarla):
-    public function alumno()
+    public function cliente()
     {
         // 'producto' es la FK en 'ventas' que apunta a 'id' de 'items'
-        return $this->belongsTo(\App\Models\Alumno::class, 'cliente', 'id');
+        return $this->belongsTo(\App\Models\Cliente::class, 'cliente', 'id');
     }
 	
 	// 1. Una orden puede tener muchas ventas

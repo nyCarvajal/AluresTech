@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('clase_alumno', function (Blueprint $table) {
+        Schema::create('clase_cliente', function (Blueprint $table) {
             $table->integer('id', true);
             $table->integer('reserva_id')->index('clase2');
-            $table->integer('alumno_id')->index('alumno4}');
+            $table->integer('cliente_id')->index('cliente4}');
             $table->dateTime('created_at')->nullable();
             $table->dateTime('updated_at')->nullable();
         });
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('clase_alumno');
+        Schema::dropIfExists('clase_cliente');
     }
 };

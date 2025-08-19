@@ -16,7 +16,7 @@ class Reserva extends Model
     {
         // 1) Ajusta la conexión tenant según el usuario autenticado
         if ($user = Auth::user()) {
-            $dbName = $user->club->db;                               // el nombre dynamic de la BD
+            $dbName = $user->peluqueria->db;                               // el nombre dynamic de la BD
             Config::set('database.connections.tenant.database', $dbName);
             DB::purge('tenant');
             DB::reconnect('tenant');
@@ -32,7 +32,7 @@ class Reserva extends Model
     'fecha',
     'end',
     'type',
-    'alumno_id',
+    'cliente_id',
 	'entrenador_id',
     'cancha_id',
     'estado',
@@ -63,11 +63,11 @@ class Reserva extends Model
     }
 
  /**
-     * Obtener el alumno responsable de la reserva.
+     * Obtener el cliente responsable de la reserva.
      */
-   public function alumno()
+   public function cliente()
     {
-        return $this->belongsTo(Alumno::class, 'alumno_id');
+        return $this->belongsTo(Cliente::class, 'cliente_id');
     }
 
     /**
@@ -81,17 +81,17 @@ class Reserva extends Model
     }
 	
 	 /**
-     * Relación MANY-TO-MANY con Alumno a través de la tabla alumno_clase,
-     * pero si sólo quieres enlazar Reserva ↔ Alumnos, ajusta el nombre de la tabla pivot.
+     * Relación MANY-TO-MANY con Cliente a través de la tabla cliente_clase,
+     * pero si sólo quieres enlazar Reserva ↔ Clientes, ajusta el nombre de la tabla pivot.
      */
-    public function alumnos(): BelongsToMany
+    public function clientes(): BelongsToMany
     {
-        // (aquí “alumno_reserva” es un ejemplo; úsalo solo si esa es tu tabla pivote)
+        // (aquí “cliente_reserva” es un ejemplo; úsalo solo si esa es tu tabla pivote)
         return $this->belongsToMany(
-            Alumno::class,
-            'clase_alumno', // o el nombre real de tu tabla pivote
+            Cliente::class,
+            'clase_cliente', // o el nombre real de tu tabla pivote
             'reserva_id',     // FK de reservas en la pivote
-            'alumno_id'       // FK de alumnos en la pivote
+            'cliente_id'       // FK de clientes en la pivote
         )->withTimestamps();
     }
 

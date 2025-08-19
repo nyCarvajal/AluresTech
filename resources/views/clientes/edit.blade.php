@@ -1,5 +1,5 @@
-{{-- resources/views/alumnos/edit.blade.php --}}
-@extends('layouts.vertical', ['subtitle' => 'Editar Alumno'])
+{{-- resources/views/clientes/edit.blade.php --}}
+@extends('layouts.vertical', ['subtitle' => 'Editar Cliente'])
 
 @section('css')
   <!-- Flatpickr CSS -->
@@ -13,10 +13,10 @@
   <div class="col-12">
     <div class="card">
       <div class="card-header">
-        <h4 class="card-title">Editar Alumno</h4>
+        <h4 class="card-title">Editar Cliente</h4>
       </div>
       <div class="card-body">
-        <form method="POST" action="{{ route('alumnos.update', $alumno) }}"  enctype="multipart/form-data">
+        <form method="POST" action="{{ route('clientes.update', $cliente) }}"  enctype="multipart/form-data">
           @csrf
           @method('PUT')
 		  
@@ -40,14 +40,14 @@
               <select id="tipo_identificacion" name="tipo_identificacion" class="form-select @error('tipo_identificacion') is-invalid @enderror">
                 <option value="">Selecciona tipo</option>
                 @foreach($tipoIdentificaciones as $tipo)
-                  <option value="{{ $tipo->id }}" {{ old('tipo_identificacion', $alumno->tipo_identificacion)==$tipo->id?'selected':'' }}>{{ $tipo->tipo }}</option>
+                  <option value="{{ $tipo->id }}" {{ old('tipo_identificacion', $cliente->tipo_identificacion)==$tipo->id?'selected':'' }}>{{ $tipo->tipo }}</option>
                 @endforeach
               </select>
               @error('tipo_identificacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6 mb-3">
               <label for="numero_identificacion" class="form-label">Número de Identificación</label>
-              <input type="text" id="numero_identificacion" name="numero_identificacion" class="form-control @error('numero_identificacion') is-invalid @enderror" value="{{ old('numero_identificacion', $alumno->numero_identificacion) }}">
+              <input type="text" id="numero_identificacion" name="numero_identificacion" class="form-control @error('numero_identificacion') is-invalid @enderror" value="{{ old('numero_identificacion', $cliente->numero_identificacion) }}">
               @error('numero_identificacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
           </div>
@@ -58,7 +58,7 @@
             <select id="nivel" name="nivel_id" class="form-select @error('nivel') is-invalid @enderror">
               <option value="">Selecciona nivel</option>
               @foreach($niveles as $nivel)
-                <option value="{{ $nivel->id }}" {{ old('nivel', $alumno->nivel_id)==$nivel->id?'selected':'' }}>{{ $nivel->nivel }}</option>
+                <option value="{{ $nivel->id }}" {{ old('nivel', $cliente->nivel_id)==$nivel->id?'selected':'' }}>{{ $nivel->nivel }}</option>
               @endforeach
             </select>
             @error('nivel')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -70,12 +70,12 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <label for="nombres" class="form-label">Nombres</label>
-              <input type="text" id="nombres" name="nombres" class="form-control @error('nombres') is-invalid @enderror" value="{{ old('nombres', $alumno->nombres) }}">
+              <input type="text" id="nombres" name="nombres" class="form-control @error('nombres') is-invalid @enderror" value="{{ old('nombres', $cliente->nombres) }}">
               @error('nombres')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6 mb-3">
               <label for="apellidos" class="form-label">Apellidos</label>
-              <input type="text" id="apellidos" name="apellidos" class="form-control @error('apellidos') is-invalid @enderror" value="{{ old('apellidos', $alumno->apellidos) }}">
+              <input type="text" id="apellidos" name="apellidos" class="form-control @error('apellidos') is-invalid @enderror" value="{{ old('apellidos', $cliente->apellidos) }}">
               @error('apellidos')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
           </div>
@@ -84,12 +84,12 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <label for="correo" class="form-label">Correo</label>
-              <input type="email" id="correo" name="correo" class="form-control @error('correo') is-invalid @enderror" value="{{ old('correo', $alumno->correo) }}" placeholder="nombre@dominio.com" required>
+              <input type="email" id="correo" name="correo" class="form-control @error('correo') is-invalid @enderror" value="{{ old('correo', $cliente->correo) }}" placeholder="nombre@dominio.com" required>
               @error('correo')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6 mb-3">
               <label for="whatsapp" class="form-label">WhatsApp</label>
-              <input type="tel" id="whatsapp" name="whatsapp" class="form-control phone-input @error('whatsapp') is-invalid @enderror" value="{{ old('whatsapp', $alumno->whatsapp) }}" data-country="co" placeholder="(Código) Número">
+              <input type="tel" id="whatsapp" name="whatsapp" class="form-control phone-input @error('whatsapp') is-invalid @enderror" value="{{ old('whatsapp', $cliente->whatsapp) }}" data-country="co" placeholder="(Código) Número">
               @error('whatsapp')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
           </div>
@@ -97,14 +97,14 @@
           {{-- Fecha de Nacimiento --}}
           <div class="mb-3">
             <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
-            <input type="text" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control @error('fecha_nacimiento') is-invalid @enderror" value="{{ old('fecha_nacimiento', $alumno->fecha_nacimiento) }}" placeholder="Selecciona fecha">
+            <input type="text" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control @error('fecha_nacimiento') is-invalid @enderror" value="{{ old('fecha_nacimiento', $cliente->fecha_nacimiento) }}" placeholder="Selecciona fecha">
             @error('fecha_nacimiento')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
           {{-- Dirección --}}
           <div class="mb-3">
             <label for="direccion" class="form-label">Dirección</label>
-            <input type="text" id="direccion" name="direccion" class="form-control @error('direccion') is-invalid @enderror" value="{{ old('direccion', $alumno->direccion) }}">
+            <input type="text" id="direccion" name="direccion" class="form-control @error('direccion') is-invalid @enderror" value="{{ old('direccion', $cliente->direccion) }}">
             @error('direccion')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
@@ -115,7 +115,7 @@
               <select id="pais" name="pais" class="form-select @error('pais') is-invalid @enderror">
                 <option value="">Selecciona país</option>
                 @foreach($paises as $pais)
-                  <option value="{{ $pais->id }}" {{ old('pais', $alumno->pais)==$pais->id?'selected':'' }}>{{ $pais->nombre }}</option>
+                  <option value="{{ $pais->id }}" {{ old('pais', $cliente->pais)==$pais->id?'selected':'' }}>{{ $pais->nombre }}</option>
                 @endforeach
               </select>
               @error('pais')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -141,14 +141,14 @@
             <label for="sexo" class="form-label">Sexo</label>
             <select id="sexo" name="sexo" class="form-select @error('sexo') is-invalid @enderror">
               <option value="">Selecciona sexo</option>
-              <option value="M" {{ old('sexo', $alumno->sexo)=='M'?'selected':'' }}>Masculino</option>
-              <option value="F" {{ old('sexo', $alumno->sexo)=='F'?'selected':'' }}>Femenino</option>
+              <option value="M" {{ old('sexo', $cliente->sexo)=='M'?'selected':'' }}>Masculino</option>
+              <option value="F" {{ old('sexo', $cliente->sexo)=='F'?'selected':'' }}>Femenino</option>
             </select>
             @error('sexo')<div class="invalid-feedback">{{ $message }}</div>@enderror
           </div>
 
-          <button type="submit" class="btn btn-primary">Actualizar Alumno</button>
-          <a href="{{ route('alumnos.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+          <button type="submit" class="btn btn-primary">Actualizar Cliente</button>
+          <a href="{{ route('clientes.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
         </form>
       </div>
     </div>
@@ -174,8 +174,8 @@
       const paisSelect = document.querySelector('#pais');
       const deptoSelect = document.querySelector('#departamento');
       const muniSelect = document.querySelector('#municipio');
-      const defaultDepto = "{{ old('departamento', $alumno->departamento) }}";
-      const defaultMuni = "{{ old('municipio', $alumno->municipio) }}";
+      const defaultDepto = "{{ old('departamento', $cliente->departamento) }}";
+      const defaultMuni = "{{ old('municipio', $cliente->municipio) }}";
 
       async function cargarDepartamentos() {
         const paisId = paisSelect.value;

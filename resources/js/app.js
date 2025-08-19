@@ -61,13 +61,13 @@ const horaSelect  = document.getElementById('reservaHora');
   // Campos específicos
    // ===== Campos específicos =====
   
-  const alumnosField      = form.querySelector('#fieldAlumnos');
+  const clientesField      = form.querySelector('#fieldClientes');
   const canchaField       = form.querySelector('#fieldCancha');
   const entrenadorField   = form.querySelector('#fieldEntrenador');
   const responsableField  = form.querySelector('#fieldResponsable');
   const canchasField      = form.querySelector('#fieldCanchasMulti');
   const inicioInput = document.getElementById('reservaFecha');
-  const alumnoSelect      = form.querySelector('#alumnos');
+  const clienteSelect      = form.querySelector('#clientes');
   const canchaSelect      = form.querySelector('#cancha');
   const entrenadorSelect  = form.querySelector('#entrenador');
   const responsableInput   = form.querySelector('#responsable');
@@ -114,7 +114,7 @@ const horaSelect  = document.getElementById('reservaHora');
     // evita disparar la llamada si no hay texto
     if (!query.length) return callback();
 
-   fetch(`/alumnosb?q=${encodeURIComponent(query)}`)
+   fetch(`/clientesb?q=${encodeURIComponent(query)}`)
   .then(r => r.json())
   .then(json => callback(json))
   .catch(() => callback());
@@ -132,16 +132,16 @@ const horaSelect  = document.getElementById('reservaHora');
     Torneo:  { url: '/torneos'  },
   };
   
-   // Inicializar TomSelect en el select de “Alumnos” (multi-select)
-  const alumnosSelect = document.querySelector('#alumnos');
-  if (alumnosSelect) {
-    new TomSelect(alumnosSelect, {
+   // Inicializar TomSelect en el select de “Clientes” (multi-select)
+  const clientesSelect = document.querySelector('#clientes');
+  if (clientesSelect) {
+    new TomSelect(clientesSelect, {
       plugins: ['remove_button'],      // para que aparezca una “x” en cada etiqueta
       maxItems: null,                  // null = múltiples valores
       valueField: 'value',             // atributo de <option> que almacena el ID
       labelField: 'text',              // texto que se mostrará
       searchField: 'text',             // habilita búsqueda por texto
-      placeholder: 'Selecciona uno o más alumnos',
+      placeholder: 'Selecciona uno o más clientes',
       create: false                    // no permitir crear opciones nuevas
     });
   }
@@ -149,19 +149,19 @@ const horaSelect  = document.getElementById('reservaHora');
   // Mostrar/ocultar campos según tipo
   function switchFields(type) {
     if (type === 'Reserva') {
-      alumnosField.classList.remove('d-none');
+      clientesField.classList.remove('d-none');
       entrenadorField.classList.add('d-none');
       canchaField.classList.remove('d-none');
       responsableField.classList.add('d-none');
       canchasField.classList.add('d-none');
     } else if (type === 'Clase') {
-      alumnosField.classList.remove('d-none');
+      clientesField.classList.remove('d-none');
       entrenadorField.classList.remove('d-none');
       canchaField.classList.remove('d-none');
       responsableField.classList.add('d-none');
       canchasField.classList.add('d-none');
     } else if (type === 'Torneo') {
-      alumnosField.classList.add('d-none');
+      clientesField.classList.add('d-none');
       entrenadorField.classList.add('d-none');
       canchaField.classList.add('d-none');
       responsableField.classList.remove('d-none');
@@ -216,7 +216,7 @@ const horaSelect  = document.getElementById('reservaHora');
 
     //  inicioInput.value    = dt.toISOString().slice(0,16);
       durationSelect.value = '60';
-      alumnoSelect.value   = '';
+      clienteSelect.value   = '';
       canchaSelect.value   = '1';
       entrenadorSelect.value = '';
       responsableInput.value = '';
@@ -273,35 +273,35 @@ form.action                          = '/reservas/' + ev.id;
 
       if (type === 'Reserva') {
 		  const ts = document.getElementById('responsable').tomselect;
- if (Array.isArray(props.alumnos)) {
-      if (alumnosSelect.tomselect) {
-        alumnosSelect.tomselect.setValue(props.alumnos);
+ if (Array.isArray(props.clientes)) {
+      if (clientesSelect.tomselect) {
+        clientesSelect.tomselect.setValue(props.clientes);
       } else {
-        alumnosSelect.value = props.alumnos;
+        clientesSelect.value = props.clientes;
       }
     } else {
-      // Si no hay props.alumnos o no es array, limpiamos
-      alumnosSelect.value = [];
-      if (alumnosSelect.tomselect) alumnosSelect.tomselect.clear();
+      // Si no hay props.clientes o no es array, limpiamos
+      clientesSelect.value = [];
+      if (clientesSelect.tomselect) clientesSelect.tomselect.clear();
     }
 
  
       //  canchaSelect.value               = props.cancha_id;
-      //  responsableField.value           = props.alumno_id || '';
+      //  responsableField.value           = props.cliente_id || '';
       } else if (type === 'Clase') {
         entrenadorSelect.value           = props.entrenador_id;
 		//canchaSelect.value               = props.cancha_id; 
-        //alumnoSelect.value               = props.alumnos.join(',');
-		 if (Array.isArray(props.alumnos)) {
-      if (alumnosSelect.tomselect) {
-        alumnosSelect.tomselect.setValue(props.alumnos);
+        //clienteSelect.value               = props.clientes.join(',');
+		 if (Array.isArray(props.clientes)) {
+      if (clientesSelect.tomselect) {
+        clientesSelect.tomselect.setValue(props.clientes);
       } else {
-        alumnosSelect.value = props.alumnos;
+        clientesSelect.value = props.clientes;
       }
     } else {
-      // Si no hay props.alumnos o no es array, limpiamos
-      alumnosSelect.value = [];
-      if (alumnosSelect.tomselect) alumnosSelect.tomselect.clear();
+      // Si no hay props.clientes o no es array, limpiamos
+      clientesSelect.value = [];
+      if (clientesSelect.tomselect) clientesSelect.tomselect.clear();
     }
      //   canchaSelect.value = props.cancha_id;
 		

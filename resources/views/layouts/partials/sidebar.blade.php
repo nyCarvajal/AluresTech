@@ -42,15 +42,15 @@
                          <span class="nav-icon">
                               <iconify-icon icon="mingcute:user-3-line"></iconify-icon>
                          </span>
-                         <span class="nav-text"> Jugadores </span>
+                         <span class="nav-text"> Clientes </span>
                     </a>
                     <div class="collapse" id="sidebarAuthentication">
                          <ul class="nav sub-navbar-nav">
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('alumnos.create') }}">Crear</a>
+                                   <a class="sub-nav-link" href="{{ route('clientes.create') }}">Crear</a>
                               </li>
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('alumnos.index') }}">Listar</a>
+                                   <a class="sub-nav-link" href="{{ route('clientes.index') }}">Listar</a>
                               </li>
                             
                          </ul>
@@ -61,15 +61,7 @@
                     <a class="nav-link" href="{{ route('reservas.horario') }}">
                          <span class="nav-icon">
                               <i class="bx  bx-calendar-alt"  ></i> </span>
-                         <span class="nav-text"> Reservas </span>
-                    </a>
-               </li>
-			   <li class="nav-item">
-                    <a class="nav-link" href="{{ route('ventas.relacion') }}">
-                         <span class="nav-icon">
-						 <i class="bx bx-dock-left"></i> 
-                               </span>
-                         <span class="nav-text"> Membresias/Paquetes </span>
+                         <span class="nav-text"> Citas </span>
                     </a>
                </li>
 			     <li class="nav-item">
@@ -95,31 +87,19 @@
                     <div class="collapse" id="sidebarLayouts">
                          <ul class="nav sub-navbar-nav">
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('canchas.index') }}" >
-                                        Canchas</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('deportes.index') }}" >
-                                        Deportes</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('membresias.index') }}" >
-                                        Membresias</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('nivels.index') }}" >
-                                        Niveles</a>
+                                  <a class="sub-nav-link" href="{{ route('deportes.index') }}" >
+                                       Deportes</a>
                               </li>
                              
                          </ul>
                     </div>
                </li>
 			   <li class="nav-item">
-                    <a class="nav-link" href="{{ route('clubes.edit') }}">
+                    <a class="nav-link" href="{{ route('peluquerias.edit') }}">
                          <span class="nav-icon">
 						 <i class="bx bx-pencil"></i>
                                </span>
-                         <span class="nav-text"> Personalizar Club  </span>
+                         <span class="nav-text"> Personalizar Peluqueria  </span>
                     </a>
                </li>
 			   
@@ -139,7 +119,7 @@
                                    <a class="sub-nav-link" href="{{ route('users.admins.create') }}">Crea Usuario</a>
                               </li>
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('users.trainers.create') }}">Crea Entrenador</a>
+                                   <a class="sub-nav-link" href="{{ route('users.trainers.create') }}">Crea Estilista</a>
                               </li>
                               <li class="sub-nav-item">
                                    <a class="sub-nav-link" href="{{ route ('users.index') }}">Listar Usuarios</a>

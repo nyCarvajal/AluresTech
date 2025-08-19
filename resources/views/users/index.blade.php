@@ -14,7 +14,7 @@
     <h1>Usuarios</h1>
     <div>
       <a href="{{ route('users.trainers.create') }}" class="btn btn-primary me-2">
-        + Nuevo Entrenador
+        + Nuevo Estilista
       </a>
       @if(auth()->user()->role == 18)
         <a href="{{ route('users.admins.create') }}" class="btn btn-success">
@@ -35,7 +35,7 @@
         <th>Nombre completo</th>
         <th>Email</th>
         <th>Rol</th>
-        <th>Club</th>
+        <th>Peluqueria</th>
         <th class="text-end">Acciones</th>
       </tr>
     </thead>
@@ -50,14 +50,14 @@
           <td>
 		  
             @if($user->role == 11)
-              Entrenador
+              Estilista
             @elseif($user->role == 18)
               Administrador
             @else
               {{ $user->role }}
             @endif
           </td>
-          <td>{{ optional($user->club)->nombre ?? '—' }}</td>
+          <td>{{ optional($user->peluqueria)->nombre ?? '—' }}</td>
           <td class="text-end">
             <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary">
               Editar

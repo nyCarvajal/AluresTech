@@ -45,8 +45,8 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
-                        <p class="text-muted mb-0 text-truncate">Jugadores</p>
-                        <h3 class="text-dark mt-2 mb-0">{{$totalAlumnos}}</h3>
+                       <p class="text-muted mb-0 text-truncate">Clientes</p>
+                        <h3 class="text-dark mt-2 mb-0">{{$totalClientes}}</h3>
                     </div>
 
                     <div class="col-6">
@@ -111,8 +111,8 @@
     <div class="col-xl-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">Nuevos Jugadores</h4>
-                <a href="{{ route('alumnos.index') }}" class="btn btn-sm btn-light">
+               <h4 class="card-title mb-0">Nuevos Clientes</h4>
+                <a href="{{ route('clientes.index') }}" class="btn btn-sm btn-light">
                     Ver Todos
                 </a>
             </div>
@@ -129,23 +129,23 @@
                         </thead>
                         <tbody>
 						
-                            @forelse($alumnos as $alumno)
+                            @forelse($clientes as $cliente)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td><a href="{{ route('alumnos.show', $alumno) }}" >{{ $alumno->nombres }} {{ $alumno->apellidos }} </a></td>
+                                <td><a href="{{ route('clientes.show', $cliente) }}" >{{ $cliente->nombres }} {{ $cliente->apellidos }} </a></td>
                                 <td>  @php
                   // Limpiar el número para wa.me
-                  $clean = preg_replace('/\D+/', '', $alumno->whatsapp);
+                  $clean = preg_replace('/\D+/', '', $cliente->whatsapp);
                 @endphp<a href="https://wa.me/{{ $clean }}" target="_blank">
-                  {{ $alumno->whatsapp }}
+                  {{ $cliente->whatsapp }}
                 </a></td>
                                 <td>
-                                    <span class="badge bg-success">{{ optional($alumno->nivel)->nivel ?? '—' }}</span>
+                                    <span class="badge bg-success">{{ optional($cliente->nivel)->nivel ?? '—' }}</span>
                                 </td>
                                 
                             </tr>
 							 @empty
-                      <tr><td colspan="4" class="text-center">Aún no hay alumnos</td></tr>
+                      <tr><td colspan="4" class="text-center">Aún no hay clientes</td></tr>
                   @endforelse
                             
                                
@@ -179,7 +179,7 @@
                         <thead>
                             <th class="py-1">ID</th>
                             <th class="py-1">Fecha</th>
-                            <th class="py-1">Jugador</th>
+                            <th class="py-1">Cliente</th>
                             <th class="py-1">Monto</th>
                            
                         </thead>
@@ -188,7 +188,7 @@
                       <tr>
                           <td>{{ $loop->iteration }}</td>
 						  <td><a href="{{ route('orden_de_compras.show', $cuenta) }}" >{{ $cuenta->fecha_hora->format('d/m/Y H:i') }}</a></td>
-                          <td>{{ $cuenta->alumno->nombres }} {{ $cuenta->alumno->apellidos }}</td>
+                          <td>{{ $cuenta->cliente->nombres }} {{ $cuenta->cliente->apellidos }}</td>
                           <td>${{ number_format($cuenta->monto, 0, ',', '.') }}</td>
                           
                       </tr>
