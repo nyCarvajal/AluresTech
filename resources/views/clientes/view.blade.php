@@ -159,72 +159,7 @@
     </div>
 	
 	
-    <!-- Tarjeta 2: Suscripción y Clases -->
-    <div class="card-custom profile-info">
-      <div class="card-header" style="background: linear-gradient(to right, #0053BF, #6366F1);">Información de Suscripción</div>
-	  
-	  @if($ultimaMembresia)
-		  
-	  {{-- $suscripcion es una instancia de MembresiaCliente --}}
-
-<a href="{{ route('membresia-cliente.edit', $ultimaMembresia) }}"
-
-   class="btn btn-sm btn-warning">
-   Editar suscripción
-</a>
-
-		  
-      <div class="card-body">
-        <p><strong>Paquete:</strong>  {{ $ultimaMembresia->paquete->descripcion ?? '—' }}
-</p>
-        <p><strong>Fecha último pago:</strong>  {{ optional($ultimaMembresia->created_at)->format('d M Y') ?? '—' }}</p>
-        <div class="stats">
-          <div class="stat">
-            <div><strong>Clases mensuales:</strong></div>
-            <div> {{ $clases }}</div>
-          </div>
-          <div class="stat">
-            <div><strong>Clases vistas:</strong></div>
-            <div> {{ $clasesVistas }}</div>
-          </div>
-		  <div class="stat">
-            <div><strong>Plan de juego:</strong></div>
-            <div> {{ $res }}</div>
-          </div>
-          <div class="stat">
-            <div><strong>Juegos consumidos:</strong></div>
-            <div> {{ $numReservas }}</div>
-          </div>
-        </div>
-      </div>
-	  @endif
-    </div>
-
-    <!-- Tarjeta 3: Últimas Reservas -->
-    <div class="card-custom profile-info">
-  <div class="card-header" style="background: linear-gradient(to right, #0053BF, #6366F1);">Últimas Reservas</div>
-  <div class="card-body">
-    <ul class="reservations-list list-unstyled mb-0">
-      @forelse($reservas as $reserva)
-        <li class="d-flex justify-content-between align-items-center mb-2">
-          {{-- Fecha formateada --}}
-			  
-          <span>
-            {{ \Carbon\Carbon::parse($reserva->fecha)->format('d M Y') }}
-          </span>
-		  <br> {{$reserva->tipo}}
-          {{-- Estado con clase dinámica --}}
-          <span class="status {{ strtolower($reserva->estado) }}">
-            {{ ucfirst(strtolower($reserva->estado)) }}
-          </span>
-        </li>
-      @empty
-        <li class="text-center text-muted">No hay reservas recientes.</li>
-      @endforelse
-    </ul>
-  </div>
-</div>
-
+   
   </div>
 
 

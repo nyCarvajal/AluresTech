@@ -40,7 +40,7 @@
 		  
 		 {{-- tu input de foto --}}
   <div class="mb-3">
-    <label for="foto" class="form-label">Foto del jugador</label>
+    <label for="foto" class="form-label">Foto del cliente</label>
     <input type="file"
            name="foto"
            id="foto"
@@ -208,23 +208,6 @@
             @enderror
           </div>
 		  
-          {{-- Sexo --}}
-          <div class="col-md-4 mb-3">
-            <label for="nivel" class="form-label">Nivel</label>
-            <select id="nivel" name="nivel_id"
-                    class="form-select @error('nivel') is-invalid @enderror">
-              <option value="">Selecciona nivel</option>
-                @foreach($niveles as $nivel)
-                  <option value="{{ $nivel->id }}"
-                    {{ old('nivel_id') == $nivel->id ? 'selected' : '' }}>
-                    {{ $nivel->nivel }}
-                  </option>
-				   @endforeach
-            </select>
-            @error('nivel')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-          </div>
 
           <div class="d-flex justify-content-between mt-4">
   <a href="{{ route('users.index') }}" class="btn btn-secondary">
