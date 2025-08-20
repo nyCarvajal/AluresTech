@@ -45,16 +45,16 @@ class DashboardController extends Controller
     ->count();
         // últimos 10 (cambia a ->paginate(10) si quieres paginación)
         $clientes = Cliente::latest()->take(10)->get();
-        $cuentas =  OrdenDeCompra::with('cliente')  
+        $cuentas =  OrdenDeCompra::with('clienterel')  
 		->whereYear('fecha_hora', now()->year)       // ← año actual
         ->whereMonth('fecha_hora', now()->month) 
 		->whereNotNull('cliente')          
 		->where('activa', 1)// columna llena
-		->whereHas('cliente')  		// eager-load del cliente
+		->whereHas('clienterel')  		// eager-load del cliente
         ->withSum('ventas as monto', 'valor_total')  // suma de sus ventas
         ->latest('fecha_hora')                       // orden cronológico
         ->take(10)
-        ->get(['id','fecha_hora','cliente']);  
+        ->get(['id','fecha_hora']);  
 		
 		
 

@@ -42,7 +42,7 @@ class OrdenDeCompra extends Model
     ];
 	
 	// Aquí definimos la relación "item" (o como prefieras nombrarla):
-    public function cliente()
+    public function clienterel()
     {
         // 'producto' es la FK en 'ventas' que apunta a 'id' de 'items'
         return $this->belongsTo(\App\Models\Cliente::class, 'cliente', 'id');

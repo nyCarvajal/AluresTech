@@ -18,7 +18,7 @@
 
 <div class="row">
     <!-- Card 1 -->
-    <div class="col-md-6 col-xl-3">
+    <div class="col-md-6 col-xl-4">
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Card 2 -->
-    <div class="col-md-6 col-xl-3">
+    <div class="col-md-6 col-xl-4">
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -64,12 +64,12 @@
     </div>
 
     <!-- Card 3 -->
-    <div class="col-md-6 col-xl-3">
+    <div class="col-md-6 col-xl-4">
         <div class="card">
             <div class="card-body">
                 <div class="row">
                     <div class="col-6">
-                        <p class="text-muted mb-0 text-truncate">Reservas</p>
+                        <p class="text-muted mb-0 text-truncate">Citas</p>
                         <h3 class="text-dark mt-2 mb-0">{{$totalReservas}}</h3>
                     </div>
 
@@ -86,26 +86,7 @@
     </div>
 
     <!-- Card 4 -->
-    <div class="col-md-6 col-xl-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        <p class="text-muted mb-0 text-truncate">Clases</p>
-                        <h3 class="text-dark mt-2 mb-0">{{$totalClases}}</h3>
-                    </div>
-
-                    <div class="col-6">
-                        <div class="ms-auto avatar-md bg-soft-primary rounded">
-                            <iconify-icon icon="solar:dumbbell-large-minimalistic-line-duotone"
-                                class="fs-32 avatar-title text-primary"></iconify-icon>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="chart04"></div>
-        </div>
-    </div>
+   
 </div>
 
 
@@ -129,7 +110,7 @@
                             <th class="py-1">ID</th>
                             <th class="py-1">Nombres</th>
                             <th class="py-1">Whatsapp</th>
-                            <th class="py-1">Nivel</th>
+                           
                         </thead>
                         <tbody>
 						
@@ -143,9 +124,7 @@
                 @endphp<a href="https://wa.me/{{ $clean }}" target="_blank">
                   {{ $cliente->whatsapp }}
                 </a></td>
-                                <td>
-                                    <span class="badge bg-success">{{ optional($cliente->nivel)->nivel ?? '—' }}</span>
-                                </td>
+                               
                                 
                             </tr>
 							 @empty
@@ -192,7 +171,7 @@
                       <tr>
                           <td>{{ $loop->iteration }}</td>
 						  <td><a href="{{ route('orden_de_compras.show', $cuenta) }}" >{{ $cuenta->fecha_hora->format('d/m/Y H:i') }}</a></td>
-                          <td>{{ $cuenta->cliente->nombres }} {{ $cuenta->cliente->apellidos }}</td>
+                          <td>{{ $cuenta->clienterel->nombres }} {{ $cuenta->clienterel->apellidos }}</td>
                           <td>${{ number_format($cuenta->monto, 0, ',', '.') }}</td>
                           
                       </tr>

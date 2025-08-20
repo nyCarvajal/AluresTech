@@ -46,25 +46,12 @@ class Cliente extends Model
   'departamento',
   'municipio',
   'sexo',
-  'nivel_id',
   'tipo',
   'foto',
 ];
 
  use Notifiable; 
-/**
-     * Nivel académico del cliente.
-     * La columna 'nivel' en clientes es la FK hacia la tabla niveles.id
-     */
-    public function nivel()
-    {
-        // 1er arg: Modelo relacionado
-        // 2º arg: foreign key en esta tabla
-        // 3er arg: primary key en la tabla de niveles (opcional porque es 'id')
-        return $this->belongsTo(Nivel::class, 'nivel_id', 'id');
-    }
 
-   
 
     public function pais()
     {
@@ -80,44 +67,14 @@ class Cliente extends Model
     {
         return $this->belongsTo(Municipios::class, 'municipio');
     }
-    /**
-     * Relación inversa many-to-many con Clase.
-     */
-      public function clases(): BelongsToMany
-    {
-		 return $this->belongsToMany(
-        Reserva::class,
-        'clase_cliente', // pivote
-        'cliente_id',    // FK a clientes en la pivote
-        'reserva_id'    // FK a reservas en la pivote
-    )->withTimestamps();
-		
-		
-        
-    }
+   
 	public function reservas()
 {
     return $this->hasMany(Reserva::class);
 }
 
 	
-	public function membresias()
-{
-    return $this->belongsToMany(
-            Membresia::class,
-            'membresia_cliente',
-            'cliente_id',
-            'membresia_id'
-        )
-        ->using(MembresiaCliente::class)
-        ->withPivot('clases','reservas')
-        ->withTimestamps();
-}
 
-public function membresiasClientes()
-{
-    return $this->hasMany(MembresiaCliente::class);
-}
 
                       // ← añade el trait
 

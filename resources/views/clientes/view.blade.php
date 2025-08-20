@@ -153,7 +153,6 @@
           <li><strong>Número de identificación:</strong> <span>{{ $cliente->numero_identificacion }}</span></li>
           <li><strong>Correo:</strong> <span>{{ $cliente->correo }}</span></li>
           <li><strong>WhatsApp:</strong> <span>{{ $cliente->whatsapp }}</span></li>
-          <li><strong>Nivel:</strong> <span class="badge-custom">{{ optional($cliente->nivel)->nivel }}</span></li>
         </ul>
       </div>
     </div>

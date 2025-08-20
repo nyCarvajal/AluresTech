@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\TipoIdentificacion;
 use App\Models\Paises;
 use App\Models\TipoUsuario;
-use App\Models\Nivel;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -24,7 +23,6 @@ class ClientesController extends Controller
     {
 		
         $clientes = Cliente::with([
-        'nivel',
         'pais',
         'departamento',
         'municipio',
@@ -40,7 +38,7 @@ class ClientesController extends Controller
 {
     $tipoIdentificaciones = TipoIdentificacion::all();
     $paises               = Paises::orderBy('nombre')->get();
-	$niveles			  = Nivel::all();
+
 
     // Encuentra Colombia (ajusta el campo que uses para el nombre)
     $colombia = $paises->firstWhere('nombre', 'Colombia');
@@ -50,7 +48,7 @@ class ClientesController extends Controller
         'tipoIdentificaciones',
         'paises',
         'defaultPais',
-		'niveles'
+		
     ));
 }
 
@@ -74,7 +72,6 @@ class ClientesController extends Controller
         'departamento'           => 'nullable|exists:departamentos,id',
         'municipio'              => 'nullable|exists:municipios,id',
         'sexo'                   => 'nullable|in:M,F',
-		'nivel_id'				 => 'nullable|exists:nivels,id',
 		'foto'       			 => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
       
     ]);
@@ -126,34 +123,14 @@ class ClientesController extends Controller
 {
 	// Trae las últimas 10 reservas (ordenadas por fecha descendente)
     $reservas = $cliente
-        ->clases()              // relación hasMany Reserva en el modelo Cliente
+        ->reservas()              // relación hasMany Reserva en el modelo Cliente
         ->orderBy('fecha', 'desc')
         ->take(10)
         ->get();
 		
 		
-		
-	 // Trae la última membresía comprada (suponiendo relación hasMany Membresia)
-    $ultimaMembresia = $cliente
-          
-        ->membresiasClientes()
-		->with('paquete')		// relación hasMany Membresia en el modelo Cliente
-        ->orderBy('id', 'desc')
-		->where('estado', 1)
-        ->first();
-		
-		$clases =0;
-		$clasesVistas=0;
-		$numReservas=0;
-		$res=0;
-		
-		if($ultimaMembresia){
-		$clases       = $ultimaMembresia->clases ?? 0;
-$clasesVistas = $ultimaMembresia->clasesVistas ?? 0;   // o lo que sea tu lógica
-$numReservas  = $ultimaMembresia->numReservas;
-$res=$ultimaMembresia->reservas;
-		}
-    return view('clientes.view', compact('clases','clasesVistas','numReservas', 'cliente', 'reservas', 'ultimaMembresia', 'res'));
+	
+    return view('clientes.view', compact('cliente', 'reservas'));
 }
 
 
@@ -165,8 +142,7 @@ $res=$ultimaMembresia->reservas;
     $tipoIdentificaciones = TipoIdentificacion::all();
     $paises               = Paises::orderBy('nombre')->get();
 	$tipos = TipoUsuario::all();
-    $niveles              = Nivel::orderBy('nivel')->get();  // <-- añadir
-	 // Encuentra Colombia (ajusta el campo que uses para el nombre)
+   // Encuentra Colombia (ajusta el campo que uses para el nombre)
     $colombia = $paises->firstWhere('nombre', 'Colombia');
     $defaultPais = $colombia ? $colombia->id : $paises->pluck('id')->first();
 
@@ -176,7 +152,6 @@ $res=$ultimaMembresia->reservas;
         'paises',
 		'tipos',
 		'defaultPais',
-        'niveles'  // <-- añadir
     ));
 }
 
@@ -200,7 +175,6 @@ $res=$ultimaMembresia->reservas;
             'departamento'          => 'required|exists:departamentos,id',
             'municipio'             => 'required|exists:municipios,id',
             'sexo'                  => 'required|in:M,F',
-			'nivel_id'				=> 'nullable|exists:nivels,id',
 			'foto'       			 => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
       
         ]);

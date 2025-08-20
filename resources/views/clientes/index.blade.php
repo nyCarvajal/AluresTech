@@ -59,7 +59,7 @@
   @endif
 	<h5>	Cliente </h5>
 
-					 <span class="badge bg-success">{{ optional($cliente->nivel)->nivel ?? '—' }}</span>
+					 
 
                   </div>
                 </div>
