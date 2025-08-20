@@ -72,7 +72,6 @@ const horaSelect  = document.getElementById('reservaHora');
   const entrenadorSelect  = form.querySelector('#entrenador');
   const responsableInput   = form.querySelector('#responsable');
   const canchasSelect     = form.querySelector('#canchas');
-  const canchaFilter = document.getElementById('canchaFilter');
   // Listener para cambio de tipo en el select del modal
   typeSelect.addEventListener('change', e => {
     switchFields(e.target.value);
@@ -223,7 +222,6 @@ const horaSelect  = document.getElementById('reservaHora');
       canchasSelect.value    = '';
 	  fechaInput.value = info.startStr.split('T')[0];
       // (opcional) deja cancha en valor actual
-      // canchaInput.value ya debería venir de tu HTML
 
       // dispara la recarga de slots
       cargarSlots();
@@ -329,7 +327,6 @@ form.action                          = '/reservas/' + ev.id;
 
     // 5) Volvemos a colocar los listeners
     fechaInput.addEventListener('change',   cargarSlots);
-    canchaInput.addEventListener('change',  cargarSlots);
 
     // 6) Abrimos el modal
     modal.show();
@@ -338,11 +335,7 @@ form.action                          = '/reservas/' + ev.id;
 
        events: {
         url: cfg.eventsUrl,   // p.ej. '/reservas.json'
-        method: 'GET',
-        extraParams: () => {
-          console.log('Enviando cancha_id:', canchaFilter.value);
-          return { cancha_id: canchaFilter.value };
-        }
+        method: 'GET'
       },
 	   // 2) Permite seleccionar rangos
     
@@ -359,12 +352,10 @@ form.action                          = '/reservas/' + ev.id;
 	   
     }),
 	
-	datesSet: info => {
+        datesSet: info => {
       // cada vez que cambias de día, recarga disponibilidad
       const date = info.startStr.split('T')[0];
-	  const canchaInput = document.getElementById('cancha');
-	   const canchaId = canchaInput.value || '1';
-      axios.get('/reserva/availability', { params: { date,  cancha_id: canchaId } })
+      axios.get('/reserva/availability', { params: { date } })
         .then(res => {
           const { minTime, maxTime } = res.data;
           calendar.setOption('slotMinTime', minTime);
@@ -389,8 +380,7 @@ form.action                          = '/reservas/' + ev.id;
 
   /* ---- 2)  COMMON data: extended props ---- */
   const estado = arg.event.extendedProps.status;      // Confirmada / Pendiente…
-  const cancha = arg.event.extendedProps.cancha;      // opcional, si la envías
-  const time   = arg.timeText;      
+  const time   = arg.timeText;
 
    
 
@@ -407,11 +397,9 @@ form.action                          = '/reservas/' + ev.id;
     const cont = document.createElement('div');
     cont.classList.add('d-flex', 'flex-column', 'gap-1');
 
-    // línea 1: cancha + título principal
+    // línea 1: título principal
     const fila1 = document.createElement('div');
-    fila1.innerHTML =
-      (cancha ? `<strong>${cancha}</strong> — ` : '') +
-      `<span class="fw-bold">${lineas[0]}</span>`;
+    fila1.innerHTML = `<span class="fw-bold">${lineas[0]}</span>`;
     cont.appendChild(fila1);
 
     // líneas extra del título, si las hubiera
@@ -485,12 +473,6 @@ form.action                          = '/reservas/' + ev.id;
 
 
   calendar.render();
-  canchaFilter.addEventListener('change', () => {
-    // Opcional: limpia la capa visual
-    calendar.removeAllEvents();
-    // Y vuelve a cargar con el nuevo filtro
-    calendar.refetchEvents();
-  });
   
  
   form.addEventListener('submit', () => {
@@ -543,22 +525,20 @@ form.action                          = '/reservas/' + ev.id;
 
 
 const fechaInput  = document.getElementById('reservaFecha');
-const canchaInput = document.getElementById('cancha');
 const horaSelect  = document.getElementById('reservaHora');
 
 function cargarSlots() {
-  const date     = fechaInput.value;
-  const canchaId = canchaInput.value || '1';
+  const date = fechaInput.value;
 
-  if (!date || !canchaId) {
+  if (!date) {
     horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
-    return  Promise.resolve();
+    return Promise.resolve();
   }
 
- return axios.get('/reserva/availability', {
-    params: { date, cancha_id: canchaId }
+  return axios.get('/reserva/availability', {
+    params: { date }
   })
- .then(res => {
+  .then(res => {
     horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
     res.data.slots.forEach(h => {
       // `h` ya viene como "HH:mm"
@@ -574,9 +554,6 @@ function cargarSlots() {
 // Cuando cambie la fecha..
 
 fechaInput.addEventListener('change', cargarSlots);
-
-// …o cuando cambie la cancha.
-canchaInput.addEventListener('change', cargarSlots);
 
 
 
