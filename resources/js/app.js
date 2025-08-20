@@ -61,17 +61,15 @@ const horaSelect  = document.getElementById('reservaHora');
   // Campos específicos
    // ===== Campos específicos =====
   
-  const clientesField      = form.querySelector('#fieldClientes');
-  const canchaField       = form.querySelector('#fieldCancha');
+  const clientesField     = form.querySelector('#fieldClientes');
   const entrenadorField   = form.querySelector('#fieldEntrenador');
   const responsableField  = form.querySelector('#fieldResponsable');
-  const canchasField      = form.querySelector('#fieldCanchasMulti');
-  const inicioInput = document.getElementById('reservaFecha');
-  const clienteSelect      = form.querySelector('#clientes');
-  const canchaSelect      = form.querySelector('#cancha');
+  const inicioInput       = document.getElementById('reservaFecha');
+  const clienteSelect     = form.querySelector('#clientes');
   const entrenadorSelect  = form.querySelector('#entrenador');
-  const responsableInput   = form.querySelector('#responsable');
-  const canchasSelect     = form.querySelector('#canchas');
+
+  const responsableInput  = form.querySelector('#responsable');
+
   // Listener para cambio de tipo en el select del modal
   typeSelect.addEventListener('change', e => {
     switchFields(e.target.value);
@@ -150,21 +148,15 @@ const horaSelect  = document.getElementById('reservaHora');
     if (type === 'Reserva') {
       clientesField.classList.remove('d-none');
       entrenadorField.classList.add('d-none');
-      canchaField.classList.remove('d-none');
       responsableField.classList.add('d-none');
-      canchasField.classList.add('d-none');
     } else if (type === 'Clase') {
       clientesField.classList.remove('d-none');
       entrenadorField.classList.remove('d-none');
-      canchaField.classList.remove('d-none');
       responsableField.classList.add('d-none');
-      canchasField.classList.add('d-none');
     } else if (type === 'Torneo') {
       clientesField.classList.add('d-none');
       entrenadorField.classList.add('d-none');
-      canchaField.classList.add('d-none');
       responsableField.classList.remove('d-none');
-      canchasField.classList.remove('d-none');
     }
   }
   
@@ -216,12 +208,11 @@ const horaSelect  = document.getElementById('reservaHora');
     //  inicioInput.value    = dt.toISOString().slice(0,16);
       durationSelect.value = '60';
       clienteSelect.value   = '';
-      canchaSelect.value   = '1';
       entrenadorSelect.value = '';
       responsableInput.value = '';
-      canchasSelect.value    = '';
-	  fechaInput.value = info.startStr.split('T')[0];
-      // (opcional) deja cancha en valor actual
+
+          fechaInput.value = info.startStr.split('T')[0];
+
 
       // dispara la recarga de slots
       cargarSlots();
@@ -238,10 +229,9 @@ const horaSelect  = document.getElementById('reservaHora');
       miModal.show()
     },
 
-    eventClick: info => {
-		 fechaInput.removeEventListener('change', cargarSlots);
-		canchaSelect.removeEventListener('change', cargarSlots);
-      const ev    = info.event;
+      eventClick: info => {
+                 fechaInput.removeEventListener('change', cargarSlots);
+        const ev    = info.event;
       const props = ev.extendedProps;
       const type  = props.type; 
   // extraemos horas y minutos en local:
@@ -252,8 +242,7 @@ const horaSelect  = document.getElementById('reservaHora');
   const time  = `${hrs}:${mins}`;    // "07:00"
   const date  = ev.start.toISOString().split('T')[0];
 	  
-	    console.log('[DEBUG] extendedProps:', props);
-		 canchaSelect.value = props.cancha_id;
+              console.log('[DEBUG] extendedProps:', props);
       typeSelect.value                     = type;
       switchFields(type);
       methodIn.value                       = 'PUT';
@@ -269,8 +258,8 @@ form.action                          = '/reservas/' + ev.id;
      // inicioInput.value                    = ev.start.toISOString().slice(0,16);
       durationSelect.value                 = props.duration;
 
-      if (type === 'Reserva') {
-		  const ts = document.getElementById('responsable').tomselect;
+        if (type === 'Reserva') {
+                    const ts = document.getElementById('responsable').tomselect;
  if (Array.isArray(props.clientes)) {
       if (clientesSelect.tomselect) {
         clientesSelect.tomselect.setValue(props.clientes);
@@ -284,12 +273,9 @@ form.action                          = '/reservas/' + ev.id;
     }
 
  
-      //  canchaSelect.value               = props.cancha_id;
-      //  responsableField.value           = props.cliente_id || '';
-      } else if (type === 'Clase') {
-        entrenadorSelect.value           = props.entrenador_id;
-		//canchaSelect.value               = props.cancha_id; 
-        //clienteSelect.value               = props.clientes.join(',');
+        } else if (type === 'Clase') {
+          entrenadorSelect.value           = props.entrenador_id;
+          //clienteSelect.value               = props.clientes.join(',');
 		 if (Array.isArray(props.clientes)) {
       if (clientesSelect.tomselect) {
         clientesSelect.tomselect.setValue(props.clientes);
@@ -301,13 +287,9 @@ form.action                          = '/reservas/' + ev.id;
       clientesSelect.value = [];
       if (clientesSelect.tomselect) clientesSelect.tomselect.clear();
     }
-     //   canchaSelect.value = props.cancha_id;
-		
-		
-      } else if (type === 'Torneo') {
-        responsableInput.value           = props.responsable;
-        canchasSelect.value              = props.canchas.join(',');
-      }
+        } else if (type === 'Torneo') {
+          responsableInput.value           = props.responsable;
+        }
 	  
 	  // 2) Rellenar el select de hora (HH:mm)
   //    Usamos substring de la parte de hora
