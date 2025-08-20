@@ -9,6 +9,7 @@ use App\Models\clase;
 use App\Models\Peluqueria;
 use App\Models\Cancha; 
 use App\Models\Cliente;
+use App\Models\Tipocita;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,7 +26,10 @@ class ReservaController extends Controller
         public function calendar()
 {
     $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
-    return view('reservas.calendar', compact('entrenadores'));
+        
+    $tipocitas    = Tipocita::all();
+    return view('reservas.calendar', compact('entrenadores', 'tipocitas'));
+
 
 }
 
@@ -91,7 +95,7 @@ class ReservaController extends Controller
 	public function events(Request $request)
 {
     // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
-    $query = Reserva::with(['clientes', 'entrenador']);
+    $query = Reserva::with(['cliente', 'entrenador']);
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
 		
@@ -123,7 +127,7 @@ class ReservaController extends Controller
             'duration'        => $r->duracion,
 			
             'title' => match($r->tipo) {
-                'Reserva' => optional($r->clientes->first())->nombres . ' ' . optional($r->clientes->first())->apellidos,
+                'Reserva' => optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
                 'Clase'   => optional($r->entrenador)->nombre,
                 'Torneo'   => optional($r->responsable)->nombres,
             },
@@ -142,7 +146,7 @@ class ReservaController extends Controller
 
         // Si necesitas campos extra:
         if ($r->tipo === 'Clase' || $r->tipo === 'Reserva' ) {
-            $base['clientes'] = $r->clientes->pluck('id')->toArray();
+            $base['cliente_id']   = $r->cliente_id;
             $base['entrenador_id'] = $r->entrenador_id;
         }
 
@@ -182,8 +186,7 @@ public function store(Request $request)
         'entrenador_id'  => 'required_if:type,Clase|nullable',
         'responsable_id' => 'nullable',
         'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
-        'clientes'        => 'required_if:type,Reserva,Clase|array',
-        'clientes.*'      => 'integer|exists:clientes,id',
+        'cliente_id'     => 'required_if:type,Reserva,Clase|integer|exists:clientes,id',
         'canchas'        => 'required_if:type,Torneo|array',
         'canchas.*'      => 'integer|exists:canchas,id',
         // estos dos para la repetición
@@ -215,10 +218,10 @@ public function store(Request $request)
                     'estado'      => $data['estado'],
                     'duracion'    => $data['duration'] ?? 60,
                     'tipo'        => $data['type'],
+                    'cliente_id'  => $data['cliente_id'],
                     'repeat_enabled' => !empty($data['repeat_enabled']),
                     'repeat_until'   => $data['repeat_until'] ?? null,
                 ]);
-                $res->clientes()->sync($data['clientes']);
                 break;
 
             case 'Clase':
@@ -229,10 +232,10 @@ public function store(Request $request)
                     'estado'        => $data['estado'],
                     'duracion'      => $data['duration'] ?? 60,
                     'tipo'          => $data['type'],
+                    'cliente_id'    => $data['cliente_id'],
                     'repeat_enabled'=> !empty($data['repeat_enabled']),
                     'repeat_until'  => $data['repeat_until'] ?? null,
                 ]);
-                $res->clientes()->sync($data['clientes']);
                 break;
 
             case 'Torneo':
@@ -253,57 +256,54 @@ public function store(Request $request)
 
         // 4) Actualiza membresías
         if (in_array($data['type'], ['Reserva','Clase'])) {
-            foreach ($data['clientes'] as $alId) {
-				
-                $m = MembresiaCliente::where('cliente_id', $alId)
-					->orderBy('id', 'desc')
+            $alId = $data['cliente_id'];
+            $m = MembresiaCliente::where('cliente_id', $alId)
+                                        ->orderBy('id', 'desc')
                     ->where('estado',1)
                     ->first();
-					
-				if($m){
-					
-					$oldClase   = $m->clasesVistas;
-$oldReserva = $m->numReservas;
 
-if ($data['type'] === 'Clase') {
-    $m->increment('clasesVistas');           // no requiere save()
-} elseif ($data['type'] === 'Reserva') {
-    $m->increment('numReservas');
-}
+            if ($m) {
+                $oldClase   = $m->clasesVistas;
+                $oldReserva = $m->numReservas;
 
-$m->refresh(); // asegura leer los valores actualizados desde BD
-/*
-if($oldClase==$m->clasesVistas){
-	$al = Cliente::find($alId);
-						
-			 $payload = [
-            $peluqueria->msj_finalizado ?? 'Tu paquete ha finalizado', // {{4}}
-            "https://wa.me/{$peluqueria->telefono}?text=Hola",  // {{5}}
-						
-						];
-						
-						 if ($al && $al->whatsapp) {
-				
-                $al->notify(new OneMsgTemplateNotification('finalizado', array_merge(
-                    $payload
-                )));
+                if ($data['type'] === 'Clase') {
+                    $m->increment('clasesVistas');
+                } elseif ($data['type'] === 'Reserva') {
+                    $m->increment('numReservas');
+                }
+
+                $m->refresh();
+                /*
+                if($oldClase==$m->clasesVistas){
+                        $al = Cliente::find($alId);
+
+                                 $payload = [
+                    $peluqueria->msj_finalizado ?? 'Tu paquete ha finalizado', // {{4}}
+                    "https://wa.me/{$peluqueria->telefono}?text=Hola",  // {{5}}
+
+                                                    ];
+
+                                                     if ($al && $al->whatsapp) {
+
+                        $al->notify(new OneMsgTemplateNotification('finalizado', array_merge(
+                            $payload
+                        )));
+                    }
+
+                                    }
+                                    */
             }
-			
-				}
-				*/
-		}
-                
-            
-	}
+
+
         }
 
         // 5) Notificaciones WhatsApp (si lo quieres por cada reserva)
-        
-       
-        foreach ($data['clientes'] as $alId) {
-			
-			$al = Cliente::find($alId);
-			 $payload = [
+
+
+        $alId = $data['cliente_id'];
+
+                    $al = Cliente::find($alId);
+                     $payload = [
             ucfirst($al->nombres),                     // {{0}} Tipo
             ucfirst($data['type']),                     // {{1}}
             $dt->format('d/m/Y H:i'),                   // {{2}}
@@ -311,16 +311,15 @@ if($oldClase==$m->clasesVistas){
             $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
             "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
         ];
-			
-            $al = Cliente::find($alId);
-			
-            if ($al && $al->whatsapp) {
-				
-                $al->notify(new OneMsgTemplateNotification('reserva', array_merge(
-                    $payload,
-                    ['nombre'=>$al->nombres]
-                )));
-            }
+
+        $al = Cliente::find($alId);
+
+        if ($al && $al->whatsapp) {
+
+            $al->notify(new OneMsgTemplateNotification('reserva', array_merge(
+                $payload,
+                ['nombre'=>$al->nombres]
+            )));
         }
 
         $created++;
@@ -426,10 +425,8 @@ public function update(Request $request, Reserva $reserva)
             'duration'      => 'integer|min:1',
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada',
             'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
-          //  'cliente_id'     => 'required_if:type,Reserva|exists:clientes,id',
-          //  'entrenador_id' => 'required_if:type,Clase|exists:usuarios,id',
-            'clientes'       => 'required_if:type,Clase,Reserva|array',
-            'clientes.*'     => 'exists:clientes,id',
+            'cliente_id'    => 'required_if:type,Reserva,Clase|exists:clientes,id',
+            'entrenador_id' => 'required_if:type,Clase|nullable',
             'responsable_id'=> 'required_if:type,Torneo|exists:clientes,id',
             'canchas'       => 'required_if:type,Torneo|array',
             'canchas.*'     => 'exists:canchas,id',
@@ -439,10 +436,10 @@ public function update(Request $request, Reserva $reserva)
 	  $peluqueria    = Auth::user()->peluqueria; // o where('id', …)
     
 	 
-	 $start = Carbon::parse($data['start']);
-	  foreach ($data['clientes'] as $alId) {
-			$al = Cliente::find($alId);
-			 $payload = [
+         $start = Carbon::parse($data['start']);
+         $alId = $data['cliente_id'];
+         $al = Cliente::find($alId);
+         $payload = [
             ucfirst($al->nombres),                     // {{0}} Tipo
             ucfirst($data['type']),                     // {{1}}
             $start->format('d/m/Y H:i'),                   // {{2}}
@@ -450,45 +447,38 @@ public function update(Request $request, Reserva $reserva)
             $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
             "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
         ];
-			
-            $al = Cliente::find($alId);
-            if ($al && $al->whatsapp) {
-                $al->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
-                    $payload,
-                    ['nombre'=>$al->nombres]
-                )));
-            }
+
+        if ($al && $al->whatsapp) {
+            $al->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
+                $payload,
+                ['nombre'=>$al->nombres]
+            )));
         }
 	 
 	
  
 if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) {
-    // Para cada cliente afectado
-	
-    foreach ($data['clientes'] ?? [] as $clienteId) {
-        // Buscamos la membresía de este cliente
-        $memb = MembresiaCliente::where('cliente_id', $clienteId)
-		->where('estado', 1)
-		 ->latest() 
-		->first();
+    $clienteId = $data['cliente_id'];
+    $memb = MembresiaCliente::where('cliente_id', $clienteId)
+            ->where('estado', 1)
+            ->latest()
+            ->first();
 
-        // Determinamos el campo a modificar
-        $campo = $data['type'] === 'Clase' ? 'clasesVistas' : 'numReservas';
+    $campo = $data['type'] === 'Clase' ? 'clasesVistas' : 'numReservas';
 
-        if ($newEstado === 'Cancelada') {
-            if ($memb) {
-                $memb->decrement($campo);
-            }
-
+    if ($newEstado === 'Cancelada') {
+        if ($memb) {
+            $memb->decrement($campo);
         }
-        elseif ($newEstado === 'Confirmada') {
-            if ($memb) {
-                $memb->increment($campo);
-            }
-            Log::info("Reserva #{$reserva->id} CONFIRMADA: -" .
-                      ($memb ? "1 en {$campo}" : "(sin membresía)") .
-                      " para cliente {$clienteId}.");
+
+    }
+    elseif ($newEstado === 'Confirmada') {
+        if ($memb) {
+            $memb->increment($campo);
         }
+        Log::info("Reserva #{$reserva->id} CONFIRMADA: -" .
+                  ($memb ? "1 en {$campo}" : "(sin membresía)") .
+                  " para cliente {$clienteId}.");
     }
 }
 
@@ -500,15 +490,11 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
         'estado'        => $data['estado'],
         'cancha_id'     => $data['cancha_id'] ?? null,
         'responsable_id'=> $data['responsable_id'] ?? $reserva->responsable_id,
+        'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
+        'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
     ])->save();
 
-    // 3) Sincronizar relaciones pivote
-    // (asegúrate de tener definidas en el modelo Reserva: clientes() y canchas())
-    if (in_array($data['type'], ['Reserva','Clase'])) {
-        $reserva->clientes()->sync($data['clientes']);
-    }
     if ($data['type'] === 'Torneo') {
-        $reserva->clientes()->sync([$data['responsable_id']]); // si aplica
         $reserva->canchas()->sync($data['canchas']);
     }
 

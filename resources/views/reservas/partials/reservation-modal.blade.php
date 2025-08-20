@@ -12,12 +12,12 @@
           </div>
           <div class="modal-body">
 		  
- <label for="reservaDuracion" class="form-label">Tipo de Cita</label>
+ <label for="eventType" class="form-label">Tipo de Cita</label>
             <input type="hidden" id="eventId" name="id">
-			<select id="eventType" name="type" class="form-select mb-3">
- <option value="Reserva">Cita</option>
-  <option value="Clase">Clase</option>
-  <option value="Torneo">Torneo</option>
+                        <select id="eventType" name="type" class="form-select mb-3">
+ @foreach($tipocitas as $tc)
+  <option value="{{ $tc->nombre }}">{{ $tc->nombre }}</option>
+ @endforeach
 </select>
 
 
@@ -77,14 +77,13 @@
               </select>
             </div>
 
-          <!-- Clientes (multi-select) -->
+          <!-- Cliente -->
        <div id="fieldClientes" class="mb-3 d-none">
-  <label for="clientes" class="form-label">Clientes</label>
+  <label for="clientes" class="form-label">Cliente</label>
   <select id="clientes"
-          name="clientes[]"
+          name="cliente_id"
           class="form-select"
-          multiple
-		  required>
+                  required>
     @foreach(\App\Models\Cliente::orderBy('nombres')->get() as $al)
       <option value="{{ $al->id }}">
         {{ $al->nombres }} {{ $al->apellidos }}
@@ -92,9 +91,6 @@
     @endforeach
   </select>
 </div>
-
-          <!-- Componente para mostrar clientes seleccionados -->
-<div id="selectedClientes" class="mb-2"></div>
 
 
 
@@ -104,7 +100,7 @@
 
   {{-- TomSelect busca remotamente en /api/clientes --}}
   <select id="responsable"
-          name="cliente_id"   {{-- guarda el id del cliente --}}
+          name="responsable_id"   {{-- guarda el id del cliente --}}
           class="form-select"
           placeholder="Escribe para buscar…">
   </select>

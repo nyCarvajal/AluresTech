@@ -67,7 +67,6 @@ const horaSelect  = document.getElementById('reservaHora');
   const inicioInput       = document.getElementById('reservaFecha');
   const clienteSelect     = form.querySelector('#clientes');
   const entrenadorSelect  = form.querySelector('#entrenador');
-
   const responsableInput  = form.querySelector('#responsable');
 
   // Listener para cambio de tipo en el select del modal
@@ -129,17 +128,16 @@ const horaSelect  = document.getElementById('reservaHora');
     Torneo:  { url: '/torneos'  },
   };
   
-   // Inicializar TomSelect en el select de “Clientes” (multi-select)
+   // Inicializar TomSelect en el select de “Cliente”
   const clientesSelect = document.querySelector('#clientes');
   if (clientesSelect) {
     new TomSelect(clientesSelect, {
-      plugins: ['remove_button'],      // para que aparezca una “x” en cada etiqueta
-      maxItems: null,                  // null = múltiples valores
-      valueField: 'value',             // atributo de <option> que almacena el ID
-      labelField: 'text',              // texto que se mostrará
-      searchField: 'text',             // habilita búsqueda por texto
-      placeholder: 'Selecciona uno o más clientes',
-      create: false                    // no permitir crear opciones nuevas
+      maxItems: 1,
+      valueField: 'value',
+      labelField: 'text',
+      searchField: 'text',
+      placeholder: 'Selecciona un cliente',
+      create: false
     });
   }
 
@@ -210,10 +208,7 @@ const horaSelect  = document.getElementById('reservaHora');
       clienteSelect.value   = '';
       entrenadorSelect.value = '';
       responsableInput.value = '';
-
           fechaInput.value = info.startStr.split('T')[0];
-
-
       // dispara la recarga de slots
       cargarSlots();
 
@@ -259,34 +254,21 @@ form.action                          = '/reservas/' + ev.id;
       durationSelect.value                 = props.duration;
 
         if (type === 'Reserva') {
-                    const ts = document.getElementById('responsable').tomselect;
- if (Array.isArray(props.clientes)) {
-      if (clientesSelect.tomselect) {
-        clientesSelect.tomselect.setValue(props.clientes);
-      } else {
-        clientesSelect.value = props.clientes;
-      }
-    } else {
-      // Si no hay props.clientes o no es array, limpiamos
-      clientesSelect.value = [];
-      if (clientesSelect.tomselect) clientesSelect.tomselect.clear();
-    }
 
- 
+          if (clientesSelect.tomselect) {
+            clientesSelect.tomselect.setValue(props.cliente_id || '');
+          } else {
+            clientesSelect.value = props.cliente_id || '';
+          }
+
         } else if (type === 'Clase') {
-          entrenadorSelect.value           = props.entrenador_id;
-          //clienteSelect.value               = props.clientes.join(',');
-		 if (Array.isArray(props.clientes)) {
-      if (clientesSelect.tomselect) {
-        clientesSelect.tomselect.setValue(props.clientes);
-      } else {
-        clientesSelect.value = props.clientes;
-      }
-    } else {
-      // Si no hay props.clientes o no es array, limpiamos
-      clientesSelect.value = [];
-      if (clientesSelect.tomselect) clientesSelect.tomselect.clear();
-    }
+          entrenadorSelect.value = props.entrenador_id;
+          if (clientesSelect.tomselect) {
+            clientesSelect.tomselect.setValue(props.cliente_id || '');
+          } else {
+            clientesSelect.value = props.cliente_id || '';
+          
+        
         } else if (type === 'Torneo') {
           responsableInput.value           = props.responsable;
         }
