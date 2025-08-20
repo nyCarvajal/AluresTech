@@ -26,8 +26,10 @@ class ReservaController extends Controller
         public function calendar()
 {
     $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
+        
     $tipocitas    = Tipocita::all();
     return view('reservas.calendar', compact('entrenadores', 'tipocitas'));
+
 
 }
 
