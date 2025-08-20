@@ -112,11 +112,7 @@ class ReservaController extends Controller
                           ->addMinutes($r->duracion)
                           ->toIso8601String();
 						  
-						  $rgba = match ($r->tipo) {
-            'Reserva' => 'rgba(96,66,245,0.35)',   // morado-azulado translúcido
-            'Torneo'  => 'rgba(128,128,128,0.30)', // gris translúcido
-            'Clase'   => 'rgba(0,168,89,0.35)',    // verde translúcido
-        };
+						  $rgba = 'rgba(96,66,245,0.35)';
 
         $base = [
             'id'              => $r->id,
@@ -126,11 +122,7 @@ class ReservaController extends Controller
             'status'          => $r->estado,
             'duration'        => $r->duracion,
 			
-            'title' => match($r->tipo) {
-                'Reserva' => optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
-                'Clase'   => optional($r->entrenador)->nombre,
-                'Torneo'   => optional($r->responsable)->nombres,
-            },
+            'title' =>  optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
 			'borderColor'     => str_replace('0.35', '1', $rgba), // mismo color, opaco
             'textColor'       => '#121212', 
             'backgroundColor' => $rgba,
@@ -144,11 +136,7 @@ class ReservaController extends Controller
 			
         ];
 
-        // Si necesitas campos extra:
-        if ($r->tipo === 'Clase' || $r->tipo === 'Reserva' ) {
-            $base['cliente_id']   = $r->cliente_id;
-            $base['entrenador_id'] = $r->entrenador_id;
-        }
+      
 
         return $base;
     })
