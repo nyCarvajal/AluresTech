@@ -20,15 +20,6 @@
   <option value="Torneo">Torneo</option>
 </select>
 
-<!-- Cita & Clase: cancha -->
-<div id="fieldCancha" class="mb-3">
-  <label>Cancha</label>
-  <select id="cancha" name="cancha_id" class="form-select">
-    @foreach(\App\Models\Cancha::all() as $c)
-      <option value="{{ $c->id }}">{{ $c->nombre }}</option>
-    @endforeach
-  </select>
-</div>
 
 {{-- Fecha y hora de inicio --}}
 {{-- Fecha --}}
@@ -79,12 +70,12 @@
             <select id="entrenador"
                     name="entrenador_id"
                     class="form-select">
-              <option value="">Selecciona entrenador</option>
-              @foreach($entrenadores as $u)
-                <option value="{{ $u->id }}">{{ $u->nombre }}</option>
-              @endforeach
-            </select>
-          </div>
+                <option value="">Selecciona estilista</option>
+                @foreach($entrenadores as $u)
+                  <option value="{{ $u->id }}">{{ $u->nombre }}</option>
+                @endforeach
+              </select>
+            </div>
 
           <!-- Clientes (multi-select) -->
        <div id="fieldClientes" class="mb-3 d-none">
@@ -119,15 +110,6 @@
   </select>
 </div>
 
-<!-- Torneo: canchas múltiples -->
-<div id="fieldCanchasMulti" class="mb-3 d-none">
-  <label>Canchas</label>
-  <select id="canchas" name="canchas[]" multiple class="form-select">
-    @foreach(\App\Models\Cancha::all() as $c)
-      <option value="{{ $c->id }}">{{ $c->nombre }}</option>
-    @endforeach
-  </select>
-</div>
 
 			
           </div>

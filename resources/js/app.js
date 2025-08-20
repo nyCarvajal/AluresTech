@@ -61,18 +61,13 @@ const horaSelect  = document.getElementById('reservaHora');
   // Campos específicos
    // ===== Campos específicos =====
   
-  const clientesField      = form.querySelector('#fieldClientes');
-  const canchaField       = form.querySelector('#fieldCancha');
+  const clientesField     = form.querySelector('#fieldClientes');
   const entrenadorField   = form.querySelector('#fieldEntrenador');
   const responsableField  = form.querySelector('#fieldResponsable');
-  const canchasField      = form.querySelector('#fieldCanchasMulti');
-  const inicioInput = document.getElementById('reservaFecha');
-  const clienteSelect      = form.querySelector('#clientes');
-  const canchaSelect      = form.querySelector('#cancha');
+  const inicioInput       = document.getElementById('reservaFecha');
+  const clienteSelect     = form.querySelector('#clientes');
   const entrenadorSelect  = form.querySelector('#entrenador');
-  const responsableInput   = form.querySelector('#responsable');
-  const canchasSelect     = form.querySelector('#canchas');
-  const canchaFilter = document.getElementById('canchaFilter');
+  const responsableInput  = form.querySelector('#responsable');
   // Listener para cambio de tipo en el select del modal
   typeSelect.addEventListener('change', e => {
     switchFields(e.target.value);
@@ -151,21 +146,15 @@ const horaSelect  = document.getElementById('reservaHora');
     if (type === 'Reserva') {
       clientesField.classList.remove('d-none');
       entrenadorField.classList.add('d-none');
-      canchaField.classList.remove('d-none');
       responsableField.classList.add('d-none');
-      canchasField.classList.add('d-none');
     } else if (type === 'Clase') {
       clientesField.classList.remove('d-none');
       entrenadorField.classList.remove('d-none');
-      canchaField.classList.remove('d-none');
       responsableField.classList.add('d-none');
-      canchasField.classList.add('d-none');
     } else if (type === 'Torneo') {
       clientesField.classList.add('d-none');
       entrenadorField.classList.add('d-none');
-      canchaField.classList.add('d-none');
       responsableField.classList.remove('d-none');
-      canchasField.classList.remove('d-none');
     }
   }
   
@@ -217,13 +206,9 @@ const horaSelect  = document.getElementById('reservaHora');
     //  inicioInput.value    = dt.toISOString().slice(0,16);
       durationSelect.value = '60';
       clienteSelect.value   = '';
-      canchaSelect.value   = '1';
       entrenadorSelect.value = '';
       responsableInput.value = '';
-      canchasSelect.value    = '';
-	  fechaInput.value = info.startStr.split('T')[0];
-      // (opcional) deja cancha en valor actual
-      // canchaInput.value ya debería venir de tu HTML
+          fechaInput.value = info.startStr.split('T')[0];
 
       // dispara la recarga de slots
       cargarSlots();
@@ -240,10 +225,9 @@ const horaSelect  = document.getElementById('reservaHora');
       miModal.show()
     },
 
-    eventClick: info => {
-		 fechaInput.removeEventListener('change', cargarSlots);
-		canchaSelect.removeEventListener('change', cargarSlots);
-      const ev    = info.event;
+      eventClick: info => {
+                 fechaInput.removeEventListener('change', cargarSlots);
+        const ev    = info.event;
       const props = ev.extendedProps;
       const type  = props.type; 
   // extraemos horas y minutos en local:
@@ -254,8 +238,7 @@ const horaSelect  = document.getElementById('reservaHora');
   const time  = `${hrs}:${mins}`;    // "07:00"
   const date  = ev.start.toISOString().split('T')[0];
 	  
-	    console.log('[DEBUG] extendedProps:', props);
-		 canchaSelect.value = props.cancha_id;
+              console.log('[DEBUG] extendedProps:', props);
       typeSelect.value                     = type;
       switchFields(type);
       methodIn.value                       = 'PUT';
@@ -271,8 +254,8 @@ form.action                          = '/reservas/' + ev.id;
      // inicioInput.value                    = ev.start.toISOString().slice(0,16);
       durationSelect.value                 = props.duration;
 
-      if (type === 'Reserva') {
-		  const ts = document.getElementById('responsable').tomselect;
+        if (type === 'Reserva') {
+                    const ts = document.getElementById('responsable').tomselect;
  if (Array.isArray(props.clientes)) {
       if (clientesSelect.tomselect) {
         clientesSelect.tomselect.setValue(props.clientes);
@@ -286,12 +269,9 @@ form.action                          = '/reservas/' + ev.id;
     }
 
  
-      //  canchaSelect.value               = props.cancha_id;
-      //  responsableField.value           = props.cliente_id || '';
-      } else if (type === 'Clase') {
-        entrenadorSelect.value           = props.entrenador_id;
-		//canchaSelect.value               = props.cancha_id; 
-        //clienteSelect.value               = props.clientes.join(',');
+        } else if (type === 'Clase') {
+          entrenadorSelect.value           = props.entrenador_id;
+          //clienteSelect.value               = props.clientes.join(',');
 		 if (Array.isArray(props.clientes)) {
       if (clientesSelect.tomselect) {
         clientesSelect.tomselect.setValue(props.clientes);
@@ -303,13 +283,9 @@ form.action                          = '/reservas/' + ev.id;
       clientesSelect.value = [];
       if (clientesSelect.tomselect) clientesSelect.tomselect.clear();
     }
-     //   canchaSelect.value = props.cancha_id;
-		
-		
-      } else if (type === 'Torneo') {
-        responsableInput.value           = props.responsable;
-        canchasSelect.value              = props.canchas.join(',');
-      }
+        } else if (type === 'Torneo') {
+          responsableInput.value           = props.responsable;
+        }
 	  
 	  // 2) Rellenar el select de hora (HH:mm)
   //    Usamos substring de la parte de hora
@@ -329,7 +305,6 @@ form.action                          = '/reservas/' + ev.id;
 
     // 5) Volvemos a colocar los listeners
     fechaInput.addEventListener('change',   cargarSlots);
-    canchaInput.addEventListener('change',  cargarSlots);
 
     // 6) Abrimos el modal
     modal.show();
@@ -338,11 +313,7 @@ form.action                          = '/reservas/' + ev.id;
 
        events: {
         url: cfg.eventsUrl,   // p.ej. '/reservas.json'
-        method: 'GET',
-        extraParams: () => {
-          console.log('Enviando cancha_id:', canchaFilter.value);
-          return { cancha_id: canchaFilter.value };
-        }
+        method: 'GET'
       },
 	   // 2) Permite seleccionar rangos
     
@@ -359,12 +330,10 @@ form.action                          = '/reservas/' + ev.id;
 	   
     }),
 	
-	datesSet: info => {
+        datesSet: info => {
       // cada vez que cambias de día, recarga disponibilidad
       const date = info.startStr.split('T')[0];
-	  const canchaInput = document.getElementById('cancha');
-	   const canchaId = canchaInput.value || '1';
-      axios.get('/reserva/availability', { params: { date,  cancha_id: canchaId } })
+      axios.get('/reserva/availability', { params: { date } })
         .then(res => {
           const { minTime, maxTime } = res.data;
           calendar.setOption('slotMinTime', minTime);
@@ -389,8 +358,7 @@ form.action                          = '/reservas/' + ev.id;
 
   /* ---- 2)  COMMON data: extended props ---- */
   const estado = arg.event.extendedProps.status;      // Confirmada / Pendiente…
-  const cancha = arg.event.extendedProps.cancha;      // opcional, si la envías
-  const time   = arg.timeText;      
+  const time   = arg.timeText;
 
    
 
@@ -407,11 +375,9 @@ form.action                          = '/reservas/' + ev.id;
     const cont = document.createElement('div');
     cont.classList.add('d-flex', 'flex-column', 'gap-1');
 
-    // línea 1: cancha + título principal
+    // línea 1: título principal
     const fila1 = document.createElement('div');
-    fila1.innerHTML =
-      (cancha ? `<strong>${cancha}</strong> — ` : '') +
-      `<span class="fw-bold">${lineas[0]}</span>`;
+    fila1.innerHTML = `<span class="fw-bold">${lineas[0]}</span>`;
     cont.appendChild(fila1);
 
     // líneas extra del título, si las hubiera
@@ -485,12 +451,6 @@ form.action                          = '/reservas/' + ev.id;
 
 
   calendar.render();
-  canchaFilter.addEventListener('change', () => {
-    // Opcional: limpia la capa visual
-    calendar.removeAllEvents();
-    // Y vuelve a cargar con el nuevo filtro
-    calendar.refetchEvents();
-  });
   
  
   form.addEventListener('submit', () => {
@@ -543,22 +503,20 @@ form.action                          = '/reservas/' + ev.id;
 
 
 const fechaInput  = document.getElementById('reservaFecha');
-const canchaInput = document.getElementById('cancha');
 const horaSelect  = document.getElementById('reservaHora');
 
 function cargarSlots() {
-  const date     = fechaInput.value;
-  const canchaId = canchaInput.value || '1';
+  const date = fechaInput.value;
 
-  if (!date || !canchaId) {
+  if (!date) {
     horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
-    return  Promise.resolve();
+    return Promise.resolve();
   }
 
- return axios.get('/reserva/availability', {
-    params: { date, cancha_id: canchaId }
+  return axios.get('/reserva/availability', {
+    params: { date }
   })
- .then(res => {
+  .then(res => {
     horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
     res.data.slots.forEach(h => {
       // `h` ya viene como "HH:mm"
@@ -574,9 +532,6 @@ function cargarSlots() {
 // Cuando cambie la fecha..
 
 fechaInput.addEventListener('change', cargarSlots);
-
-// …o cuando cambie la cancha.
-canchaInput.addEventListener('change', cargarSlots);
 
 
 
