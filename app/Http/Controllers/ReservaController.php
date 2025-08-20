@@ -22,12 +22,11 @@ use App\Models\MembresiaCliente;
 class ReservaController extends Controller
 {
 	
-	public function calendar()
+        public function calendar()
 {
-	 $canchas = Cancha::all();
     $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
-    return view('reservas.calendar', compact('canchas', 'entrenadores'));
-  
+    return view('reservas.calendar', compact('entrenadores'));
+
 }
 
  public function horario(Request $request)
@@ -336,11 +335,10 @@ if($oldClase==$m->clasesVistas){
 
 public function availability(Request $request)
 {
-    $date      = $request->query('date');
-    $canchaId  = $request->query('cancha_id');
+    $date = $request->query('date');
 
-    if (! $date || ! $canchaId) {
-        return response()->json(['error' => 'Falta parámetro date o cancha_id'], 422);
+    if (! $date) {
+        return response()->json(['error' => 'Falta parámetro date'], 422);
     }
 
     try {
@@ -348,41 +346,40 @@ public function availability(Request $request)
         $workEnd   = Carbon::parse("$date 22:00");
         $interval  = 30; // minutos
 
-        // Trae reservas del día para esa cancha (excluye canceladas)
+        $userId = Auth::id();
+
         $reservas = Reserva::query()
-    ->where('cancha_id', $canchaId)
-    ->whereRaw('TRIM(LOWER(estado)) <> ?', ['cancelada'])
-    ->whereDate('fecha', $date)
-    ->get(['fecha as start', 'duracion as duration'])
-    ->map(function ($r) {
-        $start = Carbon::parse($r->start);
-        $mins  = max(0, (int) $r->duration);
-
-        // Si quieres un "colchón" después de cada reserva, súmalo aquí (en minutos).
-        // $bufferAfter = 0; // p.ej. 30 para bloquear también el siguiente slot completo
-        // $end = (clone $start)->addMinutes($mins + $bufferAfter);
-
-        $end = (clone $start)->addMinutes($mins); // sin colchón
-        return compact('start', 'end');
-    });
+            ->where(function ($q) use ($userId) {
+                $q->where('entrenador_id', $userId)
+                  ->orWhere('cliente_id', $userId);
+            })
+            ->whereRaw('TRIM(LOWER(estado)) <> ?', ['cancelada'])
+            ->whereDate('fecha', $date)
+            ->get(['fecha as start', 'duracion as duration'])
+            ->map(function ($r) {
+                $start = Carbon::parse($r->start);
+                $mins  = max(0, (int) $r->duration);
+                $end   = (clone $start)->addMinutes($mins); // sin colchón
+                return compact('start', 'end');
+            });
 
         $slots  = [];
         $cursor = $workStart->copy();
 
         while ($cursor->lt($workEnd)) {
-    $next = $cursor->copy()->addMinutes($interval);
+            $next = $cursor->copy()->addMinutes($interval);
 
-    // Hacemos el final inclusivo:
-    // bloquea el slot si [cursor,next) ∩ [start,end] ≠ ∅
-    $ocupado = $reservas->first(function ($r) use ($cursor, $next) {
-        return $cursor->lte($r['end']) && $next->gt($r['start']);
-    });
+            // Hacemos el final inclusivo:
+            // bloquea el slot si [cursor,next) ∩ [start,end] ≠ ∅
+            $ocupado = $reservas->first(function ($r) use ($cursor, $next) {
+                return $cursor->lte($r['end']) && $next->gt($r['start']);
+            });
 
-    if (! $ocupado) {
-        $slots[] = $cursor->format('H:i');
-    }
-    $cursor->addMinutes($interval);
-}
+            if (! $ocupado) {
+                $slots[] = $cursor->format('H:i');
+            }
+            $cursor->addMinutes($interval);
+        }
 
         return response()->json([
             'slots'   => $slots,

@@ -8,21 +8,9 @@
       <h5>Calendario de Clases y Reservas</h5>
     </div>
 
-    <div class="mb-4 px-4 py-3 d-flex justify-content-between align-items-center">
+    <div class="mb-4 px-4 py-3">
       <a href="{{ route('reservas.horario', ['date' => now()->toDateString()]) }}"
          class="btn btn-info">Ir a Día</a>
-
-      <div class="d-flex align-items-center">
-        <label for="canchaFilter" class="form-label me-2 mb-0">Filtrar cancha:</label>
-        <select id="canchaFilter"
-                class="form-select shadow-sm rounded-pill ps-4 pe-5 border-0"
-                style="min-width: 200px; background-color: #f8f9fa;">
-          <option value="">Todas</option>
-          @foreach($canchas as $cancha)
-            <option value="{{ $cancha->id }}">{{ $cancha->nombre }}</option>
-          @endforeach
-        </select>
-      </div>
     </div>
 
     <div class="wrapper-calendar" style="border-top:5px solid #D4A017;">
