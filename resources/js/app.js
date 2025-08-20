@@ -15,9 +15,6 @@ import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import axios from 'axios';
 
-
-
-
 // Importa estilos de Flatpickr
 import "flatpickr/dist/flatpickr.min.css";
 import "flatpickr/dist/themes/dark.css";
@@ -253,25 +250,8 @@ form.action                          = '/reservas/' + ev.id;
      // inicioInput.value                    = ev.start.toISOString().slice(0,16);
       durationSelect.value                 = props.duration;
 
-        if (type === 'Reserva') {
-
-          if (clientesSelect.tomselect) {
-            clientesSelect.tomselect.setValue(props.cliente_id || '');
-          } else {
-            clientesSelect.value = props.cliente_id || '';
-          }
-
-        } else if (type === 'Clase') {
-          entrenadorSelect.value = props.entrenador_id;
-          if (clientesSelect.tomselect) {
-            clientesSelect.tomselect.setValue(props.cliente_id || '');
-          } else {
-            clientesSelect.value = props.cliente_id || '';
-          
         
-        } else if (type === 'Torneo') {
-          responsableInput.value           = props.responsable;
-        }
+      
 	  
 	  // 2) Rellenar el select de hora (HH:mm)
   //    Usamos substring de la parte de hora

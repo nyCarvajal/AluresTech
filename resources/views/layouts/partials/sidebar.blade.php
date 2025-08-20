@@ -58,7 +58,7 @@
                </li>
 			   
                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('reservas.horario') }}">
+                    <a class="nav-link" href="{{ route('reservas.calendar') }}">
                          <span class="nav-icon">
                               <i class="bx  bx-calendar-alt"  ></i> </span>
                          <span class="nav-text"> Citas </span>

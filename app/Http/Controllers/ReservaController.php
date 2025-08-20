@@ -179,134 +179,44 @@ public function store(Request $request)
 {
     // 1) Validación, ahora con repeat_enabled y repeat_until
     $data = $request->validate([
-        'type'           => 'required|in:Reserva,Clase,Torneo',
+        'type'           => 'required',
         'start'          => 'required|date',                // "YYYY-MM-DD HH:MM"
         'duration'       => 'nullable|integer|min:1',
-        'cancha_id'      => 'required_if:type,Reserva,Clase',
         'entrenador_id'  => 'required_if:type,Clase|nullable',
-        'responsable_id' => 'nullable',
         'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
-        'cliente_id'     => 'required_if:type,Reserva,Clase|integer|exists:clientes,id',
-        'canchas'        => 'required_if:type,Torneo|array',
-        'canchas.*'      => 'integer|exists:canchas,id',
-        // estos dos para la repetición
-        'repeat_enabled' => 'nullable|sometimes|boolean',
-        'repeat_until'   => 'nullable|date|after_or_equal:start',
+        'cliente_id'     => 'required_if:type,Reserva|integer|exists:clientes,id',
+      
+        
     ]);
 
     // 2) Preparamos la serie de fechas
-    $start = Carbon::parse($data['start']);
-    $dates = [ $start ];
+    $start = Carbon::parse($data['start']);  
+ 
 
-    if (!empty($data['repeat_enabled']) && $data['repeat_until']) {
-        $until = Carbon::parse($data['repeat_until'])->endOfDay();
-        $cursor = $start->copy()->addWeek();
-        while ($cursor->lte($until)) {
-            $dates[] = $cursor->copy();
-            $cursor->addWeek();
-        }
-    }
-
-    $created = 0;
-    foreach ($dates as $dt) {
-        // 3) Creamos cada reserva en función del tipo
-        switch ($data['type']) {
-            case 'Reserva':
+   
                 $res = Reserva::create([
-                    'fecha'       => $dt->toDateTimeString(),
-                    'cancha_id'   => $data['cancha_id'],
-                    'estado'      => $data['estado'],
-                    'duracion'    => $data['duration'] ?? 60,
-                    'tipo'        => $data['type'],
-                    'cliente_id'  => $data['cliente_id'],
-                    'repeat_enabled' => !empty($data['repeat_enabled']),
-                    'repeat_until'   => $data['repeat_until'] ?? null,
-                ]);
-                break;
-
-            case 'Clase':
-                $res = Reserva::create([
-                    'fecha'         => $dt->toDateTimeString(),
+                    'fecha'         => $start,
                     'entrenador_id' => $data['entrenador_id'],
-                    'cancha_id'     => $data['cancha_id'],
                     'estado'        => $data['estado'],
                     'duracion'      => $data['duration'] ?? 60,
                     'tipo'          => $data['type'],
                     'cliente_id'    => $data['cliente_id'],
-                    'repeat_enabled'=> !empty($data['repeat_enabled']),
-                    'repeat_until'  => $data['repeat_until'] ?? null,
+                    
                 ]);
-                break;
+              
 
-            case 'Torneo':
-                $res = Reserva::create([
-                    'fecha'       => $dt->toDateTimeString(),
-                    'responsable' => $data['responsable_id'],
-                    'duracion'    => $data['duration'] ?? 60,
-                    'estado'      => $data['estado'],
-                    'tipo'        => $data['type'],
-                    'repeat_enabled'=> !empty($data['repeat_enabled']),
-                    'repeat_until'  => $data['repeat_until'] ?? null,
-                ]);
-                $res->canchas()->sync($data['canchas']);
-                break;
-        }
+          
 		  $peluqueria    = Auth::user()->peluqueria; // o where('id', …)
     
 
-        // 4) Actualiza membresías
-        if (in_array($data['type'], ['Reserva','Clase'])) {
-            $alId = $data['cliente_id'];
-            $m = MembresiaCliente::where('cliente_id', $alId)
-                                        ->orderBy('id', 'desc')
-                    ->where('estado',1)
-                    ->first();
-
-            if ($m) {
-                $oldClase   = $m->clasesVistas;
-                $oldReserva = $m->numReservas;
-
-                if ($data['type'] === 'Clase') {
-                    $m->increment('clasesVistas');
-                } elseif ($data['type'] === 'Reserva') {
-                    $m->increment('numReservas');
-                }
-
-                $m->refresh();
-                /*
-                if($oldClase==$m->clasesVistas){
-                        $al = Cliente::find($alId);
-
-                                 $payload = [
-                    $peluqueria->msj_finalizado ?? 'Tu paquete ha finalizado', // {{4}}
-                    "https://wa.me/{$peluqueria->telefono}?text=Hola",  // {{5}}
-
-                                                    ];
-
-                                                     if ($al && $al->whatsapp) {
-
-                        $al->notify(new OneMsgTemplateNotification('finalizado', array_merge(
-                            $payload
-                        )));
-                    }
-
-                                    }
-                                    */
-            }
-
-
-        }
-
-        // 5) Notificaciones WhatsApp (si lo quieres por cada reserva)
-
-
+            
         $alId = $data['cliente_id'];
 
                     $al = Cliente::find($alId);
                      $payload = [
             ucfirst($al->nombres),                     // {{0}} Tipo
             ucfirst($data['type']),                     // {{1}}
-            $dt->format('d/m/Y H:i'),                   // {{2}}
+            $start->format('d/m/Y H:i'),                   // {{2}}
             ($data['duration'] ?? 60).' min',           // {{3}}
             $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
             "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
@@ -322,8 +232,8 @@ public function store(Request $request)
             )));
         }
 
-        $created++;
-    }
+        
+    
 
     return redirect()
         ->route('reservas.calendar')

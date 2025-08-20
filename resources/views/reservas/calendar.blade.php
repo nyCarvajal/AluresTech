@@ -8,10 +8,7 @@
       <h5>Calendario de Clases y Reservas</h5>
     </div>
 
-    <div class="mb-4 px-4 py-3">
-      <a href="{{ route('reservas.horario', ['date' => now()->toDateString()]) }}"
-         class="btn btn-info">Ir a Día</a>
-    </div>
+   
 
     <div class="wrapper-calendar" style="border-top:5px solid #D4A017;">
       <div id="calendar"></div>
