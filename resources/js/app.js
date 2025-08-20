@@ -67,7 +67,9 @@ const horaSelect  = document.getElementById('reservaHora');
   const inicioInput       = document.getElementById('reservaFecha');
   const clienteSelect     = form.querySelector('#clientes');
   const entrenadorSelect  = form.querySelector('#entrenador');
+
   const responsableInput  = form.querySelector('#responsable');
+
   // Listener para cambio de tipo en el select del modal
   typeSelect.addEventListener('change', e => {
     switchFields(e.target.value);
@@ -208,7 +210,9 @@ const horaSelect  = document.getElementById('reservaHora');
       clienteSelect.value   = '';
       entrenadorSelect.value = '';
       responsableInput.value = '';
+
           fechaInput.value = info.startStr.split('T')[0];
+
 
       // dispara la recarga de slots
       cargarSlots();
