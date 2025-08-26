@@ -104,6 +104,7 @@ class UsuarioController extends Controller
         return view('users.create_admin');
     }
 
+
     public function index()
     {
         $peluqueriaId = Auth::user()->peluqueria_id;
@@ -156,5 +157,17 @@ class UsuarioController extends Controller
             ->route('users.index')
             ->with('success', 'Usuario actualizado correctamente.');
     }
+
+    public function destroy(User $user)
+    {
+        $this->authorize('delete', $user);
+
+        $user->delete();
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Usuario eliminado correctamente.');
+    }
+
 
 }
