@@ -59,7 +59,7 @@
           </td>
           <td>{{ optional($user->peluqueria)->nombre ?? '—' }}</td>
           <td class="text-end">
-            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary">
+            <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-primary">
               Editar
             </a>
             <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline-block"

@@ -5,7 +5,7 @@
          name="nombre"
          type="text"
          class="form-control @error('nombre') is-invalid @enderror"
-         value="{{ old('nombre') }}"
+         value="{{ old('nombre', $user->nombre ?? '') }}"
          required>
   @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -17,7 +17,7 @@
          name="apellidos"
          type="text"
          class="form-control @error('apellidos') is-invalid @enderror"
-         value="{{ old('apellidos') }}"
+         value="{{ old('apellidos', $user->apellidos ?? '') }}"
          required>
   @error('apellidos') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -29,7 +29,7 @@
          name="email"
          type="email"
          class="form-control @error('email') is-invalid @enderror"
-         value="{{ old('email') }}"
+         value="{{ old('email', $user->email ?? '') }}"
          required>
   @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -55,7 +55,7 @@
          name="tipo_identificacion"
          type="text"
          class="form-control @error('tipo_identificacion') is-invalid @enderror"
-         value="{{ old('tipo_identificacion') }}"
+         value="{{ old('tipo_identificacion', $user->tipo_identificacion ?? '') }}"
          required>
   @error('tipo_identificacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -67,7 +67,7 @@
          name="numero_identificacion"
          type="text"
          class="form-control @error('numero_identificacion') is-invalid @enderror"
-         value="{{ old('numero_identificacion') }}"
+         value="{{ old('numero_identificacion', $user->numero_identificacion ?? '') }}"
          required>
   @error('numero_identificacion') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -79,7 +79,7 @@
          name="direccion"
          type="text"
          class="form-control @error('direccion') is-invalid @enderror"
-         value="{{ old('direccion') }}"
+         value="{{ old('direccion', $user->direccion ?? '') }}"
          required>
   @error('direccion') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -91,7 +91,7 @@
          name="whatsapp"
          type="tel"
          class="form-control @error('whatsapp') is-invalid @enderror"
-         value="{{ old('whatsapp') }}"
+         value="{{ old('whatsapp', $user->whatsapp ?? '') }}"
          placeholder="+57 300 123 4567"
          required>
   @error('whatsapp') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -105,7 +105,7 @@
          name="color"
          type="color"
          class="form-control form-control-color"
-         value="{{ old('color', '#6042F5') }}">
+         value="{{ old('color', $user->color ?? '#6042F5') }}">
 </div>
 
 {{-- Password --}}
@@ -115,7 +115,7 @@
          name="password"
          type="password"
          class="form-control @error('password') is-invalid @enderror"
-         required>
+         @if(!isset($user)) required @endif>
   @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
 
@@ -126,5 +126,5 @@
          name="password_confirmation"
          type="password"
          class="form-control"
-         required>
+         @if(!isset($user)) required @endif>
 </div>
