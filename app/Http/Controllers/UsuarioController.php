@@ -106,12 +106,23 @@ class UsuarioController extends Controller
 
    
 	
-	public function index()
-{
-	$peluqueriaId=Auth::user()->peluqueria_id;
-	
+    public function index()
+    {
+        $peluqueriaId=Auth::user()->peluqueria_id;
+
     $users = User::with('peluqueria') ->where('peluqueria_id', $peluqueriaId)->orderBy('nombre')->paginate(15);
     return view('users.index', compact('users'));
 }
+
+    public function destroy(User $user)
+    {
+        $this->authorize('delete', $user);
+
+        $user->delete();
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Usuario eliminado correctamente.');
+    }
 
 }
