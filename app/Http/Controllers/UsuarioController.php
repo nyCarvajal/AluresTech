@@ -104,15 +104,60 @@ class UsuarioController extends Controller
         return view('users.create_admin');
     }
 
-   
-	
+
     public function index()
     {
-        $peluqueriaId=Auth::user()->peluqueria_id;
+        $peluqueriaId = Auth::user()->peluqueria_id;
 
-    $users = User::with('peluqueria') ->where('peluqueria_id', $peluqueriaId)->orderBy('nombre')->paginate(15);
-    return view('users.index', compact('users'));
-}
+        $users = User::with('peluqueria')
+            ->where('peluqueria_id', $peluqueriaId)
+            ->orderBy('nombre')
+            ->paginate(15);
+
+        return view('users.index', compact('users'));
+    }
+
+    public function edit(User $user)
+    {
+        return view('users.edit', compact('user'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'email' => 'required|email|unique:usuarios,email,' . $user->id,
+            'tipo_identificacion' => 'required|string|max:50',
+            'numero_identificacion' => 'required|string|max:50',
+            'direccion' => 'required|string|max:255',
+            'whatsapp' => 'required|string|max:30',
+            'password' => 'nullable|string|confirmed|min:8',
+            'color' => 'nullable|string|max:7',
+        ]);
+
+        $updateData = [
+            'nombre' => $data['nombre'],
+            'apellidos' => $data['apellidos'],
+            'email' => $data['email'],
+            'tipo_identificacion' => $data['tipo_identificacion'],
+            'numero_identificacion' => $data['numero_identificacion'],
+            'direccion' => $data['direccion'],
+            'whatsapp' => $data['whatsapp'],
+            'color' => $data['color'] ?? null,
+        ];
+
+        if (!empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($updateData);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Usuario actualizado correctamente.');
+    }
+
 
     public function destroy(User $user)
     {
