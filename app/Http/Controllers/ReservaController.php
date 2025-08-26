@@ -98,9 +98,11 @@ class ReservaController extends Controller
     $query = Reserva::with(['cliente', 'entrenador']);
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
-		
     }
-	$query->where('estado', '<>', 'Cancelada');
+    if ($request->filled('entrenador_id')) {
+        $query->where('entrenador_id', $request->entrenador_id);
+    }
+    $query->where('estado', '<>', 'Cancelada');
     $reservas = $query->get();
 	
 	  
@@ -112,7 +114,7 @@ class ReservaController extends Controller
                           ->addMinutes($r->duracion)
                           ->toIso8601String();
 						  
-						  $rgba = 'rgba(96,66,245,0.35)';
+        $color = optional($r->entrenador)->color ?? '#6042F5';
 
         $base = [
             'id'              => $r->id,
@@ -121,19 +123,17 @@ class ReservaController extends Controller
             'type'            => $r->tipo,
             'status'          => $r->estado,
             'duration'        => $r->duracion,
-			
-            'title' =>  optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
-			'borderColor'     => str_replace('0.35', '1', $rgba), // mismo color, opaco
-            'textColor'       => '#121212', 
-            'backgroundColor' => $rgba,
-			 'extendedProps'   => [
-                'tipo'   => $r->tipo,              // reserva | torneo | clase
-                'estado' => $r->estado,            // confirmada | pendiente
-				
-				 
+            'title'           => optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
+            'borderColor'     => $color,
+            'textColor'       => '#121212',
+            'backgroundColor' => $color,
+            'extendedProps'   => [
+                'tipo'          => $r->tipo,              // reserva | torneo | clase
+                'estado'        => $r->estado,            // confirmada | pendiente
+                'entrenador_id' => $r->entrenador_id,
             ],
             'cancha_id'       => $r->cancha_id,
-			
+            'entrenador_id'   => $r->entrenador_id,
         ];
 
       
