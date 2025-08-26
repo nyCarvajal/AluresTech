@@ -158,7 +158,6 @@ class UsuarioController extends Controller
             ->with('success', 'Usuario actualizado correctamente.');
     }
 
-
     public function destroy(User $user)
     {
         $this->authorize('delete', $user);
@@ -169,5 +168,6 @@ class UsuarioController extends Controller
             ->route('users.index')
             ->with('success', 'Usuario eliminado correctamente.');
     }
+
 
 }
