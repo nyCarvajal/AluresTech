@@ -98,6 +98,16 @@
 </div>
 
 
+{{-- Color --}}
+<div class="mb-3">
+  <label for="color" class="form-label">Color</label>
+  <input id="color"
+         name="color"
+         type="color"
+         class="form-control form-control-color"
+         value="{{ old('color', '#6042F5') }}">
+</div>
+
 {{-- Password --}}
 <div class="mb-3">
   <label for="password" class="form-label">Contraseña</label>

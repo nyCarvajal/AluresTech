@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal      = new bootstrap.Modal(modalEl);
   const form       = modalEl.querySelector('form');
   form.setAttribute('method', 'POST');
+  const entrenadorFilter = document.querySelector(cfg.filterSelector);
 
   const methodIn      = form.querySelector('#reservationMethod');
   const typeSelect    = form.querySelector('#eventType');
@@ -140,11 +141,7 @@ const horaSelect  = document.getElementById('reservaHora');
 
   // Mostrar/ocultar campos según tipo
   function switchFields(type) {
-    if (type === 'Reserva') {
-      clientesField.classList.remove('d-none');
-      entrenadorField.classList.add('d-none');
-      responsableField.classList.add('d-none');
-    } else if (type === 'Clase') {
+    if (type === 'Reserva' || type === 'Clase') {
       clientesField.classList.remove('d-none');
       entrenadorField.classList.remove('d-none');
       responsableField.classList.add('d-none');
@@ -240,7 +237,7 @@ const horaSelect  = document.getElementById('reservaHora');
       methodIn.value                       = 'PUT';
 form.action                          = '/reservas/' + ev.id;
       form.method                          = 'POST';
-		 // 1) Rellenar el input de fecha (YYYY-MM-DD)
+                 // 1) Rellenar el input de fecha (YYYY-MM-DD)
   //    ev.start.toISOString() === "2025-06-12T14:30:00.000Z"
   fechaInput.value = ev.start.toISOString().split('T')[0];
  
@@ -249,6 +246,7 @@ form.action                          = '/reservas/' + ev.id;
 		
      // inicioInput.value                    = ev.start.toISOString().slice(0,16);
       durationSelect.value                 = props.duration;
+      entrenadorSelect.value              = props.entrenador_id || '';
 
         
       
@@ -277,9 +275,12 @@ form.action                          = '/reservas/' + ev.id;
   });
     },
 
-       events: {
+      events: {
         url: cfg.eventsUrl,   // p.ej. '/reservas.json'
-        method: 'GET'
+        method: 'GET',
+        extraParams: () => ({
+          entrenador_id: entrenadorFilter ? entrenadorFilter.value : ''
+        })
       },
 	   // 2) Permite seleccionar rangos
     
@@ -290,9 +291,9 @@ form.action                          = '/reservas/' + ev.id;
       start:           raw.start,
       end:             raw.end,
       backgroundColor: raw.backgroundColor,
-     // borderColor:     raw.color,
+      borderColor:     raw.borderColor,
       display:         'block',
-      extendedProps:   raw,   
+      extendedProps:   raw,
 	   
     }),
 	
@@ -417,6 +418,10 @@ form.action                          = '/reservas/' + ev.id;
 
 
   calendar.render();
+
+  if (entrenadorFilter) {
+    entrenadorFilter.addEventListener('change', () => calendar.refetchEvents());
+  }
   
  
   form.addEventListener('submit', () => {

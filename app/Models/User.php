@@ -37,6 +37,7 @@ class User extends Authenticatable
         'password',
         'peluqueria_id',
         'role',
+        'color',
     ];
 
     /**

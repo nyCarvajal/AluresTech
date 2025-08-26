@@ -4,14 +4,22 @@
 @section('content')
 
   <div class="card">
-    <div class="card-header">
-      <h5>Calendario de Clases y Reservas</h5>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+      <h5 class="mb-0">Calendario de Clases y Reservas</h5>
+      <div class="mt-2 mt-sm-0">
+        <select id="entrenadorFilter" class="form-select">
+          <option value="">Todos los estilistas</option>
+          @foreach($entrenadores as $e)
+            <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+          @endforeach
+        </select>
+      </div>
     </div>
 
-   
 
-    <div class="wrapper-calendar" style="border-top:5px solid #D4A017;">
-      <div id="calendar"></div>
+
+    <div class="wrapper-calendar w-100" style="border-top:5px solid #D4A017;">
+      <div id="calendar" class="w-100"></div>
     </div>
 
     @include('reservas.partials.reservation-modal')
@@ -32,7 +40,8 @@
       window.CalendarConfig = {
         selector: '#calendar',
         eventsUrl: '{{ route('reservas.events') }}',
-        modalSelector: '#reservationModal'
+        modalSelector: '#reservationModal',
+        filterSelector: '#entrenadorFilter'
       };
     });
   </script>

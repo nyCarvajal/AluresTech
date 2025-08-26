@@ -40,6 +40,7 @@ class UsuarioController extends Controller
             'direccion'             => 'required|string|max:255',
             'whatsapp'              => 'required|string|max:30',
             'password'              => 'required|string|confirmed|min:8',
+            'color'                => 'nullable|string|max:7',
         ]);
 
         User::create([
@@ -54,6 +55,7 @@ class UsuarioController extends Controller
             'password'              => Hash::make($data['password']),
             'peluqueria_id'               => Auth::user()->peluqueria_id,
             'role'                  => 11,  // entranador
+            'color'                 => $data['color'] ?? null,
         ]);
 
         return redirect()
@@ -73,6 +75,7 @@ class UsuarioController extends Controller
             'direccion'             => 'required|string|max:255',
             'whatsapp'              => 'required|string|max:30',
             'password'              => 'required|string|confirmed|min:8',
+            'color'                => 'nullable|string|max:7',
         ]);
 
         User::create([
@@ -87,6 +90,7 @@ class UsuarioController extends Controller
             'password'              => Hash::make($data['password']),
             'peluqueria_id'               => Auth::user()->peluqueria_id,
             'role'                  => 18,  // administrador
+            'color'                 => $data['color'] ?? null,
         ]);
 
         return redirect()
