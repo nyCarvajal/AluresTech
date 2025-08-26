@@ -21,10 +21,7 @@
   <label>Mensaje Bienvenida</label>
   <textarea name="msj_bienvenida" class="form-control">{{ old('msj_bienvenida', $peluqueria->msj_bienvenida ?? '') }}</textarea>
 </div>
-<div class="mb-3">
-  <label>Mensaje paquete finalizado</label>
-  <textarea name="msj_finalizado" class="form-control">{{ old('msj_finalizado', $peluqueria->msj_finalizado ?? '') }}</textarea>
-</div>
+
 <div class="mb-3">
   <label>NIT</label>
   <input type="text" name="nit" value="{{ old('nit', $peluqueria->nit ?? '') }}" class="form-control">
