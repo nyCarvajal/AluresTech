@@ -53,7 +53,8 @@
   {{-- Columna mayor: tarjeta de la orden --}}
   <div class="col-md-8">
     <div class="card mb-4 shadow-sm" >
-      <div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+<div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+
         <i class="fa fa-file-invoice me-2"></i>
         Orden de Compra #{{ $ordenSeleccionada->id }}
       </div>
@@ -85,8 +86,8 @@
   {{-- Columna menor: bloque de botones --}}
   <div class="col-md-4 d-grid gap-2">
    
-        <button
-                                        class="btn btn-dorado btn-pagar"
+        <button     class="btn btn-dorado btn-pagar"
+
                                                                                 style="height: 80px;"
                                         data-bs-toggle="modal"
                                         data-bs-target="#modalPagarFactura"
@@ -98,7 +99,8 @@
       
 
     @if(auth()->user()->peluqueria && auth()->user()->peluqueria->pos == 1)
-      <button id="btn-factura_post" class="btn btn-dorado" style="height: 80px;">
+ <button id="btn-factura_post" class="btn btn-dorado" style="height: 80px;">
+
         <i class="fa fa-fw me-1" title="Finalizar factura pos"></i>
         Finalizar factura pos
       </button>
@@ -106,7 +108,9 @@
 
     @if(auth()->user()->peluqueria && auth()->user()->peluqueria->cuentaCobro == 1)
   <a href="{{ route('orden_de_compras.show', $ordenSeleccionada->id) }}"
+
      class="btn btn-dorado"
+
          style="height: 80px;"
      id="btn-cuenta_cobro">
     <i class="fa fa-fw me-1" title="Cuenta de cobro"></i>
@@ -116,7 +120,8 @@
 
 
     @if(auth()->user()->peluqueria && auth()->user()->peluqueria->electronica == 1)
-      <button id="btn-factura_electronica" class="btn btn-dorado" style="width: 80px;">
+<button id="btn-factura_electronica" class="btn btn-dorado" style="width: 80px;">
+
         <i class="pe-7s-news-paper me-1"></i>
         Generar factura electrónica
       </button>
@@ -160,7 +165,8 @@
                                 </option>
                             @endforeach
                         </select>
-                        <button class="btn btn-dorado" type="submit">
+ <button class="btn btn-dorado" type="submit">
+
                             <i class="fa fa-plus me-1"></i> Agregar Venta
                         </button>
                     </div>
@@ -178,11 +184,13 @@
          4) TABLA DE VENTAS (SIEMPRE VISIBLE)
        ============================================================== --}}
 <div class="card mb-5 shadow-sm">
+
     <div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
         <i class="fa fa-shopping-cart me-2"></i> Listado de Ventas
     </div>
     <div class="table-responsive">
   <table class="table table-striped table-hover align-middle mb-0 table-dorado">
+
     <thead class="table-light">
       <tr>
         <th>Producto (Ítem ID)</th>
@@ -254,14 +262,16 @@
 		</td>
 
         <td class="d-flex">
-          <button type="submit" class="btn btn-sm btn-dorado me-2">Guardar</button>
+ <button type="submit" class="btn btn-sm btn-dorado me-2">Guardar</button>
+
           </form>
 		
           <form action="{{ route('ventas.destroy', $venta->id) }}" method="POST"
                 onsubmit="return confirm('¿Eliminar esta venta?');">
             @csrf
             @method('DELETE')
-            <button type="submit" class="btn btn-sm btn-dorado-outline">Eliminar</button>
+<button type="submit" class="btn btn-sm btn-dorado-outline">Eliminar</button>
+
           </form>
         </td>
       </tr>
@@ -281,7 +291,8 @@
        ============================================================== --}}
     @if($cuentaSeleccionada)
         <div class="card mb-5 shadow-sm">
-            <div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+  <div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+
                 <i class="fa fa-receipt me-2"></i> Pagos de la orden:
                 <strong class="text-warning">{{ $cuentaSeleccionada }}</strong>
             </div>
@@ -293,7 +304,8 @@
                     </div>
                 @else
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover align-middle mb-0 table-dorado">
+   <table class="table table-bordered table-hover align-middle mb-0 table-dorado">
+
                             <thead class="table-light">
                                 <tr>
                                    
@@ -343,7 +355,7 @@
      6) MODAL DE PAGO DE FACTURA (idéntico a antes)
    ============================================================== --}}
 <style>
-    .btn-dorado {
+ .btn-dorado {
         background-color: #f8e5a1;
         color: #6c4e09;
         border: none;
@@ -366,12 +378,14 @@
     }
     .table-dorado tbody tr:nth-child(even) {
         background-color: #fff8e1;
+
     }
 
     /* Estilos personalizados para el modal */
     #modalPagarFactura .modal-header {
-        background-color: #f8e5a1;
+    background-color: #f8e5a1;
         color: #6c4e09;
+
     }
     #modalPagarFactura .modal-title {
         font-weight: 600;
@@ -385,6 +399,7 @@
         height: 90px;
         border: 2px solid #d4b54d;
         color: #d4b54d;
+
         font-weight: 500;
         border-radius: 8px;
         transition: background-color .2s, color .2s;
@@ -393,7 +408,8 @@
         font-size: 1.4rem;
     }
     .btn-metodo:hover {
-        background-color: #d4b54d;
+     background-color: #d4b54d;
+
         color: #fff;
     }
 
