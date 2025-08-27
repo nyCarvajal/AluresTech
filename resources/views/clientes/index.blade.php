@@ -14,10 +14,11 @@
     <p class="card-subtitle">Todos los clientes registrados en el sistema.</p>
   </div>
   <div class="card-header d-flex justify-content-between align-items-center">
-    
-
+    <form action="{{ route('clientes.index') }}" method="GET" class="d-flex w-50">
+      <input type="text" name="q" value="{{ request('q') }}" class="form-control me-2" placeholder="Buscar cliente...">
+      <button type="submit" class="btn btn-secondary">Buscar</button>
+    </form>
     <a href="{{ route('clientes.create') }}" class="btn btn-primary">Nuevo Cliente</a>
-
   </div>
 
   <div class="card-body">
