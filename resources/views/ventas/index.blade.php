@@ -53,7 +53,7 @@
   {{-- Columna mayor: tarjeta de la orden --}}
   <div class="col-md-8">
     <div class="card mb-4 shadow-sm" >
-<div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+} <div class="card-header" style="background-color: #e9ecef; color: #333;">
 
         <i class="fa fa-file-invoice me-2"></i>
         Orden de Compra #{{ $ordenSeleccionada->id }}
@@ -86,7 +86,9 @@
   {{-- Columna menor: bloque de botones --}}
   <div class="col-md-4 d-grid gap-2">
    
-        <button     class="btn btn-dorado btn-pagar"
+        <button
+
+                                        class="btn btn-gris btn-pagar"
 
                                                                                 style="height: 80px;"
                                         data-bs-toggle="modal"
@@ -99,7 +101,7 @@
       
 
     @if(auth()->user()->peluqueria && auth()->user()->peluqueria->pos == 1)
- <button id="btn-factura_post" class="btn btn-dorado" style="height: 80px;">
+<button id="btn-factura_post" class="btn btn-gris" style="height: 80px;">
 
         <i class="fa fa-fw me-1" title="Finalizar factura pos"></i>
         Finalizar factura pos
@@ -108,8 +110,7 @@
 
     @if(auth()->user()->peluqueria && auth()->user()->peluqueria->cuentaCobro == 1)
   <a href="{{ route('orden_de_compras.show', $ordenSeleccionada->id) }}"
-
-     class="btn btn-dorado"
+ class="btn btn-gris"
 
          style="height: 80px;"
      id="btn-cuenta_cobro">
@@ -120,7 +121,7 @@
 
 
     @if(auth()->user()->peluqueria && auth()->user()->peluqueria->electronica == 1)
-<button id="btn-factura_electronica" class="btn btn-dorado" style="width: 80px;">
+ <button id="btn-factura_electronica" class="btn btn-gris" style="width: 80px;">
 
         <i class="pe-7s-news-paper me-1"></i>
         Generar factura electrónica
@@ -165,7 +166,7 @@
                                 </option>
                             @endforeach
                         </select>
- <button class="btn btn-dorado" type="submit">
+<button class="btn btn-gris" type="submit">
 
                             <i class="fa fa-plus me-1"></i> Agregar Venta
                         </button>
@@ -184,12 +185,11 @@
          4) TABLA DE VENTAS (SIEMPRE VISIBLE)
        ============================================================== --}}
 <div class="card mb-5 shadow-sm">
-
-    <div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+<div class="card-header" style="background-color: #e9ecef; color: #333;">
         <i class="fa fa-shopping-cart me-2"></i> Listado de Ventas
     </div>
     <div class="table-responsive">
-  <table class="table table-striped table-hover align-middle mb-0 table-dorado">
+  <table class="table table-striped table-hover align-middle mb-0 table-gris">
 
     <thead class="table-light">
       <tr>
@@ -262,7 +262,7 @@
 		</td>
 
         <td class="d-flex">
- <button type="submit" class="btn btn-sm btn-dorado me-2">Guardar</button>
+ <button type="submit" class="btn btn-sm btn-gris me-2">Guardar</button>
 
           </form>
 		
@@ -270,7 +270,7 @@
                 onsubmit="return confirm('¿Eliminar esta venta?');">
             @csrf
             @method('DELETE')
-<button type="submit" class="btn btn-sm btn-dorado-outline">Eliminar</button>
+<button type="submit" class="btn btn-sm btn-gris-outline">Eliminar</button>
 
           </form>
         </td>
@@ -291,7 +291,7 @@
        ============================================================== --}}
     @if($cuentaSeleccionada)
         <div class="card mb-5 shadow-sm">
-  <div class="card-header" style="background-color: #f8e5a1; color: #6c4e09;">
+ <div class="card-header" style="background-color: #e9ecef; color: #333;">
 
                 <i class="fa fa-receipt me-2"></i> Pagos de la orden:
                 <strong class="text-warning">{{ $cuentaSeleccionada }}</strong>
@@ -304,7 +304,7 @@
                     </div>
                 @else
                     <div class="table-responsive">
-   <table class="table table-bordered table-hover align-middle mb-0 table-dorado">
+<table class="table table-bordered table-hover align-middle mb-0 table-gris">
 
                             <thead class="table-light">
                                 <tr>
@@ -355,36 +355,37 @@
      6) MODAL DE PAGO DE FACTURA (idéntico a antes)
    ============================================================== --}}
 <style>
- .btn-dorado {
-        background-color: #f8e5a1;
-        color: #6c4e09;
+ .btn-gris {
+        background-color: #e9ecef;
+        color: #333;
         border: none;
     }
-    .btn-dorado:hover {
-        background-color: #f6db81;
-        color: #6c4e09;
+    .btn-gris:hover {
+        background-color: #d6d8db;
+        color: #333;
     }
-    .btn-dorado-outline {
+    .btn-gris-outline {
         background-color: #fff;
-        border: 2px solid #f8e5a1;
-        color: #6c4e09;
+        border: 2px solid #e9ecef;
+        color: #6c757d;
     }
-    .btn-dorado-outline:hover {
-        background-color: #f8e5a1;
-        color: #6c4e09;
+    .btn-gris-outline:hover {
+        background-color: #e9ecef;
+        color: #333;
     }
-    .table-dorado thead {
-        background-color: #f9eec7;
+    .table-gris thead {
+        background-color: #f8f9fa;
     }
-    .table-dorado tbody tr:nth-child(even) {
-        background-color: #fff8e1;
+    .table-gris tbody tr:nth-child(even) {
+        background-color: #f1f3f5;
 
     }
 
     /* Estilos personalizados para el modal */
     #modalPagarFactura .modal-header {
-    background-color: #f8e5a1;
-        color: #6c4e09;
+
+        background-color: #e9ecef;
+        color: #333;
 
     }
     #modalPagarFactura .modal-title {
@@ -397,8 +398,8 @@
     .btn-metodo {
         width: 100px;
         height: 90px;
-        border: 2px solid #d4b54d;
-        color: #d4b54d;
+        border: 2px solid #6c757d;
+        color: #6c757d;
 
         font-weight: 500;
         border-radius: 8px;
@@ -408,7 +409,7 @@
         font-size: 1.4rem;
     }
     .btn-metodo:hover {
-     background-color: #d4b54d;
+    background-color: #6c757d;
 
         color: #fff;
     }
