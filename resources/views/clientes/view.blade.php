@@ -156,15 +156,45 @@
         </ul>
       </div>
     </div>
-	
-	
-   
-  </div>
+    <!-- Tarjeta: Últimas Reservas -->
+    <div class="card-custom">
+      <div class="card-header">Últimas Reservas</div>
+      <div class="card-body">
+        @if($reservas->isEmpty())
+          <p>No hay reservas recientes.</p>
+        @else
+          <ul class="reservations-list">
+            @foreach($reservas as $reserva)
+              <li>
+                <span>{{ $reserva->fecha }}</span>
+                <span>{{ $reserva->tipo ?? $reserva->type }}</span>
+                <span>{{ optional($reserva->entrenador)->nombre }}</span>
+              </li>
+            @endforeach
+          </ul>
+        @endif
+      </div>
+    </div>
 
-
-
-  
-
+    <!-- Tarjeta: Historial de Transacciones -->
+    <div class="card-custom">
+      <div class="card-header">Historial de Transacciones</div>
+      <div class="card-body">
+        @if($transacciones->isEmpty())
+          <p>No hay transacciones.</p>
+        @else
+          <ul class="reservations-list">
+            @foreach($transacciones as $tx)
+              <li>
+                <span>{{ $tx->fecha_hora }}</span>
+                <span>Orden #{{ $tx->id }}</span>
+                <span>${{ number_format($tx->ventas->sum('valor_total'), 0, ',', '.') }}</span>
+              </li>
+            @endforeach
+          </ul>
+        @endif
+      </div>
+    </div>
   </div>
 </div>
 @endsection

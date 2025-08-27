@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\TipoIdentificacion;
 use App\Models\Paises;
 use App\Models\TipoUsuario;
+use App\Models\OrdenDeCompra;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -19,15 +20,23 @@ class ClientesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-		
-        $clientes = Cliente::with([
-        'pais',
-        'departamento',
-        'municipio',
-    ])->get(); // o paginate()
-    return view('clientes.index', compact('clientes'));
+        $q = $request->input('q');
+
+        $clientes = Cliente::with(['pais', 'departamento', 'municipio'])
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nombres', 'like', "%{$q}%")
+                        ->orWhere('apellidos', 'like', "%{$q}%")
+                        ->orWhere('numero_identificacion', 'like', "%{$q}%")
+                        ->orWhere('correo', 'like', "%{$q}%")
+                        ->orWhere('whatsapp', 'like', "%{$q}%");
+                });
+            })
+            ->get();
+
+        return view('clientes.index', compact('clientes'));
     }
 
     /**
@@ -120,18 +129,21 @@ class ClientesController extends Controller
      * Display the specified resource.
      */
     public function show(Cliente $cliente)
-{
-	// Trae las últimas 10 reservas (ordenadas por fecha descendente)
-    $reservas = $cliente
-        ->reservas()              // relación hasMany Reserva en el modelo Cliente
-        ->orderBy('fecha', 'desc')
-        ->take(10)
-        ->get();
-		
-		
-	
-    return view('clientes.view', compact('cliente', 'reservas'));
-}
+    {
+        $reservas = $cliente->reservas()
+            ->with('entrenador')
+            ->orderBy('fecha', 'desc')
+            ->take(10)
+            ->get();
+
+        $transacciones = OrdenDeCompra::where('cliente', $cliente->id)
+            ->with('ventas')
+            ->orderBy('fecha_hora', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('clientes.view', compact('cliente', 'reservas', 'transacciones'));
+    }
 
 
     /**
