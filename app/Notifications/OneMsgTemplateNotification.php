@@ -23,6 +23,7 @@ class OneMsgTemplateNotification extends Notification
 
 public function toOneMsgTemplate($notifiable): array
 {
+   
     $template  = config("services.onemsg.templates.{$this->templateKey}");
     $namespace = config('services.onemsg.namespace');
     $langCode  = config('services.onemsg.lang', 'es');
@@ -30,7 +31,6 @@ public function toOneMsgTemplate($notifiable): array
     // Orden esperado: header + 6 vars del body
     $order = config("services.onemsg.param_order.{$this->templateKey}");
 	
-
 if($template=="reserva"){
     // ---- 1. header ----
     $headerItem = [
@@ -44,12 +44,7 @@ if($template=="reserva"){
         'type' => 'text',
         'text' => $this->data[1],
     ];
-}else if($template=="paquete"){
-	// ---- 1. header ----
-    $headerItem = [
-        'type' => 'text',
-        'text' => 'Paquete Adquirido',
-    ];
+
 }else if($template=="cambio_clase"){
 	// ---- 1. header ----
     $headerItem = [

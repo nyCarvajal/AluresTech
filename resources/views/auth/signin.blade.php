@@ -14,11 +14,11 @@ class="authentication-bg"
                         <div class="text-center">
                             <div class="mx-auto mb-4 text-center auth-logo">
                                 <a href="{{ route('any', 'index') }}" class="logo-dark">
-                                    <img src="/images/logo-dark.png" height="32" alt="logo dark">
+                                    <img src="/images/logodarkal.png" height="100" alt="logo dark">
                                 </a>
 
                                 <a href="{{ route('any', 'index') }}" class="logo-light">
-                                    <img src="/images/logo-light.png" height="38" alt="logo light">
+                                    <img src="/images/logoligth.png" height="100" alt="logo light">
                                 </a>
                             </div>
                             <h4 class="fw-bold text-dark mb-2">¡Bienvenido de nuevo!</h3>
