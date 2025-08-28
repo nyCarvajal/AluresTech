@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="container">
-    <h1 class="mb-4">Crear Servicio</h1>
+    <h1 class="mb-4">Crear Ítem</h1>
 
     {{-- Mostrar errores de validación --}}
     @if ($errors->any())
@@ -31,6 +31,31 @@
 
 
         <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo</label>
+            <select name="tipo" id="tipo" class="form-control">
+                <option value="0" {{ old('tipo') == '0' ? 'selected' : '' }}>Servicio</option>
+                <option value="1" {{ old('tipo') == '1' ? 'selected' : '' }}>Producto</option>
+            </select>
+        </div>
+
+        <div id="producto-fields" style="display:none;">
+            <div class="mb-3">
+                <label for="costo" class="form-label">Costo</label>
+                <input type="number" step="0.01" name="costo" id="costo" class="form-control @error('costo') is-invalid @enderror" value="{{ old('costo', 0) }}" min="0">
+                @error('costo')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="mb-3">
+                <label for="cantidad" class="form-label">Cantidad</label>
+                <input type="number" name="cantidad" id="cantidad" class="form-control @error('cantidad') is-invalid @enderror" value="{{ old('cantidad', 0) }}" min="0">
+                @error('cantidad')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+
+        <div class="mb-3">
             <label for="valor" class="form-label">Valor</label>
             <input type="number" step="0.01" name="valor" id="valor"
                    class="form-control @error('valor') is-invalid @enderror"
@@ -39,29 +64,28 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-<?php /*
-        <div class="mb-3">
-            <label for="tipo" class="form-label">Tipo</label>
-            <input type="text" name="tipo" id="tipo"
-                   class="form-control @error('tipo') is-invalid @enderror"
-                   value="{{ old('tipo') }}" required>
-            @error('tipo')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
 
         <div class="mb-3">
             <label for="area" class="form-label">Área</label>
-            <input type="text" name="area" id="area"
-                   class="form-control @error('area') is-invalid @enderror"
-                   value="{{ old('area') }}" required>
+            <input type="text" name="area" id="area" class="form-control @error('area') is-invalid @enderror" value="{{ old('area') }}">
             @error('area')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
-*/ ?>
+
         <button type="submit" class="btn btn-success">Guardar</button>
         <a href="{{ route('items.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tipo = document.getElementById('tipo');
+        const fields = document.getElementById('producto-fields');
+        function toggleFields() {
+            fields.style.display = tipo.value === '1' ? 'block' : 'none';
+        }
+        tipo.addEventListener('change', toggleFields);
+        toggleFields();
+    });
+</script>
 @endsection
