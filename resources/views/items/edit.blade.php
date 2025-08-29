@@ -36,6 +36,7 @@
                 <option value="0" {{ old('tipo', $item->tipo) == 0 ? 'selected' : '' }}>Servicio</option>
                 <option value="1" {{ old('tipo', $item->tipo) == 1 ? 'selected' : '' }}>Producto</option>
             </select>
+
         </div>
 
         <div class="row">
@@ -59,6 +60,7 @@
             </div>
         </div>
 
+
         <div class="mb-3" id="cantidad-field" style="display:none;">
             <label for="cantidad" class="form-label">Cantidad</label>
             <input type="number" name="cantidad" id="cantidad"
@@ -68,6 +70,7 @@
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
+
 
         <div class="mb-3">
             <label for="area" class="form-label">Área</label>
@@ -86,12 +89,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const tipo = document.getElementById('tipo');
-        const costoField = document.getElementById('costo-field');
+const costoField = document.getElementById('costo-field');
         const cantidadField = document.getElementById('cantidad-field');
         function toggleFields() {
             const isProduct = tipo.value === '1';
             costoField.style.display = isProduct ? 'block' : 'none';
             cantidadField.style.display = isProduct ? 'block' : 'none';
+}
         }
         tipo.addEventListener('change', toggleFields);
         toggleFields();

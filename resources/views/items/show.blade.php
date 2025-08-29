@@ -5,7 +5,7 @@
 <div class="container">
     <h1 class="mb-4">Detalle del Ítem #{{ $item->id }}</h1>
 
-    <div class="mb-3">
+ <div class="mb-3">
         @if($item->tipo == 1)
             <a href="{{ route('items.add-units-form', $item) }}" class="btn" style="background-color:#6f42c1; color:white;">Agregar unidades</a>
         @endif
@@ -62,5 +62,6 @@
         </div>
         @endif
     </div>
+
 </div>
 @endsection

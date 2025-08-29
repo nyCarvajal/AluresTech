@@ -38,6 +38,7 @@
             </select>
         </div>
 
+
         <div class="row">
             <div class="mb-3 col-md-6">
                 <label for="valor" class="form-label">Valor</label>
@@ -54,6 +55,7 @@
                        class="form-control @error('costo') is-invalid @enderror"
                        value="{{ old('costo', 0) }}" min="0">
                 @error('costo')
+
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -63,6 +65,7 @@
             <label for="cantidad" class="form-label">Cantidad</label>
             <input type="number" name="cantidad" id="cantidad" class="form-control @error('cantidad') is-invalid @enderror" value="{{ old('cantidad', 0) }}" min="0">
             @error('cantidad')
+
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -79,7 +82,8 @@
         <a href="{{ route('items.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
-    <script>
+
+<script>
         document.addEventListener('DOMContentLoaded', function () {
             const tipo = document.getElementById('tipo');
             const costoField = document.getElementById('costo-field');
@@ -93,4 +97,5 @@
             toggleFields();
         });
     </script>
+
 @endsection
