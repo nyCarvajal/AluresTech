@@ -38,29 +38,34 @@
             </select>
         </div>
 
-        <div id="producto-fields" style="display:none;">
-            <div class="mb-3">
-                <label for="costo" class="form-label">Costo</label>
-                <input type="number" step="0.01" name="costo" id="costo" class="form-control @error('costo') is-invalid @enderror" value="{{ old('costo', 0) }}" min="0">
-                @error('costo')
+
+        <div class="row">
+            <div class="mb-3 col-md-6">
+                <label for="valor" class="form-label">Valor</label>
+                <input type="number" step="0.01" name="valor" id="valor"
+                       class="form-control @error('valor') is-invalid @enderror"
+                       value="{{ old('valor', 0) }}" min="0" required>
+                @error('valor')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-            <div class="mb-3">
-                <label for="cantidad" class="form-label">Cantidad</label>
-                <input type="number" name="cantidad" id="cantidad" class="form-control @error('cantidad') is-invalid @enderror" value="{{ old('cantidad', 0) }}" min="0">
-                @error('cantidad')
+            <div class="mb-3 col-md-6" id="costo-field" style="display:none;">
+                <label for="costo" class="form-label">Costo</label>
+                <input type="number" step="0.01" name="costo" id="costo"
+                       class="form-control @error('costo') is-invalid @enderror"
+                       value="{{ old('costo', 0) }}" min="0">
+                @error('costo')
+
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
         </div>
 
-        <div class="mb-3">
-            <label for="valor" class="form-label">Valor</label>
-            <input type="number" step="0.01" name="valor" id="valor"
-                   class="form-control @error('valor') is-invalid @enderror"
-                   value="{{ old('valor', 0) }}" min="0" required>
-            @error('valor')
+        <div class="mb-3" id="cantidad-field" style="display:none;">
+            <label for="cantidad" class="form-label">Cantidad</label>
+            <input type="number" name="cantidad" id="cantidad" class="form-control @error('cantidad') is-invalid @enderror" value="{{ old('cantidad', 0) }}" min="0">
+            @error('cantidad')
+
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -77,15 +82,20 @@
         <a href="{{ route('items.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const tipo = document.getElementById('tipo');
-        const fields = document.getElementById('producto-fields');
-        function toggleFields() {
-            fields.style.display = tipo.value === '1' ? 'block' : 'none';
-        }
-        tipo.addEventListener('change', toggleFields);
-        toggleFields();
-    });
-</script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tipo = document.getElementById('tipo');
+            const costoField = document.getElementById('costo-field');
+            const cantidadField = document.getElementById('cantidad-field');
+            function toggleFields() {
+                const isProduct = tipo.value === '1';
+                costoField.style.display = isProduct ? 'block' : 'none';
+                cantidadField.style.display = isProduct ? 'block' : 'none';
+            }
+            tipo.addEventListener('change', toggleFields);
+            toggleFields();
+        });
+    </script>
+
 @endsection
