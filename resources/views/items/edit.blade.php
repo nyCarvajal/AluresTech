@@ -42,24 +42,23 @@
         <div class="row">
             <div class="mb-3 col-md-6">
                 <label for="valor" class="form-label">Valor</label>
-                <input type="number" step="0.01" name="valor" id="valor"
-                       class="form-control @error('valor') is-invalid @enderror"
-                       value="{{ old('valor', $item->valor) }}" min="0" required>
+                <input type="text" name="valor" id="valor"
+                       class="form-control currency-input @error('valor') is-invalid @enderror"
+                       value="{{ old('valor', $item->valor) }}" required>
                 @error('valor')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
             <div class="mb-3 col-md-6" id="costo-field" style="display:none;">
                 <label for="costo" class="form-label">Costo</label>
-                <input type="number" step="0.01" name="costo" id="costo"
-                       class="form-control @error('costo') is-invalid @enderror"
-                       value="{{ old('costo', $item->costo) }}" min="0">
+                <input type="text" name="costo" id="costo"
+                       class="form-control currency-input @error('costo') is-invalid @enderror"
+                       value="{{ old('costo', $item->costo) }}">
                 @error('costo')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
         </div>
-
 
         <div class="mb-3" id="cantidad-field" style="display:none;">
             <label for="cantidad" class="form-label">Cantidad</label>
@@ -89,14 +88,55 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const tipo = document.getElementById('tipo');
-const costoField = document.getElementById('costo-field');
+ const costoField = document.getElementById('costo-field');
         const cantidadField = document.getElementById('cantidad-field');
+        const currencyInputs = document.querySelectorAll('.currency-input');
+
+
         function toggleFields() {
             const isProduct = tipo.value === '1';
             costoField.style.display = isProduct ? 'block' : 'none';
             cantidadField.style.display = isProduct ? 'block' : 'none';
-}
+
         }
+
+        function formatCOP(value) {
+            if (!value) return '';
+            let n = parseFloat(value.toString()
+                .replace(/[^0-9\.\,]/g, '')
+                .replace(/,/g, '.'));
+            if (isNaN(n)) return '';
+            return n.toLocaleString('es-CO', { style: 'currency', currency: 'COP' });
+        }
+
+        function parseCOP(formatted) {
+            if (!formatted) return 0;
+            let plain = formatted
+                .replace(/[^0-9\.\,]/g, '')
+                .replace(/\./g, '')
+                .replace(/,/g, '.');
+            let n = parseFloat(plain);
+            return isNaN(n) ? 0 : n;
+        }
+
+        currencyInputs.forEach(input => {
+            input.value = formatCOP(input.value);
+            input.addEventListener('blur', function () {
+                this.value = formatCOP(this.value);
+            });
+            input.addEventListener('focus', function () {
+                let num = parseCOP(this.value);
+                this.value = num ? num.toFixed(2).replace('.', ',') : '';
+            });
+        });
+
+        document.querySelector('form').addEventListener('submit', function () {
+            currencyInputs.forEach(input => {
+                input.value = parseCOP(input.value);
+            });
+        });
+
+
         tipo.addEventListener('change', toggleFields);
         toggleFields();
     });
