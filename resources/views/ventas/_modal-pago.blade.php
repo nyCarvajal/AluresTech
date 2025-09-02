@@ -140,16 +140,16 @@
 
             {{-- FOOTER --}}
             <div class="modal-footer">
-                <button 
-                    type="button" 
-                    class="btn btn-outline-secondary" 
+                <button
+                    type="button"
+                    class="btn btn-gris-outline"
                     data-bs-dismiss="modal"
                 >
                     Cancelar
                 </button>
-                <button 
-                    type="button" 
-                    class="btn btn-primary btn-confirmar-pago"
+                <button
+                    type="button"
+                    class="btn btn-gris btn-confirmar-pago"
                 >
                     <i class="fa fa-check-circle me-1"></i> Confirmar Pago
                 </button>

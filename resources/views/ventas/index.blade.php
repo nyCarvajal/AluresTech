@@ -52,8 +52,8 @@
         <div class="row mb-5">
   {{-- Columna mayor: tarjeta de la orden --}}
   <div class="col-md-8">
-    <div class="card mb-4 shadow-sm" >
-} <div class="card-header" style="background-color: #e9ecef; color: #333;">
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header" style="background-color: #6f42c1; color: #fff;">
 
         <i class="fa fa-file-invoice me-2"></i>
         Orden de Compra #{{ $ordenSeleccionada->id }}
@@ -185,7 +185,7 @@
          4) TABLA DE VENTAS (SIEMPRE VISIBLE)
        ============================================================== --}}
 <div class="card mb-5 shadow-sm">
-<div class="card-header" style="background-color: #e9ecef; color: #333;">
+<div class="card-header" style="background-color: #6f42c1; color: #fff;">
         <i class="fa fa-shopping-cart me-2"></i> Listado de Ventas
     </div>
     <div class="table-responsive">
@@ -291,7 +291,7 @@
        ============================================================== --}}
     @if($cuentaSeleccionada)
         <div class="card mb-5 shadow-sm">
- <div class="card-header" style="background-color: #e9ecef; color: #333;">
+ <div class="card-header" style="background-color: #6f42c1; color: #fff;">
 
                 <i class="fa fa-receipt me-2"></i> Pagos de la orden:
                 <strong class="text-warning">{{ $cuentaSeleccionada }}</strong>
@@ -356,36 +356,40 @@
    ============================================================== --}}
 <style>
  .btn-gris {
-        background-color: #e9ecef;
-        color: #333;
+        background-color: #6f42c1;
+        color: #fff;
         border: none;
     }
     .btn-gris:hover {
-        background-color: #d6d8db;
-        color: #333;
+        background-color: #59339d;
+        color: #fff;
     }
     .btn-gris-outline {
-        background-color: #fff;
-        border: 2px solid #e9ecef;
-        color: #6c757d;
+        background-color: #f8f9fa;
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
     }
     .btn-gris-outline:hover {
-        background-color: #e9ecef;
-        color: #333;
+        background-color: #6f42c1;
+        color: #fff;
     }
     .table-gris thead {
-        background-color: #f8f9fa;
+        background-color: #6f42c1;
+        color: #fff;
     }
     .table-gris tbody tr:nth-child(even) {
-        background-color: #f1f3f5;
-
+        background-color: #f8f9fa;
+    }
+    .table-gris tbody tr:nth-child(odd) {
+        background-color: #343a40;
+        color: #fff;
     }
 
     /* Estilos personalizados para el modal */
     #modalPagarFactura .modal-header {
 
-        background-color: #e9ecef;
-        color: #333;
+        background-color: #6f42c1;
+        color: #fff;
 
     }
     #modalPagarFactura .modal-title {
@@ -398,20 +402,20 @@
     .btn-metodo {
         width: 100px;
         height: 90px;
-        border: 2px solid #6c757d;
-        color: #6c757d;
-
+        border: 2px solid #6f42c1;
+        color: #6f42c1;
+        background-color: #f8f9fa;
         font-weight: 500;
         border-radius: 8px;
-        transition: background-color .2s, color .2s;
+        transition: background-color .2s, color .2s, border-color .2s;
     }
     .btn-metodo i {
         font-size: 1.4rem;
     }
     .btn-metodo:hover {
-    background-color: #6c757d;
-
+        background-color: #343a40;
         color: #fff;
+        border-color: #343a40;
     }
 
     .content_payment_and_changed {
