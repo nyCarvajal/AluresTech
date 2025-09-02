@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use App\Notifications\WhatsAppTextMessageNotification;
 use App\Models\Venta;
 use App\Models\Cliente;    
-use App\Models\Pago;    
+use App\Models\Pago;
 use App\Models\Item;
+use App\Models\InventarioHistorial;
 use App\Models\Membresia;
 use App\Models\MembresiaCliente;
 use App\Models\OrdenDeCompra; 
@@ -251,7 +252,16 @@ if ($jugador && $jugador->whatsapp) {
             'valor_total'   => $item->valor,
         ];
 
-        Venta::create($datosVenta);
+        $venta = Venta::create($datosVenta);
+
+        if ($item->tipo == 1) {
+            $item->decrement('cantidad', 1);
+            InventarioHistorial::create([
+                'item_id' => $item->id,
+                'cambio' => -1,
+                'descripcion' => 'Venta #' . $venta->id,
+            ]);
+        }
 
         // 3) Redirigimos de vuelta a index, conservando ?orden_id=XX
         return redirect()
@@ -276,7 +286,17 @@ if ($jugador && $jugador->whatsapp) {
             'valor_total'    => 'required|numeric|min:0',
         ]);
 
-        Venta::create($data);
+        $venta = Venta::create($data);
+
+        $item = Item::find($venta->producto);
+        if ($item && $item->tipo == 1) {
+            $item->decrement('cantidad', $venta->cantidad);
+            InventarioHistorial::create([
+                'item_id' => $item->id,
+                'cambio' => -$venta->cantidad,
+                'descripcion' => 'Venta #' . $venta->id,
+            ]);
+        }
 
         return redirect()->route('ventas.index')
                          ->with('success', 'Venta creada correctamente.');

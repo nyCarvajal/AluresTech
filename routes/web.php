@@ -125,6 +125,8 @@ Route::get('/', function () {
     return redirect()->route('items.index');
 });
 Route::resource('items', ItemController::class);
+Route::get('items/{item}/agregar-unidades', [ItemController::class, 'addUnitsForm'])->name('items.add-units-form');
+Route::post('items/{item}/agregar-unidades', [ItemController::class, 'addUnits'])->name('items.add-units');
 Route::get('/calendar', [ReservaController::class, 'calendar'])->name('reservas.calendar');
 Route::get('/reservas.json', [ReservaController::class, 'events'])
      ->name('reservas.events');
