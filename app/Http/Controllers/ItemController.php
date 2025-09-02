@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use App\Models\InventarioHistorial;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
@@ -10,10 +11,18 @@ class ItemController extends Controller
     /**
      * Mostrar listado de items.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Obtener items paginados (10 por página)
-        $items = Item::orderBy('id', 'desc')->paginate(10);
+        $query = Item::query();
+
+        if ($request->filled('search')) {
+            $query->where('nombre', 'like', '%' . $request->search . '%');
+        }
+
+        $items = $query->orderBy('id', 'desc')
+                       ->paginate(10)
+                       ->appends($request->all());
+
         return view('items.index', compact('items'));
     }
 
@@ -34,13 +43,29 @@ class ItemController extends Controller
         $request->validate([
             'nombre'   => 'required|string|max:255',
             'valor'    => 'required|numeric|min:0',
+            'tipo'     => 'required|in:0,1',
+            'costo'    => 'required_if:tipo,1|nullable|numeric|min:0',
+            'cantidad' => 'required_if:tipo,1|nullable|integer|min:0',
+            'area'     => 'nullable|integer',
         ]);
 
         // Crear el registro
-        Item::create([
+        $item = Item::create([
             'nombre'   => $request->nombre,
             'valor'    => $request->valor,
+            'tipo'     => $request->tipo,
+            'costo'    => $request->costo,
+            'cantidad' => $request->tipo == 1 ? $request->cantidad : null,
+            'area'     => $request->area,
         ]);
+
+        if ($request->tipo == 1 && $request->cantidad) {
+            InventarioHistorial::create([
+                'item_id'    => $item->id,
+                'cambio'     => $request->cantidad,
+                'descripcion'=> 'Carga inicial',
+            ]);
+        }
 
         return redirect()
             ->route('items.index')
@@ -52,6 +77,7 @@ class ItemController extends Controller
      */
     public function show(Item $item)
     {
+        $item->load('movimientos');
         return view('items.show', compact('item'));
     }
 
@@ -71,24 +97,49 @@ class ItemController extends Controller
         // Validar entrada
         $request->validate([
             'nombre'   => 'required|string|max:255',
-            'cantidad' => 'required|integer|min:0',
             'valor'    => 'required|numeric|min:0',
-            'tipo'     => 'required|string|max:100',
-            'area'     => 'required|string|max:100',
+            'tipo'     => 'required|in:0,1',
+            'costo'    => 'required_if:tipo,1|nullable|numeric|min:0',
+            'cantidad' => 'required_if:tipo,1|nullable|integer|min:0',
+            'area'     => 'nullable|integer',
         ]);
 
-        // Actualizar el registro
         $item->update([
             'nombre'   => $request->nombre,
-            'cantidad' => $request->cantidad,
             'valor'    => $request->valor,
             'tipo'     => $request->tipo,
+            'costo'    => $request->costo,
+            'cantidad' => $request->tipo == 1 ? $request->cantidad : null,
             'area'     => $request->area,
         ]);
 
         return redirect()
             ->route('items.index')
             ->with('success', 'Item actualizado correctamente.');
+    }
+
+    public function addUnitsForm(Item $item)
+    {
+        return view('items.add-stock', compact('item'));
+    }
+
+    public function addUnits(Request $request, Item $item)
+    {
+        $data = $request->validate([
+            'cantidad' => 'required|integer|min:1',
+        ]);
+
+        $item->increment('cantidad', $data['cantidad']);
+
+        InventarioHistorial::create([
+            'item_id'    => $item->id,
+            'cambio'     => $data['cantidad'],
+            'descripcion'=> 'Ingreso manual',
+        ]);
+
+        return redirect()
+            ->route('items.show', $item)
+            ->with('success', 'Stock actualizado correctamente.');
     }
 
     /**

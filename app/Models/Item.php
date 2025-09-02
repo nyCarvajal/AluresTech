@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use App\Models\InventarioHistorial;
 
 class Item extends Model
 {
@@ -38,8 +39,14 @@ class Item extends Model
     protected $fillable = [
         'nombre',
         'cantidad',
+        'costo',
         'valor',
         'tipo',
         'area',
     ];
+
+    public function movimientos()
+    {
+        return $this->hasMany(InventarioHistorial::class);
+    }
 }
