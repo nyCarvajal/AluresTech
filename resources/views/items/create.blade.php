@@ -84,13 +84,14 @@
         <a href="{{ route('items.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
- <script>
+<script>
 
         document.addEventListener('DOMContentLoaded', function () {
             const tipo = document.getElementById('tipo');
             const costoField = document.getElementById('costo-field');
             const cantidadField = document.getElementById('cantidad-field');
- const currencyInputs = document.querySelectorAll('.currency-input');
+
+            const currencyInputs = document.querySelectorAll('.currency-input');
 
 
             function toggleFields() {

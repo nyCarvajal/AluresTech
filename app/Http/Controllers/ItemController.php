@@ -11,10 +11,18 @@ class ItemController extends Controller
     /**
      * Mostrar listado de items.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Obtener items paginados (10 por página)
-        $items = Item::orderBy('id', 'desc')->paginate(10);
+        $query = Item::query();
+
+        if ($request->filled('search')) {
+            $query->where('nombre', 'like', '%' . $request->search . '%');
+        }
+
+        $items = $query->orderBy('id', 'desc')
+                       ->paginate(10)
+                       ->appends($request->all());
+
         return view('items.index', compact('items'));
     }
 

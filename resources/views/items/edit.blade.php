@@ -36,8 +36,7 @@
                 <option value="0" {{ old('tipo', $item->tipo) == 0 ? 'selected' : '' }}>Servicio</option>
                 <option value="1" {{ old('tipo', $item->tipo) == 1 ? 'selected' : '' }}>Producto</option>
             </select>
-
-        </div>
+ </div>
 
         <div class="row">
             <div class="mb-3 col-md-6">
