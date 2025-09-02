@@ -199,7 +199,11 @@ const horaSelect  = document.getElementById('reservaHora');
 
     //  inicioInput.value    = dt.toISOString().slice(0,16);
       durationSelect.value = '60';
-      clienteSelect.value   = '';
+      if (clienteSelect.tomselect) {
+        clienteSelect.tomselect.clear(true);
+      } else {
+        clienteSelect.value = '';
+      }
       entrenadorSelect.value = '';
       responsableInput.value = '';
           fechaInput.value = info.startStr.split('T')[0];
@@ -247,6 +251,11 @@ form.action                          = '/reservas/' + ev.id;
      // inicioInput.value                    = ev.start.toISOString().slice(0,16);
       durationSelect.value                 = props.duration;
       entrenadorSelect.value              = props.entrenador_id || '';
+      if (clienteSelect.tomselect) {
+        clienteSelect.tomselect.setValue(props.cliente_id || '', true);
+      } else {
+        clienteSelect.value = props.cliente_id || '';
+      }
 
         
       
