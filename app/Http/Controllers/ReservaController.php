@@ -131,9 +131,11 @@ class ReservaController extends Controller
                 'tipo'          => $r->tipo,              // reserva | torneo | clase
                 'estado'        => $r->estado,            // confirmada | pendiente
                 'entrenador_id' => $r->entrenador_id,
+                'cliente_id'    => $r->cliente_id,
             ],
             'cancha_id'       => $r->cancha_id,
             'entrenador_id'   => $r->entrenador_id,
+            'cliente_id'      => $r->cliente_id,
         ];
 
       
