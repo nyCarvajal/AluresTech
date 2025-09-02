@@ -57,7 +57,7 @@
         </table>
 
         {{-- Paginación --}}
-        {{ $items->links() }}
+        {{ $items->links('pagination::bootstrap-5') }}
     @else
         <p>No hay ítems registrados.</p>
     @endif

@@ -36,7 +36,8 @@
                 <option value="0" {{ old('tipo', $item->tipo) == 0 ? 'selected' : '' }}>Servicio</option>
                 <option value="1" {{ old('tipo', $item->tipo) == 1 ? 'selected' : '' }}>Producto</option>
             </select>
- </div>
+
+        </div>
 
         <div class="row">
             <div class="mb-3 col-md-6">
@@ -87,7 +88,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const tipo = document.getElementById('tipo');
- const costoField = document.getElementById('costo-field');
+        const costoField = document.getElementById('costo-field');
         const cantidadField = document.getElementById('cantidad-field');
         const currencyInputs = document.querySelectorAll('.currency-input');
 
