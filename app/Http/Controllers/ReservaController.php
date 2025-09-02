@@ -225,7 +225,7 @@ public function store(Request $request)
 
     return redirect()
         ->route('reservas.calendar')
-        ->with('success', "$created {$data['type']}(s) creadas correctamente.");
+        ->with('success', "Reserva creada correctamente.");
 }
 
 

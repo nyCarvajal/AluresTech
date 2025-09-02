@@ -36,6 +36,7 @@
                 <option value="0" {{ old('tipo', $item->tipo) == 0 ? 'selected' : '' }}>Servicio</option>
                 <option value="1" {{ old('tipo', $item->tipo) == 1 ? 'selected' : '' }}>Producto</option>
             </select>
+
         </div>
 
         <div class="row">
@@ -69,6 +70,7 @@
             @enderror
         </div>
 
+
         <div class="mb-3">
             <label for="area" class="form-label">Área</label>
             <input type="text" name="area" id="area"
@@ -90,10 +92,12 @@
         const cantidadField = document.getElementById('cantidad-field');
         const currencyInputs = document.querySelectorAll('.currency-input');
 
+
         function toggleFields() {
             const isProduct = tipo.value === '1';
             costoField.style.display = isProduct ? 'block' : 'none';
             cantidadField.style.display = isProduct ? 'block' : 'none';
+
         }
 
         function formatCOP(value) {
@@ -131,6 +135,7 @@
                 input.value = parseCOP(input.value);
             });
         });
+
 
         tipo.addEventListener('change', toggleFields);
         toggleFields();

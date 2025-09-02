@@ -5,13 +5,15 @@
 <div class="container">
     <h1 class="mb-4">Detalle del Ítem #{{ $item->id }}</h1>
 
+
     <div class="mb-3">
+
         @if($item->tipo == 1)
             <a href="{{ route('items.add-units-form', $item) }}" class="btn" style="background-color:#6f42c1; color:white;">Agregar unidades</a>
         @endif
         <a href="{{ route('items.edit', $item) }}" class="btn" style="background-color:#6f42c1; color:white;">Editar</a>
         <a href="{{ route('items.index') }}" class="btn btn-secondary">Volver al listado</a>
-    </div>
+ </div>
 
     <div class="row">
         <div class="col-md-6">
@@ -62,5 +64,6 @@
         </div>
         @endif
     </div>
+
 </div>
 @endsection

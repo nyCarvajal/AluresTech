@@ -38,22 +38,26 @@
             </select>
         </div>
 
+
         <div class="row">
             <div class="mb-3 col-md-6">
                 <label for="valor" class="form-label">Valor</label>
                 <input type="text" name="valor" id="valor"
                        class="form-control currency-input @error('valor') is-invalid @enderror"
                        value="{{ old('valor', 0) }}" required>
+
                 @error('valor')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
             <div class="mb-3 col-md-6" id="costo-field" style="display:none;">
                 <label for="costo" class="form-label">Costo</label>
+
                 <input type="text" name="costo" id="costo"
                        class="form-control currency-input @error('costo') is-invalid @enderror"
                        value="{{ old('costo', 0) }}">
                 @error('costo')
+
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -63,6 +67,7 @@
             <label for="cantidad" class="form-label">Cantidad</label>
             <input type="number" name="cantidad" id="cantidad" class="form-control @error('cantidad') is-invalid @enderror" value="{{ old('cantidad', 0) }}" min="0">
             @error('cantidad')
+
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -79,12 +84,14 @@
         <a href="{{ route('items.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
-    <script>
+ <script>
+
         document.addEventListener('DOMContentLoaded', function () {
             const tipo = document.getElementById('tipo');
             const costoField = document.getElementById('costo-field');
             const cantidadField = document.getElementById('cantidad-field');
-            const currencyInputs = document.querySelectorAll('.currency-input');
+  const currencyInputs = document.querySelectorAll('.currency-input');
+
 
             function toggleFields() {
                 const isProduct = tipo.value === '1';
@@ -128,8 +135,10 @@
                 });
             });
 
+
             tipo.addEventListener('change', toggleFields);
             toggleFields();
         });
     </script>
+
 @endsection
