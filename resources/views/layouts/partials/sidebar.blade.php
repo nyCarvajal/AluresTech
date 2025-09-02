@@ -3,7 +3,7 @@
      <div class="logo-box">
           <a href="{{route('dashboard') }}" class="logo-dark">
                <img src="/images/logo-sm.png" class="logo-sm" alt="logo sm">
-               <img src="/images/logo-dark.png" class="logo-lg" alt="logo dark">
+               <img src="/images/logodarkal.png" class="logo-lg" alt="logo dark">
           </a>
 
           <a href="" class="logo-light">
