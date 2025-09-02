@@ -259,6 +259,7 @@ form.action                          = '/reservas/' + ev.id;
           ts.addOption({ value: String(props.cliente_id), text: nombre });
           ts.setValue(String(props.cliente_id), true);
         }
+
       } else {
         clienteSelect.value = props.cliente_id || '';
       }
