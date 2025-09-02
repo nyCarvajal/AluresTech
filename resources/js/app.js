@@ -252,7 +252,14 @@ form.action                          = '/reservas/' + ev.id;
       durationSelect.value                 = props.duration;
       entrenadorSelect.value              = props.entrenador_id || '';
       if (clienteSelect.tomselect) {
-        clienteSelect.tomselect.setValue(props.cliente_id || '', true);
+        const ts = clienteSelect.tomselect;
+        ts.clear(true);
+        if (props.cliente_id) {
+          const nombre = props.title || ev.title || '';
+          ts.addOption({ value: String(props.cliente_id), text: nombre });
+          ts.setValue(String(props.cliente_id), true);
+        }
+
       } else {
         clienteSelect.value = props.cliente_id || '';
       }
