@@ -32,7 +32,7 @@
                          </button>
                     </div>
 
-                    <!-- Notification -->
+                    <!-- Notification 
                     <div class="dropdown topbar-item">
                          <button type="button" class="topbar-button position-relative"
                               id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -57,7 +57,7 @@
                                    </div>
                               </div>
                               <div data-simplebar style="max-height: 250px;">
-                                   <!-- Item -->
+                                   
                                    <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom text-wrap">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -70,7 +70,7 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
+                              
                                    <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -89,7 +89,7 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
+                                   
                                    <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -104,7 +104,7 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
+                                 
                                    <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -121,7 +121,7 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
+                               
                                    <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -143,7 +143,7 @@
                               </div>
                          </div>
                     </div>
-
+-->
                     <!-- User -->
                     <div class="dropdown topbar-item">
                          <a type="button" class="topbar-button" id="page-header-user-dropdown" data-bs-toggle="dropdown"

@@ -192,7 +192,7 @@
     </div>
     <!-- end col -->
 </div>
-
+ <!--
 <div class="row">
     <div class="col-lg-4">
         <div class="card card-height-100">
@@ -212,8 +212,8 @@
                 </div>
             </div>
 
-        </div> <!-- end card-->
-    </div> <!-- end col -->
+        </div> 
+    </div> 
 	
 
     <div class="col-lg-4">
@@ -271,11 +271,11 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- end table-responsive-->
+                
             </div>
 
-        </div> <!-- end card-->
-    </div> <!-- end col -->
+        </div> 
+    </div> 
 
     <div class="col-lg-4">
         <div class="card">
@@ -288,11 +288,11 @@
                         View Data
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <!-- item-->
+                        
                         <a href="javascript:void(0);" class="dropdown-item">Download</a>
-                        <!-- item-->
+                        
                         <a href="javascript:void(0);" class="dropdown-item">Export</a>
-                        <!-- item-->
+                        
                         <a href="javascript:void(0);" class="dropdown-item">Import</a>
                     </div>
                 </div>
@@ -301,9 +301,9 @@
             <div class="card-body pt-0">
                 <div id="world-map-markers" class="mt-3" style="height: 309px">
                 </div>
-            </div> <!-- end card-body-->
+            </div> 
 
-
+-->
         </div> <!-- end card-->
     </div> <!-- end col-->
 
