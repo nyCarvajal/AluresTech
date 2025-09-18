@@ -313,5 +313,5 @@
 @endsection
 
 @section('scripts')
-@vite(['resources/js/pages/dashboard.js'])
+
 @endsection
