@@ -3,7 +3,7 @@ window.bootstrap = bootstrap;
 import 'iconify-icon';
 import 'simplebar/dist/simplebar'
 // resources/js/app.js
-
+import './pages/dashboard.js';
 
 import '@fullcalendar/common/main.css';
 
