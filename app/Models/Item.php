@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use App\Models\InventarioHistorial;
+use App\Models\Area;
 
 class Item extends Model
 {
@@ -45,8 +46,18 @@ class Item extends Model
         'area',
     ];
 
+    protected $casts = [
+        'valor' => 'decimal:2',
+        'costo' => 'decimal:2',
+    ];
+
     public function movimientos()
     {
         return $this->hasMany(InventarioHistorial::class);
+    }
+
+    public function areaRelation()
+    {
+        return $this->belongsTo(Area::class, 'area');
     }
 }

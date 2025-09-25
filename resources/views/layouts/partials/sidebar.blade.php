@@ -87,10 +87,18 @@
                     <div class="collapse" id="sidebarLayouts">
                          <ul class="nav sub-navbar-nav">
                               <li class="sub-nav-item">
-                                  <a class="sub-nav-link" href="{{ route('deportes.index') }}" >
-                                       Deportes</a>
+                                   <a class="sub-nav-link" href="{{ route('reservas.index') }}">
+                                        Listar citas</a>
                               </li>
-                             
+                              <li class="sub-nav-item">
+                                   <a class="sub-nav-link" href="{{ route('tipo-identificaciones.index') }}">
+                                        Tipos de identificaciones</a>
+                              </li>
+                              <li class="sub-nav-item">
+                                   <a class="sub-nav-link" href="{{ route('areas.index') }}">
+                                        Listar áreas</a>
+                              </li>
+
                          </ul>
                     </div>
                </li>

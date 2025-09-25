@@ -73,9 +73,15 @@
 
         <div class="mb-3">
             <label for="area" class="form-label">Área</label>
-            <input type="text" name="area" id="area"
-                   class="form-control @error('area') is-invalid @enderror"
-                   value="{{ old('area', $item->area) }}">
+            <select name="area" id="area"
+                    class="form-select @error('area') is-invalid @enderror">
+                <option value="">Seleccione un área</option>
+                @foreach ($areas as $area)
+                    <option value="{{ $area->id }}" {{ old('area', $item->area) == $area->id ? 'selected' : '' }}>
+                        {{ $area->descripcion }}
+                    </option>
+                @endforeach
+            </select>
             @error('area')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -101,7 +107,7 @@
         }
 
         function formatCOP(value) {
-            if (!value) return '';
+            if (value === null || value === undefined || value === '') return '';
             let n = parseFloat(value.toString()
                 .replace(/[^0-9\.\,]/g, '')
                 .replace(/,/g, '.'));
@@ -110,13 +116,13 @@
         }
 
         function parseCOP(formatted) {
-            if (!formatted) return 0;
+            if (formatted === null || formatted === undefined || formatted === '') return null;
             let plain = formatted
                 .replace(/[^0-9\.\,]/g, '')
                 .replace(/\./g, '')
                 .replace(/,/g, '.');
             let n = parseFloat(plain);
-            return isNaN(n) ? 0 : n;
+            return isNaN(n) ? null : n;
         }
 
         currencyInputs.forEach(input => {
@@ -126,13 +132,14 @@
             });
             input.addEventListener('focus', function () {
                 let num = parseCOP(this.value);
-                this.value = num ? num.toFixed(2).replace('.', ',') : '';
+                this.value = num !== null ? num.toFixed(2).replace('.', ',') : '';
             });
         });
 
         document.querySelector('form').addEventListener('submit', function () {
             currencyInputs.forEach(input => {
-                input.value = parseCOP(input.value);
+                const parsed = parseCOP(input.value);
+                input.value = parsed !== null ? parsed.toFixed(2) : '';
             });
         });
 
