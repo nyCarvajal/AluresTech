@@ -22,9 +22,8 @@ public function updateOwn(Request $request)
     $peluqueria = auth()->user()->peluqueria;
 
     $data = $request->validate([
-        'nombre'           => 'required|string',
-        'msj_finalizado'         => 'nullable|string',
-        'terminos'         => 'nullable|string',
+        'nombre'           => 'required|string', 
+      
         'color'            => 'nullable|string',
         'msj_reserva_confirmada' => 'nullable|string',
         'msj_bienvenida'   => 'nullable|string',
@@ -51,8 +50,6 @@ public function updateOwn(Request $request)
             'nombre'           => 'required|string',
            
             'cuentaCobro'      => 'nullable|boolean',
-            'msj_finalizado'   => 'nullable|string',
-            'terminos'         => 'nullable|string',
             'color'            => 'nullable|string',
             'msj_recordatorio' => 'nullable|string',
             'msj_bienvenida'   => 'nullable|string',
