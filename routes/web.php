@@ -21,6 +21,8 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TipoUsuarioController;
+use App\Http\Controllers\TipoIdentificacionController;
+use App\Http\Controllers\AreaController;
 use App\Http\Controllers\SalidaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -77,6 +79,8 @@ Route::post('/ordenes/{orden}/email', [OrdendecompraController::class, 'sendEmai
 Route::resource('proveedores', ProveedorController::class);
 
 Route::resource('salidas', SalidaController::class);
+Route::resource('tipo-identificaciones', TipoIdentificacionController::class)->except(['show']);
+Route::resource('areas', AreaController::class)->except(['show', 'destroy']);
 		 
 	Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');

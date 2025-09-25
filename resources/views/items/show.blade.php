@@ -26,7 +26,7 @@
                     @endif
                     <p><strong>Valor:</strong> {{ number_format($item->valor, 2, ',', '.') }}</p>
                     <p><strong>Tipo:</strong> {{ $item->tipo == 1 ? 'Producto' : 'Servicio' }}</p>
-                    <p><strong>Área:</strong> {{ $item->area }}</p>
+                    <p><strong>Área:</strong> {{ optional($item->areaRelation)->descripcion ?? 'Sin asignar' }}</p>
                     <p><strong>Creado:</strong> {{ $item->created_at->format('d/m/Y H:i') }}</p>
                     <p><strong>Última actualización:</strong> {{ $item->updated_at->format('d/m/Y H:i') }}</p>
                 </div>

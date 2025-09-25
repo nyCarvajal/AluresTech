@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\InventarioHistorial;
+use App\Models\Area;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ItemController extends Controller
 {
@@ -13,7 +15,7 @@ class ItemController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Item::query();
+        $query = Item::with('areaRelation');
 
         if ($request->filled('search')) {
             $query->where('nombre', 'like', '%' . $request->search . '%');
@@ -31,7 +33,9 @@ class ItemController extends Controller
      */
     public function create()
     {
-        return view('items.create');
+        $areas = Area::orderBy('descripcion')->get();
+
+        return view('items.create', compact('areas'));
     }
 
     /**
@@ -39,6 +43,11 @@ class ItemController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'valor' => $this->normalizeCurrency($request->input('valor')),
+            'costo' => $this->normalizeCurrency($request->input('costo')),
+        ]);
+
         // Validar entrada
         $request->validate([
             'nombre'   => 'required|string|max:255',
@@ -46,7 +55,7 @@ class ItemController extends Controller
             'tipo'     => 'required|in:0,1',
             'costo'    => 'required_if:tipo,1|nullable|numeric|min:0',
             'cantidad' => 'required_if:tipo,1|nullable|integer|min:0',
-            'area'     => 'nullable|integer',
+            'area'     => ['nullable', Rule::exists('tenant.areas', 'id')],
         ]);
 
         // Crear el registro
@@ -56,7 +65,7 @@ class ItemController extends Controller
             'tipo'     => $request->tipo,
             'costo'    => $request->costo,
             'cantidad' => $request->tipo == 1 ? $request->cantidad : null,
-            'area'     => $request->area,
+            'area'     => $request->area ?: null,
         ]);
 
         if ($request->tipo == 1 && $request->cantidad) {
@@ -77,7 +86,7 @@ class ItemController extends Controller
      */
     public function show(Item $item)
     {
-        $item->load('movimientos');
+        $item->load('movimientos', 'areaRelation');
         return view('items.show', compact('item'));
     }
 
@@ -86,7 +95,9 @@ class ItemController extends Controller
      */
     public function edit(Item $item)
     {
-        return view('items.edit', compact('item'));
+        $areas = Area::orderBy('descripcion')->get();
+
+        return view('items.edit', compact('item', 'areas'));
     }
 
     /**
@@ -94,6 +105,11 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item)
     {
+        $request->merge([
+            'valor' => $this->normalizeCurrency($request->input('valor')),
+            'costo' => $this->normalizeCurrency($request->input('costo')),
+        ]);
+
         // Validar entrada
         $request->validate([
             'nombre'   => 'required|string|max:255',
@@ -101,7 +117,7 @@ class ItemController extends Controller
             'tipo'     => 'required|in:0,1',
             'costo'    => 'required_if:tipo,1|nullable|numeric|min:0',
             'cantidad' => 'required_if:tipo,1|nullable|integer|min:0',
-            'area'     => 'nullable|integer',
+            'area'     => ['nullable', Rule::exists('tenant.areas', 'id')],
         ]);
 
         $item->update([
@@ -110,12 +126,29 @@ class ItemController extends Controller
             'tipo'     => $request->tipo,
             'costo'    => $request->costo,
             'cantidad' => $request->tipo == 1 ? $request->cantidad : null,
-            'area'     => $request->area,
+            'area'     => $request->area ?: null,
         ]);
 
         return redirect()
             ->route('items.index')
             ->with('success', 'Item actualizado correctamente.');
+    }
+
+    private function normalizeCurrency($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $normalized = preg_replace('/[^\d,.-]/', '', (string) $value);
+        $normalized = str_replace('.', '', $normalized);
+        $normalized = str_replace(',', '.', $normalized);
+
+        return is_numeric($normalized) ? (float) $normalized : null;
     }
 
     public function addUnitsForm(Item $item)
