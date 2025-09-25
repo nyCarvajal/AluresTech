@@ -3,64 +3,59 @@
 namespace App\Http\Controllers;
 
 use App\Models\TipoIdentificacion;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class TipoIdentificacionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $tiposIdentificacion = TipoIdentificacion::orderBy('id')->paginate(10);
+
+        return view('tipo-identificaciones.index', compact('tiposIdentificacion'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('tipo-identificaciones.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'tipo' => 'required|string|max:100',
+        ]);
+
+        TipoIdentificacion::create($data);
+
+        return redirect()
+            ->route('tipo-identificaciones.index')
+            ->with('success', 'Tipo de identificación creado correctamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(TipoIdentificacion $tipoIdentificacion)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(TipoIdentificacion $tipoIdentificacion)
     {
-        //
+        return view('tipo-identificaciones.edit', compact('tipoIdentificacion'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, TipoIdentificacion $tipoIdentificacion)
     {
-        //
+        $data = $request->validate([
+            'tipo' => 'required|string|max:100',
+        ]);
+
+        $tipoIdentificacion->update($data);
+
+        return redirect()
+            ->route('tipo-identificaciones.index')
+            ->with('success', 'Tipo de identificación actualizado correctamente.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(TipoIdentificacion $tipoIdentificacion)
     {
-        //
+        $tipoIdentificacion->delete();
+
+        return redirect()
+            ->route('tipo-identificaciones.index')
+            ->with('success', 'Tipo de identificación eliminado correctamente.');
     }
 }
