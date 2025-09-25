@@ -43,6 +43,11 @@ class ItemController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'valor' => $this->normalizeCurrency($request->input('valor')),
+            'costo' => $this->normalizeCurrency($request->input('costo')),
+        ]);
+
         // Validar entrada
         $request->validate([
             'nombre'   => 'required|string|max:255',
@@ -100,6 +105,11 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item)
     {
+        $request->merge([
+            'valor' => $this->normalizeCurrency($request->input('valor')),
+            'costo' => $this->normalizeCurrency($request->input('costo')),
+        ]);
+
         // Validar entrada
         $request->validate([
             'nombre'   => 'required|string|max:255',
@@ -122,6 +132,23 @@ class ItemController extends Controller
         return redirect()
             ->route('items.index')
             ->with('success', 'Item actualizado correctamente.');
+    }
+
+    private function normalizeCurrency($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        $normalized = preg_replace('/[^\d,.-]/', '', (string) $value);
+        $normalized = str_replace('.', '', $normalized);
+        $normalized = str_replace(',', '.', $normalized);
+
+        return is_numeric($normalized) ? (float) $normalized : null;
     }
 
     public function addUnitsForm(Item $item)
