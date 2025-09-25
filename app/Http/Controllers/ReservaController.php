@@ -214,7 +214,7 @@ public function store(Request $request)
 
         $al = Cliente::find($alId);
 
-        if ($al && $al->whatsapp) {
+        if ($al && $al->whatsapp && $peluqueria->msj_reserva_confirmada) {
 
             $al->notify(new OneMsgTemplateNotification('reserva', array_merge(
                 $payload,

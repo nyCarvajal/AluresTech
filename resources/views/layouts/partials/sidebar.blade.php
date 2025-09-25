@@ -87,8 +87,8 @@
                     <div class="collapse" id="sidebarLayouts">
                          <ul class="nav sub-navbar-nav">
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('reservas.index') }}">
-                                        Listar citas</a>
+                                   <a class="sub-nav-link" href="{{ route('tipocitas.index') }}">
+                                        Tipos de Citas</a>
                               </li>
                               <li class="sub-nav-item">
                                    <a class="sub-nav-link" href="{{ route('tipo-identificaciones.index') }}">

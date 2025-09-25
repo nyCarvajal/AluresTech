@@ -14,7 +14,7 @@
 </div>
 
 <div class="mb-3">
-  <label>Mensaje Recordatorio</label>
+  <label>Mensaje Nueva Reserva</label>
   <textarea name="msj_reserva_confirmada" class="form-control">{{ old('msj_reserva_confirmada', $peluqueria->msj_reserva_confirmada ?? '') }}</textarea>
 </div>
 <div class="mb-3">
