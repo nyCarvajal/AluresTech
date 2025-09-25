@@ -26,6 +26,7 @@
                     <th>Nombre</th>
                     <th>Valor</th>
                     <th>Tipo</th>
+                    <th>Área</th>
                     <th>Cantidad</th>
                     <th>Costo</th>
                     <th>Acciones</th>
@@ -38,6 +39,7 @@
                         <td>{{ $item->nombre }}</td>
                         <td>{{ number_format($item->valor, 2, ',', '.') }}</td>
                         <td>{{ $item->tipo == 1 ? 'Producto' : 'Servicio' }}</td>
+                        <td>{{ $item->areaRelation?->descripcion ?? 'Sin asignar' }}</td>
                         <td>{{ $item->tipo == 1 ? $item->cantidad : '-' }}</td>
                         <td>{{ $item->tipo == 1 ? number_format($item->costo, 2, ',', '.') : '-' }}</td>
 

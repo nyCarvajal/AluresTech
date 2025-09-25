@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 
-class TipoIdentificacion extends Model
+class Area extends Model
 {
     protected $connection = 'tenant';
 
-    protected $table = 'tipo_identificacions';
+    protected $table = 'areas';
 
     protected $fillable = [
-        'tipo',
+        'descripcion',
     ];
 
     public $timestamps = false;
