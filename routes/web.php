@@ -21,6 +21,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\BancoController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\TipoUsuarioController;
+use App\Http\Controllers\TipocitaController;
 use App\Http\Controllers\SalidaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -110,6 +111,7 @@ Route::resource('proveedores', ProveedorController::class);
 Route::resource('salidas', SalidaController::class);
 Route::get('/clientesb', [ClientesController::class, 'search'])->name('clientes.search');
 Route::resource('tipo-usuarios', TipoUsuarioController::class);
+Route::resource('tipocitas', TipocitaController::class)->except(['show']);
 Route::resource('peluquerias', PeluqueriaController::class)
      ->except(['edit','update']);
 Route::get('peluqueria/editar',     [PeluqueriaController::class, 'editOwn'])
