@@ -27,8 +27,17 @@ class Salida extends Model
                     ->firstOrFail();
     }
     protected $fillable = [
-        'concepto', 'fecha', 'cuenta_bancaria_id', 'valor',
-        'cuenta_contable', 'observaciones', 'responsable_id', 'tercero_id'
+        'concepto',
+        'fecha',
+        'cuenta_bancaria_id',
+        'valor',
+        'observaciones',
+        'responsable_id',
+        'tercero_id',
+    ];
+
+    protected $casts = [
+        'fecha' => 'datetime',
     ];
 
     public function responsable()
