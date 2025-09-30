@@ -47,8 +47,10 @@
                                         <td>
                                             {{ $s->cuenta_bancaria_id ? ($s->cuentaBancaria->nombre ?? 'Cuenta bancaria') : 'Caja' }}
                                         </td>
-                                        <td>{{ number_format($s->valor, 2, ',', '.') }}</td>
-                                        <td>{{ optional($s->responsable)->name }}</td>
+
+                                        <td>{{ number_format($s->valor, 0, ',', '.') }}</td>
+                                        <td>{{ optional($s->responsable)->nombre }}</td>
+
                                         <td>{{ optional($s->tercero)->nombre }}</td>
 
                                         <td class="text-center">

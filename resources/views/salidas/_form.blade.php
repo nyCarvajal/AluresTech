@@ -3,6 +3,14 @@
     $usuarioAutenticado = auth()->user();
     $origenSeleccionado = old('origen');
 
+ $valorAnterior = old('valor', $editando ? $salida->valor : null);
+    if ($valorAnterior === null || $valorAnterior === '') {
+        $valorEntero = '';
+    } else {
+        $valorEntero = (int) preg_replace('/[^\d]/', '', (string) $valorAnterior);
+    }
+    $valorFormateado = $valorEntero === '' ? '' : number_format($valorEntero, 0, ',', '.');
+
     if (!in_array($origenSeleccionado, ['caja', 'banco'], true)) {
         $origenSeleccionado = $editando && $salida->cuenta_bancaria_id ? 'banco' : 'caja';
     }
@@ -109,17 +117,22 @@
 
 {{-- Valor --}}
 <div class="mb-3">
-    <label for="valor" class="form-label">Valor</label>
+ <label for="valor_display" class="form-label">Valor</label>
     <input
-        type="number"
-        step="0.01"
-        min="0"
+        type="text"
+        inputmode="numeric"
+        id="valor_display"
+        class="form-control"
+        value="{{ $valorFormateado }}"
+        autocomplete="off"
+        placeholder="0"
+    >
+    <input
+        type="hidden"
         id="valor"
         name="valor"
-        value="{{ old('valor', $editando ? $salida->valor : '') }}"
-        class="form-control"
-        required
-    >
+        value="{{ $valorEntero }}"
+
 </div>
 
 {{-- Observaciones --}}
@@ -146,7 +159,8 @@
                     value="{{ $usuario->id }}"
                     {{ (string) old('responsable_id', $salida->responsable_id) === (string) $usuario->id ? 'selected' : '' }}
                 >
-                    {{ $usuario->name }}
+      {{ $usuario->nombre }}
+
                 </option>
             @endforeach
         </select>
@@ -154,7 +168,8 @@
         <input
             type="text"
             class="form-control"
-            value="{{ optional($usuarioAutenticado)->name }}"
+ value="{{ optional($usuarioAutenticado)->nombre }}"
+
             disabled
         >
         <input
@@ -171,6 +186,9 @@
         const radiosOrigen = document.querySelectorAll('input[name="origen"]');
         const selectBanco = document.getElementById('cuenta_bancaria_id');
         const contenedorBanco = document.getElementById('contenedor-cuenta-bancaria');
+        const valorDisplay = document.getElementById('valor_display');
+        const valorHidden = document.getElementById('valor');
+
 
         function toggleBanco() {
             const origenSeleccionado = document.querySelector('input[name="origen"]:checked');
@@ -194,6 +212,32 @@
         });
 
         toggleBanco();
+
+
+        if (valorDisplay && valorHidden) {
+            const formatter = new Intl.NumberFormat('es-CO');
+
+            const aplicarFormato = () => {
+                const soloDigitos = valorDisplay.value.replace(/[^0-9]/g, '');
+                valorHidden.value = soloDigitos ? parseInt(soloDigitos, 10) : '';
+                valorDisplay.value = soloDigitos ? formatter.format(parseInt(soloDigitos, 10)) : '';
+
+                if (valorDisplay.value.length) {
+                    const posicion = valorDisplay.value.length;
+                    requestAnimationFrame(() => {
+                        valorDisplay.setSelectionRange(posicion, posicion);
+                    });
+                }
+            };
+
+            if (valorHidden.value) {
+                valorDisplay.value = formatter.format(parseInt(valorHidden.value, 10));
+            }
+
+            valorDisplay.addEventListener('input', aplicarFormato);
+            valorDisplay.addEventListener('blur', aplicarFormato);
+        }
+
     });
 </script>
 @endpush

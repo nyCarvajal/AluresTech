@@ -29,12 +29,18 @@ class SalidaController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+            'valor' => $request->input('valor') === null || $request->input('valor') === ''
+                ? null
+                : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
+        ]);
+
         $data = $request->validate([
             'concepto'           => 'required|string|max:255',
             'fecha'              => 'required|date',
             'origen'             => 'required|in:caja,banco',
             'cuenta_bancaria_id' => 'required_if:origen,banco|nullable|exists:bancos,id',
-            'valor'              => 'required|numeric',
+            'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
             'responsable_id'     => 'required|exists:users,id',
             'tercero_id'         => 'required|exists:proveedors,id',
@@ -47,6 +53,8 @@ class SalidaController extends Controller
         $data['responsable_id'] = Auth::id() ?? $data['responsable_id'];
 
         unset($data['origen']);
+
+       $data['valor'] = (int) $data['valor'];
 
         Salida::create($data);
         return redirect()->route('salidas.index')
@@ -69,12 +77,18 @@ class SalidaController extends Controller
 
     public function update(Request $request, Salida $salida)
     {
+        $request->merge([
+            'valor' => $request->input('valor') === null || $request->input('valor') === ''
+                ? null
+                : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
+        ]);
+
         $data = $request->validate([
             'concepto'           => 'required|string|max:255',
             'fecha'              => 'required|date',
             'origen'             => 'required|in:caja,banco',
             'cuenta_bancaria_id' => 'required_if:origen,banco|nullable|exists:bancos,id',
-            'valor'              => 'required|numeric',
+            'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
             'responsable_id'     => 'required|exists:users,id',
             'tercero_id'         => 'required|exists:proveedors,id',
@@ -85,6 +99,8 @@ class SalidaController extends Controller
             : null;
 
         unset($data['origen']);
+
+        $data['valor'] = (int) $data['valor'];
 
         $salida->update($data);
         return redirect()->route('salidas.index')
