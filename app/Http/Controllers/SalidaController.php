@@ -54,7 +54,7 @@ class SalidaController extends Controller
 
         unset($data['origen']);
 
-        $data['valor'] = (int) $data['valor'];
+       $data['valor'] = (int) $data['valor'];
 
         Salida::create($data);
         return redirect()->route('salidas.index')

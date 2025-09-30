@@ -14,6 +14,7 @@
             <p><strong>Valor:</strong> {{ number_format($salida->valor, 0, ',', '.') }}</p>
             <p><strong>Observaciones:</strong> {{ $salida->observaciones }}</p>
             <p><strong>Responsable:</strong> {{ optional($salida->responsable)->nombre }}</p>
+
             <p><strong>Tercero:</strong> {{ optional($salida->tercero)->nombre }}</p>
         </div>
         <a href="{{ route('salidas.index') }}" class="btn btn-secondary mt-3">Volver</a>

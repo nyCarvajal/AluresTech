@@ -3,7 +3,7 @@
     $usuarioAutenticado = auth()->user();
     $origenSeleccionado = old('origen');
 
-    $valorAnterior = old('valor', $editando ? $salida->valor : null);
+ $valorAnterior = old('valor', $editando ? $salida->valor : null);
     if ($valorAnterior === null || $valorAnterior === '') {
         $valorEntero = '';
     } else {
@@ -117,7 +117,7 @@
 
 {{-- Valor --}}
 <div class="mb-3">
-    <label for="valor_display" class="form-label">Valor</label>
+ <label for="valor_display" class="form-label">Valor</label>
     <input
         type="text"
         inputmode="numeric"
@@ -132,7 +132,7 @@
         id="valor"
         name="valor"
         value="{{ $valorEntero }}"
-    >
+
 </div>
 
 {{-- Observaciones --}}
@@ -159,7 +159,8 @@
                     value="{{ $usuario->id }}"
                     {{ (string) old('responsable_id', $salida->responsable_id) === (string) $usuario->id ? 'selected' : '' }}
                 >
-                    {{ $usuario->nombre }}
+      {{ $usuario->nombre }}
+
                 </option>
             @endforeach
         </select>
@@ -167,7 +168,8 @@
         <input
             type="text"
             class="form-control"
-            value="{{ optional($usuarioAutenticado)->nombre }}"
+ value="{{ optional($usuarioAutenticado)->nombre }}"
+
             disabled
         >
         <input
@@ -186,6 +188,7 @@
         const contenedorBanco = document.getElementById('contenedor-cuenta-bancaria');
         const valorDisplay = document.getElementById('valor_display');
         const valorHidden = document.getElementById('valor');
+
 
         function toggleBanco() {
             const origenSeleccionado = document.querySelector('input[name="origen"]:checked');
@@ -210,6 +213,7 @@
 
         toggleBanco();
 
+
         if (valorDisplay && valorHidden) {
             const formatter = new Intl.NumberFormat('es-CO');
 
@@ -233,6 +237,7 @@
             valorDisplay.addEventListener('input', aplicarFormato);
             valorDisplay.addEventListener('blur', aplicarFormato);
         }
+
     });
 </script>
 @endpush
