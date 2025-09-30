@@ -1,41 +1,52 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Salida;
 use App\Models\Banco;
 use App\Models\Proveedor;
+use App\Models\Salida;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SalidaController extends Controller
 {
     public function index()
     {
         $salidas = Salida::with(['responsable', 'cuentaBancaria', 'tercero'])->get();
+
         return view('salidas.index', compact('salidas'));
     }
 
     public function create()
     {
-		 $salida      = new Salida();  
+        $salida = new Salida();
         $usuarios = User::all();
-        $bancos   = Banco::all();
+        $bancos = Banco::all();
         $proveedores = Proveedor::all();
-        return view('salidas.create', compact('salida', 'usuarios','bancos','proveedores'));
+
+        return view('salidas.create', compact('salida', 'usuarios', 'bancos', 'proveedores'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'concepto'             => 'required|string|max:255',
-            'fecha'                => 'required|date',
-            'cuenta_bancaria_id'   => 'required|exists:bancos,id',
-            'valor'                => 'required|numeric',
-            'cuenta_contable'      => 'required|string|max:100',
-            'observaciones'        => 'nullable|string',
-            'responsable_id'       => 'required|exists:users,id',
-            'tercero_id'           => 'required|exists:proveedors,id',
+            'concepto'           => 'required|string|max:255',
+            'fecha'              => 'required|date',
+            'origen'             => 'required|in:caja,banco',
+            'cuenta_bancaria_id' => 'required_if:origen,banco|nullable|exists:bancos,id',
+            'valor'              => 'required|numeric',
+            'observaciones'      => 'nullable|string',
+            'responsable_id'     => 'required|exists:users,id',
+            'tercero_id'         => 'required|exists:proveedors,id',
         ]);
+
+        $data['cuenta_bancaria_id'] = $data['origen'] === 'banco'
+            ? $data['cuenta_bancaria_id']
+            : null;
+
+        $data['responsable_id'] = Auth::id() ?? $data['responsable_id'];
+
+        unset($data['origen']);
 
         Salida::create($data);
         return redirect()->route('salidas.index')
@@ -59,15 +70,21 @@ class SalidaController extends Controller
     public function update(Request $request, Salida $salida)
     {
         $data = $request->validate([
-            'concepto'             => 'required|string|max:255',
-            'fecha'                => 'required|date',
-            'cuenta_bancaria_id'   => 'required|exists:bancos,id',
-            'valor'                => 'required|numeric',
-            'cuenta_contable'      => 'required|string|max:100',
-            'observaciones'        => 'nullable|string',
-            'responsable_id'       => 'required|exists:users,id',
-            'tercero_id'           => 'required|exists:proveedors,id',
+            'concepto'           => 'required|string|max:255',
+            'fecha'              => 'required|date',
+            'origen'             => 'required|in:caja,banco',
+            'cuenta_bancaria_id' => 'required_if:origen,banco|nullable|exists:bancos,id',
+            'valor'              => 'required|numeric',
+            'observaciones'      => 'nullable|string',
+            'responsable_id'     => 'required|exists:users,id',
+            'tercero_id'         => 'required|exists:proveedors,id',
         ]);
+
+        $data['cuenta_bancaria_id'] = $data['origen'] === 'banco'
+            ? $data['cuenta_bancaria_id']
+            : null;
+
+        unset($data['origen']);
 
         $salida->update($data);
         return redirect()->route('salidas.index')
