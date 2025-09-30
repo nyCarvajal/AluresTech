@@ -31,7 +31,7 @@
                                     <th>ID</th>
                                     <th>Concepto</th>
                                     <th>Fecha</th>
-                                    <th>Banco</th>
+                                    <th>Origen</th>
                                     <th>Valor</th>
                                     <th>Responsable</th>
                                     <th>Tercero</th>
@@ -43,11 +43,13 @@
                                     <tr>
                                         <td>{{ $s->id }}</td>
                                         <td>{{ $s->concepto }}</td>
-                                        <td>{{ $s->fecha->format('Y-m-d') }}</td>
-                                        <td>{{ $s->cuentaBancaria->nombre ?? '' }}</td>
-                                        <td>{{ number_format($s->valor, 2, ',', '.') }}</td>
-                                        <td>{{ $s->responsable->name }}</td>
-                                        <td>{{ $s->tercero->nombre }}</td>
+                                        <td>{{ optional($s->fecha)->format('Y-m-d') }}</td>
+                                        <td>
+                                            {{ $s->cuenta_bancaria_id ? ($s->cuentaBancaria->nombre ?? 'Cuenta bancaria') : 'Caja' }}
+                                        </td>
+                                        <td>{{ number_format($s->valor, 0, ',', '.') }}</td>
+                                        <td>{{ optional($s->responsable)->nombre }}</td>
+                                        <td>{{ optional($s->tercero)->nombre }}</td>
 
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm" role="group">
