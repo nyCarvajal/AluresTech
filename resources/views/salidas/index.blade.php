@@ -45,7 +45,7 @@
                                         <td>{{ $s->concepto }}</td>
                                         <td>{{ optional($s->fecha)->format('Y-m-d') }}</td>
                                         <td>
-                                            {{ $s->cuenta_bancaria_id ? ($s->cuentaBancaria->nombre ?? 'Cuenta bancaria') : 'Caja' }}
+                                            {{ $s->cuenta_bancaria ? ($s->cuentaBancaria->nombre ?? 'Cuenta bancaria') : 'Caja' }}
                                         </td>
 
                                         <td>{{ number_format($s->valor, 0, ',', '.') }}</td>

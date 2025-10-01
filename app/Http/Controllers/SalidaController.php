@@ -40,18 +40,18 @@ class SalidaController extends Controller
             'concepto'           => 'required|string|max:255',
             'fecha'              => 'required|date',
             'origen'             => 'required|in:caja,banco',
-            'cuenta_bancaria_id' => 'required_if:origen,banco|nullable|exists:bancos,id',
+            'cuenta_bancaria' => 'required_if:origen,banco|nullable|exists:bancos,id',
             'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
-            'responsable_id'     => 'required|exists:users,id',
+            'responsable'     => 'required|exists:usuarios,id',
             'tercero_id'         => 'nullable|exists:proveedors,id',
         ]);
 
-        $data['cuenta_bancaria_id'] = $data['origen'] === 'banco'
-            ? $data['cuenta_bancaria_id']
+        $data['cuenta_bancaria'] = $data['origen'] === 'banco'
+            ? $data['cuenta_bancaria']
             : null;
 
-        $data['responsable_id'] = Auth::id() ?? $data['responsable_id'];
+        $data['responsable'] = Auth::id() ?? $data['responsable'];
 
         unset($data['origen']);
 
@@ -62,6 +62,8 @@ class SalidaController extends Controller
                          ->with('success', 'Salida registrada correctamente.');
     }
 
+
+    
     public function show(Salida $salida)
     {
         $salida->load(['responsable','cuentaBancaria','tercero']);
@@ -89,15 +91,15 @@ class SalidaController extends Controller
             'concepto'           => 'required|string|max:255',
             'fecha'              => 'required|date',
             'origen'             => 'required|in:caja,banco',
-            'cuenta_bancaria_id' => 'required_if:origen,banco|nullable|exists:bancos,id',
+            'cuenta_bancaria' => 'required_if:origen,banco|nullable|exists:bancos,id',
             'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
-            'responsable_id'     => 'required|exists:users,id',
+            'responsable'     => 'required|exists:usuarios,id',
             'tercero_id'         => 'nullable|exists:proveedors,id',
         ]);
 
-        $data['cuenta_bancaria_id'] = $data['origen'] === 'banco'
-            ? $data['cuenta_bancaria_id']
+        $data['cuenta_bancaria'] = $data['origen'] === 'banco'
+            ? $data['cuenta_bancaria']
             : null;
 
         unset($data['origen']);

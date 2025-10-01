@@ -93,20 +93,20 @@
 
 {{-- Cuenta bancaria --}}
 <div class="mb-3" id="contenedor-cuenta-bancaria">
-    <label for="cuenta_bancaria_id" class="form-label">Cuenta bancaria</label>
+    <label for="cuenta_bancaria" class="form-label">Cuenta bancaria</label>
     <select
-        id="cuenta_bancaria_id"
-        name="cuenta_bancaria_id"
+        id="cuenta_bancaria"
+        name="cuenta_bancaria"
         class="form-select"
         {{ $origenSeleccionado === 'caja' ? 'disabled' : '' }}
     >
-        <option value="" disabled {{ old('cuenta_bancaria_id', $editando ? $salida->cuenta_bancaria_id : '') === '' ? 'selected' : '' }}>
+        <option value="" disabled {{ old('cuenta_bancaria', $editando ? $salida->cuenta_bancaria : '') === '' ? 'selected' : '' }}>
             — Selecciona banco —
         </option>
         @foreach($bancos as $banco)
             <option
                 value="{{ $banco->id }}"
-                {{ (string) old('cuenta_bancaria_id', $editando ? $salida->cuenta_bancaria_id : '') === (string) $banco->id ? 'selected' : '' }}
+                {{ (string) old('cuenta_bancaria', $editando ? $salida->cuenta_bancaria : '') === (string) $banco->id ? 'selected' : '' }}
             >
                 {{ $banco->nombre }}
             </option>
@@ -149,14 +149,14 @@
 <div class="mb-3">
     <label class="form-label">Responsable</label>
     @if($editando)
-        <select name="responsable_id" class="form-select" required>
-            <option value="" disabled {{ old('responsable_id', $salida->responsable_id) === null ? 'selected' : '' }}>
+        <select name="responsable" class="form-select" required>
+            <option value="" disabled {{ old('responsable', $salida->responsable) === null ? 'selected' : '' }}>
                 — Selecciona usuario —
             </option>
             @foreach($usuarios as $usuario)
                 <option
                     value="{{ $usuario->id }}"
-                    {{ (string) old('responsable_id', $salida->responsable_id) === (string) $usuario->id ? 'selected' : '' }}
+                    {{ (string) old('responsable', $salida->responsable) === (string) $usuario->id ? 'selected' : '' }}
                 >
       {{ $usuario->nombre }}
 
@@ -173,8 +173,8 @@
         >
         <input
             type="hidden"
-            name="responsable_id"
-            value="{{ old('responsable_id', optional($usuarioAutenticado)->id) }}"
+            name="responsable"
+            value="{{ old('responsable', optional($usuarioAutenticado)->id) }}"
         >
     @endif
 </div>
@@ -183,7 +183,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const radiosOrigen = document.querySelectorAll('input[name="origen"]');
-        const selectBanco = document.getElementById('cuenta_bancaria_id');
+        const selectBanco = document.getElementById('cuenta_bancaria');
         const contenedorBanco = document.getElementById('contenedor-cuenta-bancaria');
         const valorDisplay = document.getElementById('valor_display');
         const valorHidden = document.getElementById('valor');
