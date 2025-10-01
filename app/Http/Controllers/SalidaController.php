@@ -33,6 +33,7 @@ class SalidaController extends Controller
             'valor' => $request->input('valor') === null || $request->input('valor') === ''
                 ? null
                 : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
+            'tercero_id' => $request->filled('tercero_id') ? $request->input('tercero_id') : null,
         ]);
 
         $data = $request->validate([
@@ -43,7 +44,7 @@ class SalidaController extends Controller
             'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
             'responsable_id'     => 'required|exists:users,id',
-            'tercero_id'         => 'required|exists:proveedors,id',
+            'tercero_id'         => 'nullable|exists:proveedors,id',
         ]);
 
         $data['cuenta_bancaria_id'] = $data['origen'] === 'banco'
@@ -81,6 +82,7 @@ class SalidaController extends Controller
             'valor' => $request->input('valor') === null || $request->input('valor') === ''
                 ? null
                 : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
+            'tercero_id' => $request->filled('tercero_id') ? $request->input('tercero_id') : null,
         ]);
 
         $data = $request->validate([
@@ -91,7 +93,7 @@ class SalidaController extends Controller
             'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
             'responsable_id'     => 'required|exists:users,id',
-            'tercero_id'         => 'required|exists:proveedors,id',
+            'tercero_id'         => 'nullable|exists:proveedors,id',
         ]);
 
         $data['cuenta_bancaria_id'] = $data['origen'] === 'banco'

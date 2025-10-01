@@ -49,10 +49,9 @@
         id="tercero_id"
         name="tercero_id"
         class="form-select"
-        required
     >
-        <option value="" disabled {{ old('tercero_id', $editando ? $salida->tercero_id : '') === '' ? 'selected' : '' }}>
-            — Selecciona proveedor —
+        <option value="" {{ old('tercero_id', $editando ? $salida->tercero_id : '') === '' ? 'selected' : '' }}>
+            — Sin proveedor —
         </option>
         @foreach($proveedores as $proveedor)
             <option
