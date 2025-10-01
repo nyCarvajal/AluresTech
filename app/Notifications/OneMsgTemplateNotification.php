@@ -24,7 +24,7 @@ class OneMsgTemplateNotification extends Notification
 public function toOneMsgTemplate($notifiable): array
 {
    
-    $template  = config("services.onemsg.templates.{$this->templateKey}");
+    $template  = $this->templateKey;
     $namespace = config('services.onemsg.namespace');
     $langCode  = config('services.onemsg.lang', 'es');
 
