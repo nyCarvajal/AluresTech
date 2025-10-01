@@ -168,17 +168,11 @@ class ReservaController extends Controller
 public function store(Request $request)
 {
     // 1) Validación, ahora con repeat_enabled y repeat_until
-    $request->merge([
-        'entrenador_id' => $request->filled('entrenador_id')
-            ? $request->input('entrenador_id')
-            : null,
-    ]);
-
     $data = $request->validate([
         'type'           => 'required',
         'start'          => 'required|date',                // "YYYY-MM-DD HH:MM"
         'duration'       => 'nullable|integer|min:1',
-        'entrenador_id'  => 'nullable|integer|exists:usuarios,id',
+        'entrenador_id'  => 'required_if:type,Clase|nullable',
         'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
         'cliente_id'     => 'required_if:type,Reserva|integer|exists:clientes,id',
       
@@ -192,7 +186,7 @@ public function store(Request $request)
    
                 $res = Reserva::create([
                     'fecha'         => $start,
-                    'entrenador_id' => $data['entrenador_id'] ?? null,
+                    'entrenador_id' => $data['entrenador_id'],
                     'estado'        => $data['estado'],
                     'duracion'      => $data['duration'] ?? 60,
                     'tipo'          => $data['type'],
@@ -322,14 +316,9 @@ public function availability(Request $request)
    
 public function update(Request $request, Reserva $reserva)
 {
-
+	
    $oldEstado=$reserva->estado;
    $oldfecha=$reserva->fecha;
-        $request->merge([
-            'entrenador_id' => $request->filled('entrenador_id')
-                ? $request->input('entrenador_id')
-                : null,
-        ]);
         $data = $request->validate([
             'type'          => ['required', Rule::in(['Reserva','Clase','Torneo'])],
             'start'         => 'required|date',
@@ -337,7 +326,7 @@ public function update(Request $request, Reserva $reserva)
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada',
             'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
             'cliente_id'    => 'required_if:type,Reserva,Clase|exists:clientes,id',
-            'entrenador_id' => 'nullable|integer|exists:usuarios,id',
+            'entrenador_id' => 'required_if:type,Clase|nullable',
             'responsable_id'=> 'required_if:type,Torneo|exists:clientes,id',
             'canchas'       => 'required_if:type,Torneo|array',
             'canchas.*'     => 'exists:canchas,id',
@@ -402,9 +391,7 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
         'cancha_id'     => $data['cancha_id'] ?? null,
         'responsable_id'=> $data['responsable_id'] ?? $reserva->responsable_id,
         'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
-        'entrenador_id' => array_key_exists('entrenador_id', $data)
-            ? $data['entrenador_id']
-            : $reserva->entrenador_id,
+        'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
     ])->save();
 
     if ($data['type'] === 'Torneo') {
