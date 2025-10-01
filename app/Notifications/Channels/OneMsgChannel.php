@@ -27,8 +27,8 @@ class OneMsgChannel
 	
 	$url = sprintf(
     'https://api.1msg.io/%s/sendTemplate?token=%s',
-    config('services.onemsg.channel_id'),
-    config('services.onemsg.token')
+    'VID163266002',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpbnN0YW5jZUlkIjoiVklEMTYzMjY2MDAyIiwidG9rZW4iOiJUS05IR0NUQ0dxQXU5ZkJEWG5ZR2JyWFRMa2ZZMk04eSIsImlzcyI6IjFtc2cuaW8iLCJpYXQiOjE3NTc2MTAyNjh9.z8PuvZU58Dc324ihGAQC64a4Uh_3B2lpH4aYC5-3CmM'
 );
 
 $jsonBody = json_encode($payload, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
