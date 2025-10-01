@@ -12,7 +12,7 @@
 </div>
 
 <div class="row g-3 mb-5">
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'ventas']) }}#ventas" class="card quick-report h-100 {{ $activeTab === 'ventas' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -23,7 +23,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'comisiones']) }}#comisiones" class="card quick-report h-100 {{ $activeTab === 'comisiones' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -34,7 +34,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'gastos']) }}#gastos" class="card quick-report h-100 {{ $activeTab === 'gastos' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -45,7 +45,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'ingresos']) }}#ingresos" class="card quick-report h-100 {{ $activeTab === 'ingresos' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -56,7 +56,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+  <!--  <div class="col-6 col-md-4 col-xl-3">
         <a href="#ingresos-gastos" class="card quick-report h-100 border-light">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -66,7 +66,7 @@
                 <p class="fs-5 fw-semibold mb-0">Últimos 12 meses</p>
             </div>
         </a>
-    </div>
+    </div> -->
 </div>
 
 <section id="ventas" class="mb-5">
