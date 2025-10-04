@@ -95,7 +95,8 @@ class ReservaController extends Controller
 	public function events(Request $request)
 {
     // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
-    $query = Reserva::with(['cliente', 'entrenador']);
+    $query = Reserva::with(['cliente', 'entrenador'])
+        ->where('estado', 'Confirmada');
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
     }
@@ -155,6 +156,54 @@ class ReservaController extends Controller
         $reserva->save();
 
         return response()->json(['success' => true]);
+    }
+
+    public function pending()
+    {
+        $reservas = Reserva::with('cliente')
+            ->where('estado', 'Pendiente')
+            ->orderBy('fecha')
+            ->paginate(15);
+
+        return view('reservas.pending', compact('reservas'));
+    }
+
+    public function confirmPending(Reserva $reserva)
+    {
+        $oldEstado = $reserva->estado;
+
+        if ($oldEstado === 'Confirmada') {
+            return redirect()
+                ->back()
+                ->with('success', 'Esta reserva ya estaba confirmada.');
+        }
+
+        if ($oldEstado === 'Cancelada') {
+            return redirect()
+                ->back()
+                ->with('error', 'No es posible confirmar una reserva cancelada.');
+        }
+
+        $reserva->estado = 'Confirmada';
+        $reserva->save();
+
+        $tipoReserva = $reserva->type ?? 'Reserva';
+        if ($oldEstado !== 'Confirmada' && in_array($tipoReserva, ['Reserva', 'Clase'])) {
+            $clienteId = $reserva->cliente_id;
+            $membresia = MembresiaCliente::where('cliente_id', $clienteId)
+                ->where('estado', 1)
+                ->latest()
+                ->first();
+
+            if ($membresia) {
+                $campo = $tipoReserva === 'Clase' ? 'clasesVistas' : 'numReservas';
+                $membresia->increment($campo);
+            }
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Reserva confirmada y añadida al calendario.');
     }
 
     /**

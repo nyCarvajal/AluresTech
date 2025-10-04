@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany; 
 
 use Illuminate\Notifications\Notifiable;   
@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
   
 
-class Cliente extends Model
+class Cliente extends Authenticatable
 {
-	   protected $connection = 'tenant';
+           protected $connection = 'tenant';
 	   
 	   public function resolveRouteBinding($value, $field = null)
     {
@@ -50,7 +50,24 @@ class Cliente extends Model
   'foto',
 ];
 
- use Notifiable; 
+    use Notifiable;
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'verification_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    public function markEmailAsVerified(): void
+    {
+        $this->email_verified_at = now();
+        $this->verification_token = null;
+        $this->save();
+    }
 
 
     public function pais()
