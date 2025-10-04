@@ -28,7 +28,7 @@ class BookingController extends Controller
         $tipocitas = Tipocita::orderBy('nombre')->get();
         $proximasReservas = collect();
 
-        $captcha = $this->regenerateCaptcha($request, $peluqueria);
+$captcha = $this->regenerateCaptcha($request, $peluqueria);
 
         if ($cliente) {
             $proximasReservas = Reserva::where('cliente_id', $cliente->id)

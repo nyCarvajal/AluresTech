@@ -342,6 +342,13 @@ form.action                          = '/reservas/' + ev.id;
   /* ---- 2)  COMMON data: extended props ---- */
   const estado = arg.event.extendedProps.status;      // Confirmada / Pendiente…
   const time   = arg.timeText;
+  const estadoBadgeClasses = {
+    'Confirmada': ['bg-success'],
+    'Pendiente': ['bg-warning', 'text-dark'],
+    'Cancelada': ['bg-danger'],
+    'No Asistida': ['bg-primary']
+  };
+  const estadoClasses = estadoBadgeClasses[estado] || ['bg-secondary'];
 
    
 
@@ -375,8 +382,7 @@ form.action                          = '/reservas/' + ev.id;
     if (estado) {
       const badge = document.createElement('span');
       badge.classList.add('badge', 'align-self-start', 'fs-8');
-      if (estado === 'Confirmada') badge.classList.add('bg-success');
-      else                         badge.classList.add('bg-warning', 'text-dark');
+      estadoClasses.forEach(cls => badge.classList.add(cls));
       badge.innerText = estado;
       cont.appendChild(badge);
     }
@@ -403,11 +409,7 @@ form.action                          = '/reservas/' + ev.id;
   if (estado) {
     const badge = document.createElement('span');
     badge.classList.add('badge', 'ms-auto', 'position-absolute', 'top-0', 'end-0', 'me-1', 'mt-1', 'fs-8');
-    if (estado === 'Confirmada') {
-      badge.classList.add('bg-success');
-    } else {
-      badge.classList.add('bg-warning', 'text-dark');
-    }
+    estadoClasses.forEach(cls => badge.classList.add(cls));
     badge.innerText = estado;
     container.appendChild(badge);
   }
