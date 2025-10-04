@@ -115,6 +115,12 @@ class ReservaController extends Controller
                           ->toIso8601String();
 						  
         $color = optional($r->entrenador)->color ?? '#6042F5';
+        $textColor = '#121212';
+
+        if ($r->estado === 'No Asistida') {
+            $color = '#0d6efd';
+            $textColor = '#ffffff';
+        }
 
         $base = [
             'id'              => $r->id,
@@ -125,7 +131,7 @@ class ReservaController extends Controller
             'duration'        => $r->duracion,
             'title'           => optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
             'borderColor'     => $color,
-            'textColor'       => '#121212',
+            'textColor'       => $textColor,
             'backgroundColor' => $color,
             'extendedProps'   => [
                 'tipo'          => $r->tipo,              // reserva | torneo | clase
@@ -173,7 +179,7 @@ public function store(Request $request)
         'start'          => 'required|date',                // "YYYY-MM-DD HH:MM"
         'duration'       => 'nullable|integer|min:1',
         'entrenador_id'  => 'required_if:type,Clase|nullable',
-        'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
+        'estado'         => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
         'cliente_id'     => 'required_if:type,Reserva|integer|exists:clientes,id',
       
         
@@ -323,7 +329,7 @@ public function update(Request $request, Reserva $reserva)
             'type'          => ['required', Rule::in(['Reserva','Clase','Torneo'])],
             'start'         => 'required|date',
             'duration'      => 'integer|min:1',
-            'estado'        => 'required|in:Confirmada,Pendiente,Cancelada',
+            'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
             'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
             'cliente_id'    => 'required_if:type,Reserva,Clase|exists:clientes,id',
             'entrenador_id' => 'required_if:type,Clase|nullable',
