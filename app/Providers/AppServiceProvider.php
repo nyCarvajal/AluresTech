@@ -26,19 +26,23 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        View::composer('layouts.app', function ($view) {
-            $count = 0;
+        View::composer(['layouts.app', 'layouts.vertical', 'layouts.partials.topbar'], function ($view) {
+            static $count = null;
 
-            if ($user = Auth::user()) {
-                $peluqueria = $user->peluqueria;
+            if ($count === null) {
+                $count = 0;
 
-                if ($peluqueria && $peluqueria->db) {
-                    Config::set('database.connections.tenant.database', $peluqueria->db);
-                    DB::purge('tenant');
-                    DB::reconnect('tenant');
-                    DB::setDefaultConnection('tenant');
+                if ($user = Auth::user()) {
+                    $peluqueria = $user->peluqueria;
 
-                    $count = Reserva::where('estado', 'Pendiente')->count();
+                    if ($peluqueria && $peluqueria->db) {
+                        Config::set('database.connections.tenant.database', $peluqueria->db);
+                        DB::purge('tenant');
+                        DB::reconnect('tenant');
+                        DB::setDefaultConnection('tenant');
+
+                        $count = Reserva::where('estado', 'Pendiente')->count();
+                    }
                 }
             }
 
