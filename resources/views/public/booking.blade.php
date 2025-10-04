@@ -20,6 +20,27 @@
             border-radius: 24px;
             padding: 2.5rem;
         }
+        .hero-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .hero-logo {
+            width: 96px;
+            height: 96px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem;
+        }
+        .hero-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
         .card-shadow {
             box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
             border: none;
@@ -66,13 +87,29 @@
         .timeline-item:last-child::after {
             display: none;
         }
+        @media (max-width: 575.98px) {
+            .hero {
+                padding: 2rem;
+            }
+            .hero-logo {
+                width: 80px;
+                height: 80px;
+            }
+        }
     </style>
 </head>
 <body>
 <div class="container py-5">
     <div class="hero mb-5">
-        <h1 class="fw-bold mb-3">Reserva tu próximo servicio en {{ $peluqueria->nombre }}</h1>
-        <p class="lead mb-0">Crea tu cuenta, verifica tu correo e ingresa cuando quieras para agendar la cita que necesitas.</p>
+        <div class="hero-header">
+            <div class="hero-logo">
+                <img src="{{ $peluqueriaLogo }}" alt="Logo de {{ $peluqueria->nombre }}">
+            </div>
+            <div>
+                <h1 class="fw-bold mb-3">Reserva tu próximo servicio en {{ $peluqueria->nombre }}</h1>
+                <p class="lead mb-0">Crea tu cuenta, verifica tu correo e ingresa cuando quieras para agendar la cita que necesitas.</p>
+            </div>
+        </div>
     </div>
 
     @if (session('status'))
@@ -148,6 +185,17 @@
                                     <label class="form-label" for="register-password-confirmation">Confirmar contraseña</label>
                                     <input type="password" class="form-control" id="register-password-confirmation" name="password_confirmation" required>
                                 </div>
+                                <div class="mb-4">
+                                    <label class="form-label" for="register-captcha">Verificación anti-spam</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">{{ $captchaQuestion }}</span>
+                                        <input type="number" class="form-control @error('captcha', 'register') is-invalid @enderror" id="register-captcha" name="captcha" inputmode="numeric" pattern="[0-9]*" placeholder="Resultado" required>
+                                    </div>
+                                    @error('captcha', 'register')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Escribe el resultado para demostrar que no eres un robot.</small>
+                                </div>
                                 <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
                             </form>
                         </div>
@@ -208,11 +256,8 @@
                                     @endif
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="appointment-duration">Duración (minutos)</label>
-                                    <input type="number" class="form-control @if($appointmentErrors?->has('duracion')) is-invalid @endif" id="appointment-duration" name="duracion" min="15" max="240" step="15" value="{{ old('duracion', 60) }}" required>
-                                    @if($appointmentErrors?->has('duracion'))
-                                        <div class="invalid-feedback">{{ $appointmentErrors->first('duracion') }}</div>
-                                    @endif
+                                    <label class="form-label d-block">Duración</label>
+                                    <p class="form-control-plaintext fw-semibold text-muted mb-0">{{ $defaultDuration }} minutos</p>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="appointment-tipocita">Servicio</label>

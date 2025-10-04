@@ -18,13 +18,17 @@ use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    public function show(Peluqueria $peluqueria)
+    private const DEFAULT_DURATION = 60;
+
+    public function show(Request $request, Peluqueria $peluqueria)
     {
         $this->setTenantConnection($peluqueria);
 
         $cliente = $this->currentClient($peluqueria);
         $tipocitas = Tipocita::orderBy('nombre')->get();
         $proximasReservas = collect();
+
+$captcha = $this->regenerateCaptcha($request, $peluqueria);
 
         if ($cliente) {
             $proximasReservas = Reserva::where('cliente_id', $cliente->id)
@@ -39,6 +43,9 @@ class BookingController extends Controller
             'tipocitas' => $tipocitas,
             'cliente' => $cliente,
             'proximasReservas' => $proximasReservas,
+            'captchaQuestion' => $captcha['question'],
+            'defaultDuration' => self::DEFAULT_DURATION,
+            'peluqueriaLogo' => $this->resolveLogoUrl($peluqueria),
         ]);
     }
 
@@ -52,8 +59,11 @@ class BookingController extends Controller
             'correo' => ['required', 'email', 'max:200'],
             'whatsapp' => ['nullable', 'string', 'max:200'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'captcha' => ['required', 'integer'],
         ], [
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            'captcha.required' => 'Resuelve el captcha para continuar.',
+            'captcha.integer' => 'El captcha debe ser un número.',
         ]);
 
         if ($validator->fails()) {
@@ -62,6 +72,14 @@ class BookingController extends Controller
 
         $data = $validator->validated();
         $correo = strtolower($data['correo']);
+
+        $captchaData = $request->session()->get($this->captchaKey($peluqueria));
+        $captchaAnswer = $captchaData['answer'] ?? null;
+        if (! $captchaAnswer || (int) $data['captcha'] !== (int) $captchaAnswer) {
+            return back()
+                ->withErrors(['captcha' => 'La respuesta del captcha es incorrecta.'], 'register')
+                ->withInput($request->except('captcha'));
+        }
 
         if (Cliente::where('correo', $correo)->exists()) {
             return back()
@@ -85,6 +103,7 @@ class BookingController extends Controller
 
         $request->session()->forget($this->sessionKey($peluqueria));
         $request->session()->put($this->pendingKey($peluqueria), $cliente->correo);
+        $request->session()->forget($this->captchaKey($peluqueria));
 
         return redirect()
             ->route('public.booking.show', $peluqueria)
@@ -161,7 +180,6 @@ class BookingController extends Controller
         $validator = Validator::make($request->all(), [
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
-            'duracion' => ['required', 'integer', 'min:15', 'max:240'],
             'tipocita_id' => ['nullable', 'integer', 'exists:tipocita,id'],
             'nota_cliente' => ['nullable', 'string', 'max:1000'],
         ], [
@@ -185,7 +203,7 @@ class BookingController extends Controller
                 ->withInput();
         }
 
-        $duracion = (int) $data['duracion'];
+        $duracion = self::DEFAULT_DURATION;
         $fin = (clone $inicio)->addMinutes($duracion);
 
         $conflicto = Reserva::where('estado', '<>', 'Cancelada')
@@ -216,7 +234,6 @@ class BookingController extends Controller
             'cliente_id' => $cliente->id,
             'estado' => 'Pendiente',
             'tipo' => $tipoCita?->nombre ?? 'Reserva',
-            'type' => 'Reserva',
             'nota_cliente' => $data['nota_cliente'] ?? null,
         ]);
 
@@ -345,5 +362,55 @@ class BookingController extends Controller
     private function pendingKey(Peluqueria $peluqueria): string
     {
         return 'public_cliente_pending_' . $peluqueria->id;
+    }
+
+    private function regenerateCaptcha(Request $request, Peluqueria $peluqueria): array
+    {
+        $a = random_int(1, 9);
+        $b = random_int(1, 9);
+
+        $captcha = [
+            'question' => $a . ' + ' . $b,
+            'answer' => $a + $b,
+        ];
+
+        $request->session()->put($this->captchaKey($peluqueria), $captcha);
+
+        return $captcha;
+    }
+
+    private function captchaKey(Peluqueria $peluqueria): string
+    {
+        return 'public_captcha_' . $peluqueria->id;
+    }
+
+    private function resolveLogoUrl(Peluqueria $peluqueria): string
+    {
+        $candidates = [
+            $peluqueria->logo_url ?? null,
+            $peluqueria->logo ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (! $candidate) {
+                continue;
+            }
+
+            if (filter_var($candidate, FILTER_VALIDATE_URL)) {
+                return $candidate;
+            }
+
+            if (Str::startsWith($candidate, ['/'])) {
+                return asset(ltrim($candidate, '/'));
+            }
+
+            if (Str::startsWith($candidate, ['storage/', 'images/'])) {
+                return asset($candidate);
+            }
+
+            return asset('storage/' . ltrim($candidate, '/'));
+        }
+
+        return asset('images/logoligth.png');
     }
 }
