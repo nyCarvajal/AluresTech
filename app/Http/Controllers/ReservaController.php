@@ -17,7 +17,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\OneMsgTemplateNotification;
 use Illuminate\Support\Facades\Log;
-use App\Models\MembresiaCliente;
 
 
 class ReservaController extends Controller
@@ -192,20 +191,6 @@ class ReservaController extends Controller
 
         $reserva->estado = 'Confirmada';
         $reserva->save();
-
-        $tipoReserva = $reserva->type ?? 'Reserva';
-        if ($oldEstado !== 'Confirmada' && in_array($tipoReserva, ['Reserva', 'Clase'])) {
-            $clienteId = $reserva->cliente_id;
-            $membresia = MembresiaCliente::where('cliente_id', $clienteId)
-                ->where('estado', 1)
-                ->latest()
-                ->first();
-
-            if ($membresia) {
-                $campo = $tipoReserva === 'Clase' ? 'clasesVistas' : 'numReservas';
-                $membresia->increment($campo);
-            }
-        }
 
         return redirect()
             ->back()
@@ -414,12 +399,7 @@ public function update(Request $request, Reserva $reserva)
  
 if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) {
     $clienteId = $data['cliente_id'];
-    $memb = MembresiaCliente::where('cliente_id', $clienteId)
-            ->where('estado', 1)
-            ->latest()
-            ->first();
-
-    $campo = $data['type'] === 'Clase' ? 'clasesVistas' : 'numReservas';
+   
 
     if ($newEstado === 'Cancelada') {
         if ($memb) {
