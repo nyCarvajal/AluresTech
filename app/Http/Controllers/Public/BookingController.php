@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ClienteVerificationMail;
+use App\Mail\NuevaReservaPeluqueriaMail;
 use App\Models\Cliente;
 use App\Models\Peluqueria;
 use App\Models\Reserva;
+use App\Models\User;
 use App\Models\Tipocita;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -28,7 +30,7 @@ class BookingController extends Controller
         $tipocitas = Tipocita::orderBy('nombre')->get();
         $proximasReservas = collect();
 
-$captcha = $this->regenerateCaptcha($request, $peluqueria);
+        $captcha = $this->regenerateCaptcha($request, $peluqueria);
 
         if ($cliente) {
             $proximasReservas = Reserva::where('cliente_id', $cliente->id)
@@ -228,7 +230,7 @@ $captcha = $this->regenerateCaptcha($request, $peluqueria);
             $tipoCita = Tipocita::find($data['tipocita_id']);
         }
 
-        Reserva::create([
+        $reserva = Reserva::create([
             'fecha' => $inicio,
             'duracion' => $duracion,
             'cliente_id' => $cliente->id,
@@ -236,6 +238,17 @@ $captcha = $this->regenerateCaptcha($request, $peluqueria);
             'tipo' => $tipoCita?->nombre ?? 'Reserva',
             'nota_cliente' => $data['nota_cliente'] ?? null,
         ]);
+
+        $recipients = User::where('peluqueria_id', $peluqueria->id)
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (! empty($recipients)) {
+            Mail::to($recipients)->send(new NuevaReservaPeluqueriaMail($peluqueria, $cliente, $reserva));
+        }
 
         return redirect()
             ->route('public.booking.show', $peluqueria)
