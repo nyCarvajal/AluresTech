@@ -11,6 +11,12 @@
     </div>
 </div>
 
+@if($pageError)
+    <div class="alert alert-danger" role="alert">
+        {{ $pageError }}
+    </div>
+@endif
+
 <div class="row g-3 mb-5">
     <div class="col-6 col-md-4 col-xl-2">
         <a href="{{ route('pages.charts', ['tab' => 'ventas']) }}#ventas" class="card quick-report h-100 {{ $activeTab === 'ventas' ? 'border-primary shadow-sm' : 'border-light' }}">
@@ -474,6 +480,3 @@
 </style>
 @endpush
 
-@push('scripts')
-    @vite('resources/js/pages/chart.js')
-@endpush
