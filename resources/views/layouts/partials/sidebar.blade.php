@@ -168,7 +168,7 @@
                </li>
 
                <li class="nav-item">
-                    <a class="nav-link" href="{{ route ('second' , ['pages','charts']) }}">
+                    <a class="nav-link" href="{{ route('pages.charts') }}">
                          <span class="nav-icon">
                               <iconify-icon icon="mingcute:chart-bar-line"></iconify-icon>
                          </span>

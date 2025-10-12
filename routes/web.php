@@ -28,6 +28,7 @@ use App\Http\Controllers\SalidaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\AdministrativeReportController;
 use App\Http\Middleware\ConnectTenantDB;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
@@ -153,11 +154,13 @@ Route::resource('canchas', CanchaController::class);
 	Route::resource('caja', CajaController::class);
 	Route::resource('peluqueria', PeluqueriaController::class);
 	Route::resource('membresias', MembresiaController::class);
-	Route::resource('pagos', PagoController::class);
-	Route::resource('orden_de_compras', OrdendecompraController::class);
-	Route::resource('recordatorio', RecordatorioController::class);
-	Route::resource('reservas', ReservaController::class);
-	Route::resource('ventas', VentaController::class);
+        Route::resource('pagos', PagoController::class);
+        Route::resource('orden_de_compras', OrdendecompraController::class);
+        Route::resource('recordatorio', RecordatorioController::class);
+        Route::resource('reservas', ReservaController::class);
+        Route::resource('ventas', VentaController::class);
+        Route::get('pages/charts', [AdministrativeReportController::class, 'index'])
+            ->name('pages.charts');
 Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
 Route::post('/ventas/por-item', [VentaController::class, 'storeByItem'])
      ->name('ventas.storeByItem');
