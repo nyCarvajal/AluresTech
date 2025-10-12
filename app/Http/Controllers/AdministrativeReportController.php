@@ -169,62 +169,89 @@ class AdministrativeReportController extends Controller
         $chartStart = Carbon::now()->subMonths(11)->startOfMonth();
         $chartEnd = Carbon::now()->endOfMonth();
 
-        $ingresosPorMes = Pago::query()
-            ->select(['fecha_hora', 'valor'])
-            ->whereBetween('fecha_hora', [$chartStart, $chartEnd])
-            ->get()
-            ->groupBy(function (Pago $pago) {
-                return optional($pago->fecha_hora)->format('Y-m');
-            })
-            ->filter(function ($pagos, $periodo) {
-                return filled($periodo);
-            })
-            ->mapWithKeys(function ($pagos, $periodo) {
-                return [$periodo => $pagos->sum('valor')];
-            });
-
-        $gastosPorMes = Salida::query()
-            ->select(['fecha', 'valor'])
-            ->whereBetween('fecha', [$chartStart, $chartEnd])
-            ->get()
-            ->groupBy(function (Salida $salida) {
-                return optional($salida->fecha)->format('Y-m');
-            })
-            ->filter(function ($gastos, $periodo) {
-                return filled($periodo);
-            })
-            ->mapWithKeys(function ($gastos, $periodo) {
-                return [$periodo => $gastos->sum('valor')];
-            });
-
         $chartLabels = [];
         $chartIngresos = [];
         $chartGastos = [];
+        $chartError = null;
 
-        $spanishMonthNames = [
-            1 => 'Ene',
-            2 => 'Feb',
-            3 => 'Mar',
-            4 => 'Abr',
-            5 => 'May',
-            6 => 'Jun',
-            7 => 'Jul',
-            8 => 'Ago',
-            9 => 'Sep',
-            10 => 'Oct',
-            11 => 'Nov',
-            12 => 'Dic',
-        ];
+        try {
+            $ingresosPorMes = Pago::query()
+                ->select(['fecha_hora', 'valor'])
+                ->whereBetween('fecha_hora', [$chartStart, $chartEnd])
+                ->get()
+                ->groupBy(function (Pago $pago) {
+                    $rawFecha = $pago->getRawOriginal('fecha_hora');
 
-        $cursor = $chartStart->copy();
-        while ($cursor <= $chartEnd) {
-            $key = $cursor->format('Y-m');
-            $monthNumber = (int) $cursor->format('n');
-            $monthName = $spanishMonthNames[$monthNumber] ?? $cursor->format('M');
-            $chartLabels[] = $monthName . ' ' . $cursor->format('Y');
-            $chartIngresos[] = (float) ($ingresosPorMes[$key] ?? 0);
-            $chartGastos[] = (float) ($gastosPorMes[$key] ?? 0);
-            $cursor->addMonth();
+                    if (empty($rawFecha) || $rawFecha === '0000-00-00 00:00:00') {
+                        return null;
+                    }
+
+                    try {
+                        return Carbon::parse($rawFecha)->format('Y-m');
+                    } catch (\Throwable $exception) {
+                        return null;
+                    }
+                })
+                ->filter(function ($pagos, $periodo) {
+                    return filled($periodo);
+                })
+                ->mapWithKeys(function ($pagos, $periodo) {
+                    return [$periodo => $pagos->sum('valor')];
+                });
+
+            $gastosPorMes = Salida::query()
+                ->select(['fecha', 'valor'])
+                ->whereBetween('fecha', [$chartStart, $chartEnd])
+                ->get()
+                ->groupBy(function (Salida $salida) {
+                    $rawFecha = $salida->getRawOriginal('fecha');
+
+                    if (empty($rawFecha) || $rawFecha === '0000-00-00') {
+                        return null;
+                    }
+
+                    try {
+                        return Carbon::parse($rawFecha)->format('Y-m');
+                    } catch (\Throwable $exception) {
+                        return null;
+                    }
+                })
+                ->filter(function ($gastos, $periodo) {
+                    return filled($periodo);
+                })
+                ->mapWithKeys(function ($gastos, $periodo) {
+                    return [$periodo => $gastos->sum('valor')];
+                });
+
+            $spanishMonthNames = [
+                1 => 'Ene',
+                2 => 'Feb',
+                3 => 'Mar',
+                4 => 'Abr',
+                5 => 'May',
+                6 => 'Jun',
+                7 => 'Jul',
+                8 => 'Ago',
+                9 => 'Sep',
+                10 => 'Oct',
+                11 => 'Nov',
+                12 => 'Dic',
+            ];
+
+            $cursor = $chartStart->copy();
+            while ($cursor <= $chartEnd) {
+                $key = $cursor->format('Y-m');
+                $monthNumber = (int) $cursor->format('n');
+                $monthName = $spanishMonthNames[$monthNumber] ?? $cursor->format('M');
+                $chartLabels[] = $monthName . ' ' . $cursor->format('Y');
+                $chartIngresos[] = (float) ($ingresosPorMes[$key] ?? 0);
+                $chartGastos[] = (float) ($gastosPorMes[$key] ?? 0);
+                $cursor->addMonth();
+            }
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            $chartError = 'No se pudo generar la gráfica de ingresos y gastos por datos con fechas inválidas. Revisa que los pagos y gastos tengan una fecha válida.';
         }
 
         // Supporting data for filters
@@ -263,6 +290,7 @@ class AdministrativeReportController extends Controller
                 'ingresos' => $chartIngresos,
                 'gastos' => $chartGastos,
             ],
+            'chartError' => $chartError,
         ]);
     }
 }

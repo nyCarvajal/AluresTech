@@ -439,7 +439,13 @@
             </div>
         </div>
         <div class="card-body">
-            <div id="incomeExpenseChart" data-series='@json($chartData)'></div>
+            @if($chartError)
+                <div class="alert alert-warning mb-0">
+                    <i class="bx bx-info-circle me-1"></i>{{ $chartError }}
+                </div>
+            @else
+                <div id="incomeExpenseChart" data-series='@json($chartData)'></div>
+            @endif
         </div>
     </div>
 </section>
