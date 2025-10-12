@@ -1,6 +1,9 @@
 {{-- resources/views/clientes/show.blade.php --}}
 
 @extends('layouts.vertical', ['subtitle' => 'Perfil Cliente'])
+@php
+  use Illuminate\Support\Str;
+@endphp
 
 @section('css')
   <style>
@@ -124,9 +127,13 @@
 	.pendiente{
 		background-color: rgba(255, 193, 7, 0.35);
 	}
-	.cancelada{
-	   background-color: rgba(220, 53, 69, 0.35);
-	}
+        .cancelada{
+           background-color: rgba(220, 53, 69, 0.35);
+        }
+        .no-asistida{
+          background-color: rgba(13, 110, 253, 0.35);
+          color: #0d6efd;
+        }
 	
   </style>
 @endsection
@@ -169,6 +176,7 @@
                 <span>{{ $reserva->fecha }}</span>
                 <span>{{ $reserva->tipo ?? $reserva->type }}</span>
                 <span>{{ optional($reserva->entrenador)->nombre }}</span>
+                <span class="status {{ Str::slug($reserva->estado, '-') }}">{{ $reserva->estado }}</span>
               </li>
             @endforeach
           </ul>

@@ -33,14 +33,15 @@ class Reserva extends Model
     'end',
     'type',
     'cliente_id',
-	'entrenador_id',
+        'entrenador_id',
     'cancha_id',
     'estado',
-	'duracion',
-	'tipo',
-	'repeat_enabled',
-	'repeat_until',
-	
+        'duracion',
+        'tipo',
+        'nota_cliente',
+        'repeat_enabled',
+        'repeat_until',
+
     // …
 ];
 
