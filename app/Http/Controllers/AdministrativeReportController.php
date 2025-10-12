@@ -201,10 +201,27 @@ class AdministrativeReportController extends Controller
         $chartIngresos = [];
         $chartGastos = [];
 
+        $spanishMonthNames = [
+            1 => 'Ene',
+            2 => 'Feb',
+            3 => 'Mar',
+            4 => 'Abr',
+            5 => 'May',
+            6 => 'Jun',
+            7 => 'Jul',
+            8 => 'Ago',
+            9 => 'Sep',
+            10 => 'Oct',
+            11 => 'Nov',
+            12 => 'Dic',
+        ];
+
         $cursor = $chartStart->copy();
         while ($cursor <= $chartEnd) {
             $key = $cursor->format('Y-m');
-            $chartLabels[] = ucfirst($cursor->locale('es')->isoFormat('MMM YYYY'));
+            $monthNumber = (int) $cursor->format('n');
+            $monthName = $spanishMonthNames[$monthNumber] ?? $cursor->format('M');
+            $chartLabels[] = $monthName . ' ' . $cursor->format('Y');
             $chartIngresos[] = (float) ($ingresosPorMes[$key] ?? 0);
             $chartGastos[] = (float) ($gastosPorMes[$key] ?? 0);
             $cursor->addMonth();
