@@ -320,7 +320,7 @@ if ($jugador && $jugador->whatsapp) {
         'cantidad'       => 'required|integer|min:1',
         'descuento'      => 'nullable|numeric|min:0',
         'valor_unitario' => 'nullable|numeric|min:0',
-		'porcentajeComision'  => ['nullable','numeric','min:0','max:100'],
+		'porcentaje_comision'  => ['nullable','numeric','min:0','max:100'],
 		'usuario_id'  => ['nullable','exists:clientes,id'],
     ]);
 
@@ -332,11 +332,11 @@ if ($jugador && $jugador->whatsapp) {
     $unitNeto     = round($unitBase * (1 - ($descuento/100)), 2);
     $venta->valor_total = round($unitNeto * (int) $venta->cantidad, 2);
 
-    if($request->filled('porcentajeComision')){
-        $venta->porcentajeComision = $request->input('porcentajeComision');
-        $venta->comision = round($venta->valor_total *  ($venta->porcentajeComision/100), 2);
+    if($request->filled('porcentaje_comision')){
+        $venta->porcentaje_comision = $request->input('porcentaje_comision');
+        $venta->comision = round($venta->valor_total *  ($venta->porcentaje_comision/100), 2);
     } else {
-        $venta->porcentajeComision = null;
+        $venta->porcentaje_comision = null;
         $venta->comision = null;
     }
 

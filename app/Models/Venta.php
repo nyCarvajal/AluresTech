@@ -33,7 +33,7 @@ class Venta extends Model
         'descuento',
         'valor_unitario',
         'valor_total',
-		'porcentajeComision',
+		'porcentaje_comision',
         'usuario_id',
     ];
 	
