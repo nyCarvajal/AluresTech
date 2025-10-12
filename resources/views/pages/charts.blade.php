@@ -126,7 +126,7 @@
                     <tbody>
                         @forelse($ventas as $venta)
                             @php
-                                $clienteVenta = $venta->orden?->clienterel;
+                                $clienteVenta = optional($venta->orden)->clienterel;
                                 $nombreClienteVenta = $clienteVenta ? trim(($clienteVenta->nombres ?? '') . ' ' . ($clienteVenta->apellidos ?? '')) : null;
                             @endphp
                             <tr>
@@ -218,7 +218,7 @@
                     <tbody>
                         @forelse($comisiones as $pago)
                             @php
-                                $clienteComision = $pago->ordenDeCompra?->clienterel;
+                                $clienteComision = optional($pago->ordenDeCompra)->clienterel;
                                 $nombreClienteComision = $clienteComision ? trim(($clienteComision->nombres ?? '') . ' ' . ($clienteComision->apellidos ?? '')) : null;
                                 $empleadoComision = trim((optional($pago->responsableUsuario)->nombre ?? '') . ' ' . (optional($pago->responsableUsuario)->apellidos ?? ''));
                             @endphp
@@ -402,7 +402,7 @@
                     <tbody>
                         @forelse($ingresos as $ingreso)
                             @php
-                                $clienteIngreso = $ingreso->ordenDeCompra?->clienterel;
+                                $clienteIngreso = optional($ingreso->ordenDeCompra)->clienterel;
                                 $nombreClienteIngreso = $clienteIngreso ? trim(($clienteIngreso->nombres ?? '') . ' ' . ($clienteIngreso->apellidos ?? '')) : null;
                             @endphp
                             <tr>

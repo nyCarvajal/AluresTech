@@ -214,7 +214,7 @@ class AdministrativeReportController extends Controller
         $items = Item::orderBy('nombre')->get();
         $clientes = Cliente::orderBy('nombres')->get();
         $empleados = User::query()
-            ->when(Auth::user()?->peluqueria_id, function ($query, $peluqueriaId) {
+            ->when(optional(Auth::user())->peluqueria_id, function ($query, $peluqueriaId) {
                 $query->where('peluqueria_id', $peluqueriaId);
             })
             ->orderBy('nombre')
