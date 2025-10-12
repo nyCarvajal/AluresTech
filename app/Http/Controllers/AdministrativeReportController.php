@@ -34,9 +34,15 @@ class AdministrativeReportController extends Controller
         }
 
         $ventasQuery = Venta::with(['item', 'orden.clienterel'])
-            ->when($ventasDesde, fn ($query) => $query->whereDate('created_at', '>=', Carbon::parse($ventasDesde)))
-            ->when($ventasHasta, fn ($query) => $query->whereDate('created_at', '<=', Carbon::parse($ventasHasta)))
-            ->when($ventasItem, fn ($query) => $query->where('producto', $ventasItem));
+            ->when($ventasDesde, function ($query) use ($ventasDesde) {
+                return $query->whereDate('created_at', '>=', Carbon::parse($ventasDesde));
+            })
+            ->when($ventasHasta, function ($query) use ($ventasHasta) {
+                return $query->whereDate('created_at', '<=', Carbon::parse($ventasHasta));
+            })
+            ->when($ventasItem, function ($query) use ($ventasItem) {
+                return $query->where('producto', $ventasItem);
+            });
 
         $ventasTotal = (clone $ventasQuery)->sum('valor_total');
         $ventasPaginator = $ventasQuery
@@ -52,9 +58,15 @@ class AdministrativeReportController extends Controller
 
         $comisionesQuery = Pago::with(['ordenDeCompra.clienterel', 'responsableUsuario'])
             ->whereNotNull('responsable')
-            ->when($comisionDesde, fn ($query) => $query->whereDate('fecha_hora', '>=', Carbon::parse($comisionDesde)))
-            ->when($comisionHasta, fn ($query) => $query->whereDate('fecha_hora', '<=', Carbon::parse($comisionHasta)))
-            ->when($comisionEmpleado, fn ($query) => $query->where('responsable', $comisionEmpleado))
+            ->when($comisionDesde, function ($query) use ($comisionDesde) {
+                return $query->whereDate('fecha_hora', '>=', Carbon::parse($comisionDesde));
+            })
+            ->when($comisionHasta, function ($query) use ($comisionHasta) {
+                return $query->whereDate('fecha_hora', '<=', Carbon::parse($comisionHasta));
+            })
+            ->when($comisionEmpleado, function ($query) use ($comisionEmpleado) {
+                return $query->where('responsable', $comisionEmpleado);
+            })
             ->when($comisionCliente, function ($query) use ($comisionCliente) {
                 $query->whereHas('ordenDeCompra', function ($subQuery) use ($comisionCliente) {
                     $subQuery->where('cliente', $comisionCliente);
@@ -75,10 +87,18 @@ class AdministrativeReportController extends Controller
         $gastoConcepto = $request->input('gasto_concepto');
 
         $gastosQuery = Salida::with(['tercero', 'responsable'])
-            ->when($gastoDesde, fn ($query) => $query->whereDate('fecha', '>=', Carbon::parse($gastoDesde)))
-            ->when($gastoHasta, fn ($query) => $query->whereDate('fecha', '<=', Carbon::parse($gastoHasta)))
-            ->when($gastoProveedor, fn ($query) => $query->where('tercero_id', $gastoProveedor))
-            ->when($gastoResponsable, fn ($query) => $query->where('responsable_id', $gastoResponsable))
+            ->when($gastoDesde, function ($query) use ($gastoDesde) {
+                return $query->whereDate('fecha', '>=', Carbon::parse($gastoDesde));
+            })
+            ->when($gastoHasta, function ($query) use ($gastoHasta) {
+                return $query->whereDate('fecha', '<=', Carbon::parse($gastoHasta));
+            })
+            ->when($gastoProveedor, function ($query) use ($gastoProveedor) {
+                return $query->where('tercero_id', $gastoProveedor);
+            })
+            ->when($gastoResponsable, function ($query) use ($gastoResponsable) {
+                return $query->where('responsable_id', $gastoResponsable);
+            })
             ->when($gastoConcepto, function ($query) use ($gastoConcepto) {
                 $query->where('concepto', 'like', '%' . $gastoConcepto . '%');
             });
@@ -96,9 +116,15 @@ class AdministrativeReportController extends Controller
         $ingresoCliente = $request->input('ingreso_cliente');
 
         $ingresosQuery = Pago::with(['ordenDeCompra.clienterel', 'bancoModel'])
-            ->when($ingresoDesde, fn ($query) => $query->whereDate('fecha_hora', '>=', Carbon::parse($ingresoDesde)))
-            ->when($ingresoHasta, fn ($query) => $query->whereDate('fecha_hora', '<=', Carbon::parse($ingresoHasta)))
-            ->when($ingresoBanco, fn ($query) => $query->where('banco', $ingresoBanco))
+            ->when($ingresoDesde, function ($query) use ($ingresoDesde) {
+                return $query->whereDate('fecha_hora', '>=', Carbon::parse($ingresoDesde));
+            })
+            ->when($ingresoHasta, function ($query) use ($ingresoHasta) {
+                return $query->whereDate('fecha_hora', '<=', Carbon::parse($ingresoHasta));
+            })
+            ->when($ingresoBanco, function ($query) use ($ingresoBanco) {
+                return $query->where('banco', $ingresoBanco);
+            })
             ->when($ingresoCliente, function ($query) use ($ingresoCliente) {
                 $query->whereHas('ordenDeCompra', function ($subQuery) use ($ingresoCliente) {
                     $subQuery->where('cliente', $ingresoCliente);
