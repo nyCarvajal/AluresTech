@@ -247,8 +247,8 @@
         </td>
 		<td>
 		 <input type="number" step="0.01" min="0" max="100"
-           name="porcentajeComision"
-           value="{{ old('porcentajeComision', $venta->porcentajeComision ?? '') }}"
+           name="porcentaje_comision"
+           value="{{ old('porcentaje_comision', $venta->porcentaje_comision ?? '') }}"
            class="form-control" placeholder="Ej: 10">
 		<br>
 		<select name="usuario_id" class="form-select">
