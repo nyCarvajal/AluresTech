@@ -364,7 +364,13 @@ public function update(Request $request, Reserva $reserva)
             'start'         => 'required|date',
             'duration'      => 'integer|min:1',
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
-            'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
+            'cancha_id'     => [
+                Rule::requiredIf(fn () => in_array($request->input('type'), ['Reserva','Clase'])
+                    && $request->input('estado') !== 'Cancelada'
+                    && $reserva->cancha_id),
+                'nullable',
+                'exists:canchas,id',
+            ],
             'cliente_id'    => 'required_if:type,Reserva,Clase|exists:clientes,id',
             'entrenador_id' => 'required_if:type,Clase|nullable',
             'responsable_id'=> 'required_if:type,Torneo|exists:clientes,id',
@@ -423,7 +429,7 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
         'fecha'         => $data['start'],
         'duracion'      => $data['duration'] ?? $reserva->duration,
         'estado'        => $data['estado'],
-        'cancha_id'     => $data['cancha_id'] ?? null,
+        'cancha_id'     => $data['cancha_id'] ?? $reserva->cancha_id,
         'responsable_id'=> $data['responsable_id'] ?? $reserva->responsable_id,
         'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
         'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
