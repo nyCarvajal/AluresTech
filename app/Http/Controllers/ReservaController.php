@@ -17,7 +17,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\OneMsgTemplateNotification;
 use Illuminate\Support\Facades\Log;
-use App\Models\MembresiaCliente;
 
 
 class ReservaController extends Controller
@@ -95,7 +94,8 @@ class ReservaController extends Controller
 	public function events(Request $request)
 {
     // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
-    $query = Reserva::with(['cliente', 'entrenador']);
+    $query = Reserva::with(['cliente', 'entrenador'])
+        ->where('estado', 'Confirmada');
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
     }
@@ -115,6 +115,12 @@ class ReservaController extends Controller
                           ->toIso8601String();
 						  
         $color = optional($r->entrenador)->color ?? '#6042F5';
+        $textColor = '#121212';
+
+        if ($r->estado === 'No Asistida') {
+            $color = '#0d6efd';
+            $textColor = '#ffffff';
+        }
 
         $base = [
             'id'              => $r->id,
@@ -125,7 +131,7 @@ class ReservaController extends Controller
             'duration'        => $r->duracion,
             'title'           => optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
             'borderColor'     => $color,
-            'textColor'       => '#121212',
+            'textColor'       => $textColor,
             'backgroundColor' => $color,
             'extendedProps'   => [
                 'tipo'          => $r->tipo,              // reserva | torneo | clase
@@ -157,6 +163,40 @@ class ReservaController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function pending()
+    {
+        $reservas = Reserva::with('cliente')
+            ->where('estado', 'Pendiente')
+            ->orderBy('fecha')
+            ->paginate(15);
+
+        return view('reservas.pending', compact('reservas'));
+    }
+
+    public function confirmPending(Reserva $reserva)
+    {
+        $oldEstado = $reserva->estado;
+
+        if ($oldEstado === 'Confirmada') {
+            return redirect()
+                ->back()
+                ->with('success', 'Esta reserva ya estaba confirmada.');
+        }
+
+        if ($oldEstado === 'Cancelada') {
+            return redirect()
+                ->back()
+                ->with('error', 'No es posible confirmar una reserva cancelada.');
+        }
+
+        $reserva->estado = 'Confirmada';
+        $reserva->save();
+
+        return redirect()
+            ->back()
+            ->with('success', 'Reserva confirmada y añadida al calendario.');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -173,7 +213,7 @@ public function store(Request $request)
         'start'          => 'required|date',                // "YYYY-MM-DD HH:MM"
         'duration'       => 'nullable|integer|min:1',
         'entrenador_id'  => 'required_if:type,Clase|nullable',
-        'estado'         => 'required|in:Confirmada,Pendiente,Cancelada',
+        'estado'         => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
         'cliente_id'     => 'required_if:type,Reserva|integer|exists:clientes,id',
       
         
@@ -323,7 +363,7 @@ public function update(Request $request, Reserva $reserva)
             'type'          => ['required', Rule::in(['Reserva','Clase','Torneo'])],
             'start'         => 'required|date',
             'duration'      => 'integer|min:1',
-            'estado'        => 'required|in:Confirmada,Pendiente,Cancelada',
+            'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
             'cancha_id'     => 'required_if:type,Reserva,Clase|exists:canchas,id',
             'cliente_id'    => 'required_if:type,Reserva,Clase|exists:clientes,id',
             'entrenador_id' => 'required_if:type,Clase|nullable',
@@ -359,12 +399,7 @@ public function update(Request $request, Reserva $reserva)
  
 if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) {
     $clienteId = $data['cliente_id'];
-    $memb = MembresiaCliente::where('cliente_id', $clienteId)
-            ->where('estado', 1)
-            ->latest()
-            ->first();
-
-    $campo = $data['type'] === 'Clase' ? 'clasesVistas' : 'numReservas';
+   
 
     if ($newEstado === 'Cancelada') {
         if ($memb) {

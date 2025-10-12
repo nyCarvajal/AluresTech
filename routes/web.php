@@ -31,6 +31,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AdministrativeReportController;
 use App\Http\Middleware\ConnectTenantDB;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Public\BookingController;
 
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -42,6 +43,21 @@ use Illuminate\Auth\Middleware\Authenticate;
 
 
 require __DIR__ . '/auth.php';
+
+Route::prefix('p/{peluqueria:slug}')
+    ->name('public.booking.')
+    ->group(function () {
+        Route::get('/', function (\App\Models\Peluqueria $peluqueria) {
+            return redirect()->route('public.booking.show', $peluqueria);
+        })->name('index');
+        Route::get('/agenda', [BookingController::class, 'show'])->name('show');
+        Route::post('/registro', [BookingController::class, 'register'])->name('register');
+        Route::post('/login', [BookingController::class, 'login'])->name('login');
+        Route::post('/logout', [BookingController::class, 'logout'])->name('logout');
+        Route::post('/citas', [BookingController::class, 'schedule'])->name('appointment');
+        Route::get('/verificar', [BookingController::class, 'verify'])->name('verify');
+        Route::get('/disponibilidad', [BookingController::class, 'availability'])->name('availability');
+    });
 
 // Rutas públicas
 Route::get('login',  [LoginController::class, 'showLoginForm'])->name('login');
@@ -112,6 +128,8 @@ Route::put('users/{user}', [UsuarioController::class,'update'])
 Route::delete('users/{user}', [UsuarioController::class,'destroy'])
      ->name('users.destroy');
 Route::get('reservas/horario', [ReservaController::class, 'horario'])->name('reservas.horario');
+Route::get('reservas/pendientes', [ReservaController::class, 'pending'])->name('reservas.pending');
+Route::post('reservas/{reserva}/confirmar-publico', [ReservaController::class, 'confirmPending'])->name('reservas.pending.confirm');
 Route::resource('proveedores', ProveedorController::class);
 Route::resource('salidas', SalidaController::class);
 Route::get('/clientesb', [ClientesController::class, 'search'])->name('clientes.search');
