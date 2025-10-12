@@ -31,119 +31,15 @@
                               
                          </button>
                     </div>
-
-                    <!-- Notification 
-                    <div class="dropdown topbar-item">
-                         <button type="button" class="topbar-button position-relative"
-                              id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
-                              aria-expanded="false">
+                    <div class="topbar-item">
+                         <a href="{{ route('reservas.pending') }}" class="topbar-button position-relative">
                               <iconify-icon icon="solar:bell-bing-outline" class="fs-22 align-middle"></iconify-icon>
-                              <span
-                                   class="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">5<span
-                                        class="visually-hidden">unread messages</span></span>
-                         </button>
-                         <div class="dropdown-menu py-0 dropdown-lg dropdown-menu-end"
-                              aria-labelledby="page-header-notifications-dropdown">
-                              <div class="p-2 border-bottom bg-light bg-opacity-50">
-                                   <div class="row align-items-center">
-                                        <div class="col">
-                                             <h6 class="m-0 fs-16 fw-semibold"> Notifications (5)</h6>
-                                        </div>
-                                        <div class="col-auto">
-                                             <a href="javascript: void(0);" class="text-dark text-decoration-underline">
-                                                  <small>Clear All</small>
-                                             </a>
-                                        </div>
-                                   </div>
-                              </div>
-                              <div data-simplebar style="max-height: 250px;">
-                                   
-                                   <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom text-wrap">
-                                        <div class="d-flex">
-                                             <div class="flex-shrink-0">
-                                                  <img src="/images/users/avatar-1.jpg"
-                                                       class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-1" />
-                                             </div>
-                                             <div class="flex-grow-1">
-                                                  <p class="mb-0"><span class="fw-medium">Sally Bieber </span>started
-                                                       following you. Check out their profile!"</span></p>
-                                             </div>
-                                        </div>
-                                   </a>
-                              
-                                   <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
-                                        <div class="d-flex">
-                                             <div class="flex-shrink-0">
-                                                  <div class="avatar-sm me-2">
-                                                       <span
-                                                            class="avatar-title text-bg-info fw-semibold fs-20 rounded-circle">
-                                                            G
-                                                       </span>
-                                                  </div>
-                                             </div>
-                                             <div class="flex-grow-1">
-                                                  <p class="mb-0 fw-medium">Gloria Chambers</p>
-                                                  <p class="mb-0 text-wrap">
-                                                       mentioned you in a comment: '@admin, check this out!
-                                                  </p>
-                                             </div>
-                                        </div>
-                                   </a>
-                                   
-                                   <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
-                                        <div class="d-flex">
-                                             <div class="flex-shrink-0">
-                                                  <img src="/images/users/avatar-3.jpg"
-                                                       class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-3" />
-                                             </div>
-                                             <div class="flex-grow-1">
-                                                  <p class="mb-0 fw-medium">Jacob Gines</p>
-                                                  <p class="mb-0 text-wrap">
-                                                       Answered to your comment on the cash flow forecast's graph 🔔.
-                                                  </p>
-                                             </div>
-                                        </div>
-                                   </a>
-                                 
-                                   <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
-                                        <div class="d-flex">
-                                             <div class="flex-shrink-0">
-                                                  <div class="avatar-sm me-2">
-                                                       <span
-                                                            class="avatar-title bg-soft-warning text-warning fs-20 rounded-circle">
-                                                            <iconify-icon icon="solar:leaf-outline"></iconify-icon>
-                                                       </span>
-                                                  </div>
-                                             </div>
-                                             <div class="flex-grow-1">
-                                                  <p class="mb-0 fw-medium text-wrap">A new system update is available.
-                                                       Update now for the latest features.</p>
-                                             </div>
-                                        </div>
-                                   </a>
-                               
-                                   <a href="javascript:void(0);" class="dropdown-item p-2 border-bottom">
-                                        <div class="d-flex">
-                                             <div class="flex-shrink-0">
-                                                  <img src="/images/users/avatar-5.jpg"
-                                                       class="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-5" />
-                                             </div>
-                                             <div class="flex-grow-1">
-                                                  <p class="mb-0 fw-medium">Shawn Bunch</p>
-                                                  <p class="mb-0 text-wrap">
-                                                       commented on your post: 'Great photo!
-                                                  </p>
-                                             </div>
-                                        </div>
-                                   </a>
-                              </div>
-                              <div class="text-center p-2">
-                                   <a href="javascript:void(0);" class="btn btn-primary btn-sm">View All Notification <i
-                                             class="bx bx-right-arrow-alt ms-1"></i></a>
-                              </div>
-                         </div>
+                              <span class="position-absolute top-0 start-100 topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
+                                   {{ $pendingReservationsCount ?? 0 }}
+                              </span>
+                         </a>
                     </div>
--->
+
                     <!-- User -->
                     <div class="dropdown topbar-item">
                          <a type="button" class="topbar-button" id="page-header-user-dropdown" data-bs-toggle="dropdown"

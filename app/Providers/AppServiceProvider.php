@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
+use App\Models\Reserva;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,29 @@ class AppServiceProvider extends ServiceProvider
                 DB::reconnect('tenant');
                 DB::setDefaultConnection('tenant');
             }
+        });
+
+        View::composer(['layouts.app', 'layouts.vertical', 'layouts.partials.topbar'], function ($view) {
+            static $count = null;
+
+            if ($count === null) {
+                $count = 0;
+
+                if ($user = Auth::user()) {
+                    $peluqueria = $user->peluqueria;
+
+                    if ($peluqueria && $peluqueria->db) {
+                        Config::set('database.connections.tenant.database', $peluqueria->db);
+                        DB::purge('tenant');
+                        DB::reconnect('tenant');
+                        DB::setDefaultConnection('tenant');
+
+                        $count = Reserva::where('estado', 'Pendiente')->count();
+                    }
+                }
+            }
+
+            $view->with('pendingReservationsCount', $count);
         });
     }
 }

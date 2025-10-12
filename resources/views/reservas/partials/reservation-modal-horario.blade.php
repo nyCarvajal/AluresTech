@@ -103,7 +103,8 @@
               <select id="reservaEstado" name="estado" class="form-select" required>
                 <option value="Pendiente">Pendiente</option>
                 <option value="Confirmada">Confirmada</option>
-				 <option value="Cancelada">Cancelada</option>
+                                 <option value="No Asistida">No Asistida</option>
+                                 <option value="Cancelada">Cancelada</option>
               </select>
             </div>
 
