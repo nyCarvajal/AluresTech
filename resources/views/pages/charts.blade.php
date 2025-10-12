@@ -62,7 +62,18 @@
             </div>
         </a>
     </div>
- 
+    <div class="col-6 col-md-4 col-xl-2">
+        <a href="#ingresos-gastos" class="card quick-report h-100 border-light">
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="avatar-sm flex-shrink-0 bg-secondary-subtle text-secondary rounded"><i class="bx bx-line-chart"></i></span>
+                    <h6 class="ms-3 mb-0 text-uppercase text-muted">Ingresos/Gastos</h6>
+                </div>
+                <p class="fs-5 fw-semibold mb-0">Últimos 12 meses</p>
+            </div>
+        </a>
+    </div>
+</div>
 
 <section id="ventas" class="mb-5">
     <div class="card">
@@ -439,7 +450,8 @@
                     <i class="bx bx-info-circle me-1"></i>{{ $chartError }}
                 </div>
             @else
-                <div id="incomeExpenseChart" data-series='@json($chartData)'></div>
+                <div id="incomeExpenseChart"></div>
+                <script type="application/json" id="incomeExpenseSeries">@json($chartData)</script>
             @endif
         </div>
     </div>

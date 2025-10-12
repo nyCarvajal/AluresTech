@@ -14,10 +14,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let payload = { labels: [], ingresos: [], gastos: [] };
 
-    try {
-        payload = JSON.parse(chartElement.dataset.series ?? '{}');
-    } catch (error) {
-        console.error('No fue posible interpretar la información del gráfico', error);
+    const dataTag = document.getElementById('incomeExpenseSeries');
+
+    if (dataTag) {
+        try {
+            payload = JSON.parse(dataTag.textContent || '{}');
+        } catch (error) {
+            console.error('No fue posible interpretar la información del gráfico', error);
+        }
     }
 
     if (!payload.labels?.length) {
