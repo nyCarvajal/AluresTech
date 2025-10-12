@@ -4,6 +4,7 @@ import 'iconify-icon';
 import 'simplebar/dist/simplebar'
 // resources/js/app.js
 import './pages/dashboard.js';
+import './pages/chart';
 
 import '@fullcalendar/common/main.css';
 
