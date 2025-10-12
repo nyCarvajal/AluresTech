@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use App\Models\Banco;
+use App\Models\User;
 
 class Pago extends Model
 {
@@ -49,11 +50,16 @@ class Pago extends Model
     {
         return $this->belongsTo(Banco::class, 'banco');
     }
-	
-	// app/Models/Pago.php
+
+        // app/Models/Pago.php
 public function ordenDeCompra()
 {
     return $this->belongsTo(OrdenDeCompra::class, 'cuenta'); // ajusta FK si difiere
 }
+
+    public function responsableUsuario()
+    {
+        return $this->belongsTo(User::class, 'responsable');
+    }
 
 }
