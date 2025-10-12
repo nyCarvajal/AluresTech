@@ -143,15 +143,33 @@ class AdministrativeReportController extends Controller
         $chartStart = Carbon::now()->subMonths(11)->startOfMonth();
         $chartEnd = Carbon::now()->endOfMonth();
 
-        $ingresosPorMes = Pago::selectRaw("DATE_FORMAT(fecha_hora, '%Y-%m') as periodo, SUM(valor) as total")
+        $ingresosPorMes = Pago::query()
+            ->select(['fecha_hora', 'valor'])
             ->whereBetween('fecha_hora', [$chartStart, $chartEnd])
-            ->groupBy('periodo')
-            ->pluck('total', 'periodo');
+            ->get()
+            ->groupBy(function (Pago $pago) {
+                return optional($pago->fecha_hora)->format('Y-m');
+            })
+            ->filter(function ($pagos, $periodo) {
+                return filled($periodo);
+            })
+            ->mapWithKeys(function ($pagos, $periodo) {
+                return [$periodo => $pagos->sum('valor')];
+            });
 
-        $gastosPorMes = Salida::selectRaw("DATE_FORMAT(fecha, '%Y-%m') as periodo, SUM(valor) as total")
+        $gastosPorMes = Salida::query()
+            ->select(['fecha', 'valor'])
             ->whereBetween('fecha', [$chartStart, $chartEnd])
-            ->groupBy('periodo')
-            ->pluck('total', 'periodo');
+            ->get()
+            ->groupBy(function (Salida $salida) {
+                return optional($salida->fecha)->format('Y-m');
+            })
+            ->filter(function ($gastos, $periodo) {
+                return filled($periodo);
+            })
+            ->mapWithKeys(function ($gastos, $periodo) {
+                return [$periodo => $gastos->sum('valor')];
+            });
 
         $chartLabels = [];
         $chartIngresos = [];
