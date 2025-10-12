@@ -1,7 +1,7 @@
 @extends('layouts.vertical', ['subtitle' => 'Informes administrativos'])
 
 @section('content')
-<div class="row align-items-center mb-4">
+<div class="row align-items-center mb-3">
     <div class="col-xl-8">
         <h2 class="fw-semibold mb-1">Reportes administrativos</h2>
         <p class="text-muted mb-0">Consulta y compara la información financiera y operativa de tu club desde un solo lugar.</p>
@@ -18,7 +18,7 @@
 @endif
 
 <div class="row g-3 mb-5">
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'ventas']) }}#ventas" class="card quick-report h-100 {{ $activeTab === 'ventas' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -29,7 +29,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'comisiones']) }}#comisiones" class="card quick-report h-100 {{ $activeTab === 'comisiones' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -40,7 +40,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'gastos']) }}#gastos" class="card quick-report h-100 {{ $activeTab === 'gastos' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -51,7 +51,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+    <div class="col-6 col-md-4 col-xl-3">
         <a href="{{ route('pages.charts', ['tab' => 'ingresos']) }}#ingresos" class="card quick-report h-100 {{ $activeTab === 'ingresos' ? 'border-primary shadow-sm' : 'border-light' }}">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -62,18 +62,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
-        <a href="#ingresos-gastos" class="card quick-report h-100 border-light">
-            <div class="card-body d-flex flex-column justify-content-between">
-                <div class="d-flex align-items-center mb-3">
-                    <span class="avatar-sm flex-shrink-0 bg-secondary-subtle text-secondary rounded"><i class="bx bx-line-chart"></i></span>
-                    <h6 class="ms-3 mb-0 text-uppercase text-muted">Ingresos/Gastos</h6>
-                </div>
-                <p class="fs-5 fw-semibold mb-0">Últimos 12 meses</p>
-            </div>
-        </a>
-    </div>
-</div>
+ 
 
 <section id="ventas" class="mb-5">
     <div class="card">
