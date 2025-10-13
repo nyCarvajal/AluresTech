@@ -4,6 +4,7 @@ import 'iconify-icon';
 import 'simplebar/dist/simplebar'
 // resources/js/app.js
 import './pages/dashboard.js';
+import './pages/chart';
 
 import '@fullcalendar/common/main.css';
 
@@ -43,22 +44,38 @@ document.addEventListener('DOMContentLoaded', () => {
   
   console.log('🚀 app.js arrancó, intentando FullCalendar…');
   // 1) Obtener elementos comunes
-  const calendarEl = document.querySelector(cfg.selector);
-  const modalEl    = document.querySelector(cfg.modalSelector);
-  const modal      = new bootstrap.Modal(modalEl);
-  const form       = modalEl.querySelector('form');
-  form.setAttribute('method', 'POST');
-  const entrenadorFilter = document.querySelector(cfg.filterSelector);
+  const calendarEl = cfg.selector ? document.querySelector(cfg.selector) : null;
+  const modalSelector = cfg.modalSelector || null;
+  const modalEl = modalSelector ? document.querySelector(modalSelector) : null;
 
-  const methodIn      = form.querySelector('#reservationMethod');
-  const typeSelect    = form.querySelector('#eventType');
-  const durationSelect= form.querySelector('#reservaDuracion');
-  const fechaInput = document.getElementById('reservaFecha');
-const horaSelect  = document.getElementById('reservaHora');
+  if (!calendarEl || !modalEl) {
+    console.warn('CalendarConfig presente pero falta el calendario o el modal en el DOM. Se omite la inicialización.');
+    return;
+  }
+
+  const form = modalEl.querySelector('form');
+  if (!form) {
+    console.warn('No se encontró el formulario del modal de calendario. Se omite la inicialización.');
+    return;
+  }
+
+  form.setAttribute('method', 'POST');
+  const entrenadorFilter = cfg.filterSelector ? document.querySelector(cfg.filterSelector) : null;
+
+  const methodIn       = form.querySelector('#reservationMethod');
+  const typeSelect     = form.querySelector('#eventType');
+  const durationSelect = form.querySelector('#reservaDuracion');
+  const fechaInput     = document.getElementById('reservaFecha');
+  const horaSelect     = document.getElementById('reservaHora');
+
+  if (!methodIn || !durationSelect || !typeSelect || !fechaInput || !horaSelect) {
+    console.warn('Faltan elementos clave del formulario del calendario. Se omite la inicialización.');
+    return;
+  }
+
+  const modal = new bootstrap.Modal(modalEl);
 
   // Campos específicos
-   // ===== Campos específicos =====
-  
   const clientesField     = form.querySelector('#fieldClientes');
   const entrenadorField   = form.querySelector('#fieldEntrenador');
   const responsableField  = form.querySelector('#fieldResponsable');
