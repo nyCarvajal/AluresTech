@@ -448,15 +448,40 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Reserva $reserva)
+    public function destroy(Request $request, Reserva $reserva)
     {
-		 $reserva->estado = 'Cancelada';
+        $wasAlreadyCancelled = $reserva->estado === 'Cancelada';
 
-    // 3. Guardas los cambios en la BD
-    $reserva->save();
-		
-         return redirect()
-           ->route('reservas.horario')
-           ->with('success', "Reserva cancelada correctamente.");
+        $reserva->estado = 'Cancelada';
+        $reserva->save();
+
+        if (! $wasAlreadyCancelled) {
+            $cliente     = $reserva->cliente;
+            $templateId  = config('services.onemsg.templates.cancelacion');
+
+            if ($cliente && $cliente->whatsapp && $templateId) {
+                $payload = [
+                    0 => ucfirst($cliente->nombres ?? ''),
+                    1 => ucfirst($reserva->tipo ?? 'Reserva'),
+                    2 => Carbon::parse($reserva->fecha)->format('d/m/Y H:i'),
+                ];
+
+                $cliente->notify(new OneMsgTemplateNotification('cancelacion', array_merge(
+                    $payload,
+                    ['nombre' => $cliente->nombres ?? '']
+                )));
+            }
+        }
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Reserva cancelada correctamente.',
+            ]);
+        }
+
+        return redirect()
+            ->route('reservas.horario')
+            ->with('success', 'Reserva cancelada correctamente.');
     }
 }
