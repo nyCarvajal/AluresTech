@@ -43,6 +43,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!cfg) return;
   
   console.log('🚀 app.js arrancó, intentando FullCalendar…');
+
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  if (csrfToken) {
+    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+  }
+  axios.defaults.headers.common['Accept'] = 'application/json';
+
   // 1) Obtener elementos comunes
   const calendarEl = document.querySelector(cfg.selector);
   const modalEl    = document.querySelector(cfg.modalSelector);
@@ -55,7 +62,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const typeSelect    = form.querySelector('#eventType');
   const durationSelect= form.querySelector('#reservaDuracion');
   const fechaInput = document.getElementById('reservaFecha');
-const horaSelect  = document.getElementById('reservaHora');
+  const horaSelect  = document.getElementById('reservaHora');
+  const eventIdInput = form.querySelector('#eventId');
+  const cancelBtn    = form.querySelector('#reservationCancel');
+  const cancelBtnDefaultText = cancelBtn ? cancelBtn.innerHTML : '';
+
+  const toggleCancelButton = (show = false) => {
+    if (!cancelBtn) return;
+    cancelBtn.classList.toggle('d-none', !show);
+    cancelBtn.disabled = false;
+    cancelBtn.innerHTML = cancelBtnDefaultText;
+  };
+
+  toggleCancelButton(false);
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    toggleCancelButton(false);
+    if (eventIdInput) {
+      eventIdInput.value = '';
+    }
+  });
 
   // Campos específicos
    // ===== Campos específicos =====
@@ -192,6 +217,10 @@ const horaSelect  = document.getElementById('reservaHora');
 	
 
     select: info => {
+      if (eventIdInput) {
+        eventIdInput.value = '';
+      }
+      toggleCancelButton(false);
       typeSelect.value     = 'Reserva';
       switchFields('Reserva');
       methodIn.value       = 'POST';
@@ -214,20 +243,27 @@ const horaSelect  = document.getElementById('reservaHora');
       modal.show();
     },
 	
-	   // Captura el click sobre un día
+           // Captura el click sobre un día
     dateClick: info => {
       // info.dateStr viene en formato "YYYY-MM-DD"
+      if (eventIdInput) {
+        eventIdInput.value = '';
+      }
+      toggleCancelButton(false);
       fechaInput.value = info.dateStr
       // opcional: abrir tu modal de reserva aquí
-      const miModal = new bootstrap.Modal(document.getElementById('reservaModal'))
-      miModal.show()
+      modal.show()
     },
 
       eventClick: info => {
                  fechaInput.removeEventListener('change', cargarSlots);
         const ev    = info.event;
       const props = ev.extendedProps;
-      const type  = props.type; 
+      const type  = props.type;
+      if (eventIdInput) {
+        eventIdInput.value = ev.id;
+      }
+      toggleCancelButton(true);
   // extraemos horas y minutos en local:
   
  
@@ -432,9 +468,44 @@ form.action                          = '/reservas/' + ev.id;
 
   
   });
-  
-   
 
+
+
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async () => {
+      const reservaId = eventIdInput ? eventIdInput.value : '';
+      if (!reservaId) {
+        return;
+      }
+
+      const confirmCancel = window.confirm('¿Deseas cancelar esta cita?');
+      if (!confirmCancel) {
+        return;
+      }
+
+      cancelBtn.disabled = true;
+      cancelBtn.innerHTML = 'Cancelando…';
+
+      try {
+        await axios.delete(`/reservas/${reservaId}`);
+        const calendarEvent = calendar.getEventById(reservaId);
+        if (calendarEvent) {
+          calendarEvent.remove();
+        }
+        toggleCancelButton(false);
+        modal.hide();
+        window.alert('La cita ha sido cancelada correctamente.');
+      } catch (error) {
+        console.error('Error al cancelar la cita', error);
+        window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
+        toggleCancelButton(true);
+      } finally {
+        cancelBtn.disabled = false;
+        cancelBtn.innerHTML = cancelBtnDefaultText;
+      }
+    });
+  }
 
   calendar.render();
 

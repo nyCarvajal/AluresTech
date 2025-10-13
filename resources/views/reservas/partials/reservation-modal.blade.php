@@ -110,13 +110,23 @@
 
 			
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Cancelar
-            </button>
-            <button type="submit" class="btn btn-primary" id="reservationSubmit">
-              Guardar
-            </button>
+          <div class="modal-footer d-flex justify-content-between">
+            <div class="me-auto">
+              <button type="button"
+                      class="btn btn-outline-danger d-none"
+                      id="reservationCancel"
+                      data-action="cancel">
+                Cancelar cita
+              </button>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Cerrar
+              </button>
+              <button type="submit" class="btn btn-primary" id="reservationSubmit">
+                Guardar
+              </button>
+            </div>
           </div>
         </form>
       </div>
