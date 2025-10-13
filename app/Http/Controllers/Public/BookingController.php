@@ -268,11 +268,25 @@ class BookingController extends Controller
                 ->with('error', 'El enlace de verificación no es válido o ha expirado.');
         }
 
-        $cliente = Cliente::where('correo', $correo)
-            ->where('verification_token', $token)
-            ->first();
+        $cliente = Cliente::where('correo', $correo)->first();
 
         if (! $cliente) {
+            return redirect()
+                ->route('public.booking.show', $peluqueria)
+                ->with('error', 'El enlace de verificación no es válido o ha expirado.');
+        }
+
+        if ($cliente->email_verified_at) {
+            $request->session()->put($this->sessionKey($peluqueria), $cliente->id);
+            $request->session()->forget($this->pendingKey($peluqueria));
+            $request->session()->regenerate();
+
+            return redirect()
+                ->route('public.booking.show', $peluqueria)
+                ->with('status', 'Tu correo ya estaba verificado. Ya puedes agendar tu cita.');
+        }
+
+        if (! $cliente->verification_token || ! hash_equals((string) $cliente->verification_token, (string) $token)) {
             return redirect()
                 ->route('public.booking.show', $peluqueria)
                 ->with('error', 'El enlace de verificación no es válido o ha expirado.');
