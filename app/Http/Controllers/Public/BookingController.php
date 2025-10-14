@@ -186,6 +186,12 @@ class BookingController extends Controller
                 ->withErrors(['general' => 'Verifica tu correo para poder agendar.'], 'appointment');
         }
 
+        if ($request->has('entrenador_id')) {
+            $request->merge([
+                'entrenador_id' => $this->normalizeStylistId($request->input('entrenador_id')),
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
@@ -332,9 +338,14 @@ class BookingController extends Controller
         $this->setTenantConnection($peluqueria);
 
         $date = $request->query('date');
-        $stylistId = $request->query('entrenador_id');
+        $rawStylistId = $request->query('entrenador_id');
+        $stylistId = $this->normalizeStylistId($rawStylistId);
         if (! $date) {
             return response()->json(['error' => 'Debes indicar la fecha.'], 422);
+        }
+
+        if ($rawStylistId !== null && $rawStylistId !== '' && $stylistId === null) {
+            return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
         }
 
         if ($stylistId && ! User::where('peluqueria_id', $peluqueria->id)
@@ -390,6 +401,30 @@ class BookingController extends Controller
         } catch (\Throwable $exception) {
             return response()->json(['error' => 'No se pudo calcular la disponibilidad.'], 500);
         }
+    }
+
+    private function normalizeStylistId($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_array($value)) {
+            $value = reset($value);
+        }
+
+        if (is_string($value) && str_contains($value, ':')) {
+            $parts = array_values(array_filter(explode(':', $value), fn ($segment) => $segment !== ''));
+            $value = end($parts) ?: reset($parts);
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $intValue = (int) $value;
+
+        return $intValue > 0 ? $intValue : null;
     }
 
     private function setTenantConnection(Peluqueria $peluqueria): void

@@ -129,6 +129,10 @@
         $pendingVerification = session('public_cliente_pending_' . $peluqueria->id);
         $appointmentErrors = $errors->appointment ?? null;
         $defaultStylistId = old('entrenador_id');
+        if (is_string($defaultStylistId) && str_contains($defaultStylistId, ':')) {
+            $parts = array_values(array_filter(explode(':', $defaultStylistId), fn ($segment) => $segment !== ''));
+            $defaultStylistId = end($parts) ?: reset($parts);
+        }
         if (! $defaultStylistId && isset($estilistas) && $estilistas->count() === 1) {
             $defaultStylistId = optional($estilistas->first())->id;
         }
@@ -248,7 +252,14 @@
                                     <select class="form-select @if($appointmentErrors?->has('entrenador_id')) is-invalid @endif" id="appointment-stylist" name="entrenador_id" @if(($estilistas ?? collect())->isEmpty()) disabled @endif required>
                                         <option value="">Selecciona un estilista</option>
                                         @foreach($estilistas ?? [] as $estilista)
-                                            <option value="{{ $estilista->id }}" @selected($defaultStylistId == $estilista->id)>{{ trim($estilista->nombre . ' ' . ($estilista->apellidos ?? '')) }}</option>
+                                            @php
+                                                $estilistaId = $estilista->id;
+                                                if (is_string($estilistaId) && str_contains($estilistaId, ':')) {
+                                                    $idParts = array_values(array_filter(explode(':', $estilistaId), fn ($segment) => $segment !== ''));
+                                                    $estilistaId = end($idParts) ?: reset($idParts);
+                                                }
+                                            @endphp
+                                            <option value="{{ $estilistaId }}" @selected((string) $defaultStylistId === (string) $estilistaId)>{{ trim($estilista->nombre . ' ' . ($estilista->apellidos ?? '')) }}</option>
                                         @endforeach
                                     </select>
                                     @if(($estilistas ?? collect())->isEmpty())
@@ -370,7 +381,12 @@
 
             const params = new URLSearchParams({ date: dateValue });
             if (stylistValue) {
-                params.append('entrenador_id', stylistValue);
+                const normalizedStylist = stylistValue.includes(':')
+                    ? stylistValue.split(':').filter(Boolean).pop()
+                    : stylistValue;
+                if (normalizedStylist) {
+                    params.append('entrenador_id', normalizedStylist);
+                }
             }
 
             fetch(`${availabilityUrl}?${params.toString()}`)
