@@ -128,6 +128,10 @@
     @php
         $pendingVerification = session('public_cliente_pending_' . $peluqueria->id);
         $appointmentErrors = $errors->appointment ?? null;
+        $defaultStylistId = old('entrenador_id');
+        if (! $defaultStylistId && isset($estilistas) && $estilistas->count() === 1) {
+            $defaultStylistId = optional($estilistas->first())->id;
+        }
     @endphp
 
     <div class="row g-4">
@@ -240,6 +244,21 @@
                             @csrf
                             <div class="row g-3">
                                 <div class="col-md-6">
+                                    <label class="form-label" for="appointment-stylist">Estilista</label>
+                                    <select class="form-select @if($appointmentErrors?->has('entrenador_id')) is-invalid @endif" id="appointment-stylist" name="entrenador_id" @if(($estilistas ?? collect())->isEmpty()) disabled @endif required>
+                                        <option value="">Selecciona un estilista</option>
+                                        @foreach($estilistas ?? [] as $estilista)
+                                            <option value="{{ $estilista->id }}" @selected($defaultStylistId == $estilista->id)>{{ trim($estilista->nombre . ' ' . ($estilista->apellidos ?? '')) }}</option>
+                                        @endforeach
+                                    </select>
+                                    @if(($estilistas ?? collect())->isEmpty())
+                                        <div class="form-text text-danger">No hay estilistas disponibles por ahora.</div>
+                                    @endif
+                                    @if($appointmentErrors?->has('entrenador_id'))
+                                        <div class="invalid-feedback">{{ $appointmentErrors->first('entrenador_id') }}</div>
+                                    @endif
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label" for="appointment-date">Fecha</label>
                                     <input type="date" class="form-control @if($appointmentErrors?->has('fecha')) is-invalid @endif" id="appointment-date" name="fecha" value="{{ old('fecha') ?? now()->format('Y-m-d') }}" required>
                                     @if($appointmentErrors?->has('fecha'))
@@ -316,20 +335,55 @@
     document.addEventListener('DOMContentLoaded', () => {
         const dateInput = document.getElementById('appointment-date');
         const timeSelect = document.getElementById('appointment-time');
+        const stylistSelect = document.getElementById('appointment-stylist');
         const storedTime = @json(old('hora'));
+        const availabilityUrl = @json(route('public.booking.availability', $peluqueria));
+
+        const setTimePlaceholder = (message) => {
+            if (!timeSelect) {
+                return;
+            }
+            timeSelect.innerHTML = `<option value="">${message}</option>`;
+            timeSelect.disabled = true;
+        };
 
         const fetchSlots = () => {
-            if (!dateInput || !timeSelect || !dateInput.value) {
+            if (!dateInput || !timeSelect) {
+                return;
+            }
+
+            const dateValue = dateInput.value;
+            const stylistValue = stylistSelect ? stylistSelect.value : '';
+
+            if (!dateValue) {
+                setTimePlaceholder('Selecciona una fecha');
+                return;
+            }
+
+            if (stylistSelect && !stylistValue) {
+                setTimePlaceholder('Selecciona un estilista');
                 return;
             }
 
             timeSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+            timeSelect.disabled = true;
 
-            fetch('{{ route('public.booking.availability', $peluqueria) }}?date=' + dateInput.value)
-                .then(response => response.json())
+            const params = new URLSearchParams({ date: dateValue });
+            if (stylistValue) {
+                params.append('entrenador_id', stylistValue);
+            }
+
+            fetch(`${availabilityUrl}?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('No se pudo obtener disponibilidad');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     timeSelect.innerHTML = '<option value="">Selecciona un horario</option>';
-                    if (data.slots && data.slots.length) {
+                    if (Array.isArray(data.slots) && data.slots.length) {
+                        timeSelect.disabled = false;
                         data.slots.forEach(slot => {
                             const option = document.createElement('option');
                             option.value = slot;
@@ -340,21 +394,21 @@
                             timeSelect.appendChild(option);
                         });
                     } else {
-                        const option = document.createElement('option');
-                        option.value = '';
-                        option.textContent = 'Sin horarios disponibles';
-                        timeSelect.appendChild(option);
+                        setTimePlaceholder('Sin horarios disponibles');
                     }
                 })
                 .catch(() => {
-                    timeSelect.innerHTML = '<option value="">No se pudo cargar la disponibilidad</option>';
+                    setTimePlaceholder('No se pudo cargar la disponibilidad');
                 });
         };
 
         if (dateInput) {
             dateInput.addEventListener('change', fetchSlots);
-            fetchSlots();
         }
+        if (stylistSelect) {
+            stylistSelect.addEventListener('change', fetchSlots);
+        }
+        fetchSlots();
     });
 </script>
 </body>
