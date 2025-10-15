@@ -188,8 +188,6 @@ class BookingController extends Controller
             ]);
         }
 
-        $availableStylistIds = $this->availableStylistIds($peluqueria);
-
         $validator = Validator::make($request->all(), [
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
@@ -198,12 +196,15 @@ class BookingController extends Controller
             'entrenador_id' => [
                 'required',
                 'integer',
-                Rule::in($availableStylistIds),
+                function ($attribute, $value, $fail) use ($peluqueria) {
+                    if (! $this->stylistExists($peluqueria, (int) $value)) {
+                        $fail('El estilista seleccionado no es válido.');
+                    }
+                },
             ],
         ], [
             'tipocita_id.exists' => 'El tipo de cita seleccionado no es válido.',
             'entrenador_id.required' => 'Selecciona el estilista que atenderá tu cita.',
-            'entrenador_id.in' => 'El estilista seleccionado no es válido.',
         ]);
 
         if ($validator->fails()) {
@@ -335,7 +336,6 @@ class BookingController extends Controller
         $date = $request->query('date');
         $rawStylistId = $request->query('entrenador_id');
         $stylistId = $this->normalizeStylistId($rawStylistId);
-        $availableStylistIds = $this->availableStylistIds($peluqueria);
         if (! $date) {
             return response()->json(['error' => 'Debes indicar la fecha.'], 422);
         }
@@ -344,7 +344,7 @@ class BookingController extends Controller
             return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
         }
 
-        if ($stylistId && ! in_array($stylistId, $availableStylistIds, true)) {
+        if ($stylistId && ! $this->stylistExists($peluqueria, $stylistId)) {
             return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
         }
 
@@ -398,15 +398,9 @@ class BookingController extends Controller
 
     private function availableStylists(Peluqueria $peluqueria)
     {
-        $connections = ['mysql'];
-
-        if (! empty($peluqueria->db)) {
-            $connections[] = 'tenant';
-        }
-
         $stylists = collect();
 
-        foreach (array_unique($connections) as $connection) {
+        foreach ($this->connectionsFor($peluqueria) as $connection) {
             $connectionStylists = User::on($connection)
                 ->where('peluqueria_id', $peluqueria->id)
                 ->whereIn('role', [11, '11'])
@@ -428,16 +422,6 @@ class BookingController extends Controller
         }
 
         return $stylists->unique('id')->values();
-    }
-
-    private function availableStylistIds(Peluqueria $peluqueria): array
-    {
-        return $this->availableStylists($peluqueria)
-            ->map(fn ($stylist) => $this->normalizeStylistId($stylist->id))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
     }
 
     private function normalizeStylistId($value): ?int
@@ -477,6 +461,33 @@ class BookingController extends Controller
         $intValue = (int) $value;
 
         return $intValue > 0 ? $intValue : null;
+    }
+
+    private function connectionsFor(Peluqueria $peluqueria): array
+    {
+        $connections = ['mysql'];
+
+        if (! empty($peluqueria->db)) {
+            $connections[] = 'tenant';
+        }
+
+        return array_unique($connections);
+    }
+
+    private function stylistExists(Peluqueria $peluqueria, int $stylistId): bool
+    {
+        foreach ($this->connectionsFor($peluqueria) as $connection) {
+            $exists = User::on($connection)
+                ->where('peluqueria_id', $peluqueria->id)
+                ->where('id', $stylistId)
+                ->exists();
+
+            if ($exists) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function setTenantConnection(Peluqueria $peluqueria): void
