@@ -28,6 +28,7 @@ class BookingController extends Controller
 
         $cliente = $this->currentClient($peluqueria);
         $tipocitas = Tipocita::orderBy('nombre')->get();
+        $estilistas = $this->availableStylists($peluqueria);
         $proximasReservas = collect();
 
         $captcha = $this->regenerateCaptcha($request, $peluqueria);
@@ -48,6 +49,7 @@ class BookingController extends Controller
             'captchaQuestion' => $captcha['question'],
             'defaultDuration' => self::DEFAULT_DURATION,
             'peluqueriaLogo' => $this->resolveLogoUrl($peluqueria),
+            'estilistas' => $estilistas,
         ]);
     }
 
@@ -179,13 +181,29 @@ class BookingController extends Controller
                 ->withErrors(['general' => 'Verifica tu correo para poder agendar.'], 'appointment');
         }
 
+        if ($request->has('entrenador_id')) {
+            $request->merge([
+                'entrenador_id' => $this->normalizeStylistId($request->input('entrenador_id')),
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
             'tipocita_id' => ['nullable', 'integer', 'exists:tipocita,id'],
             'nota_cliente' => ['nullable', 'string', 'max:1000'],
+            'entrenador_id' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) use ($peluqueria) {
+                    if (! $this->stylistExists($peluqueria, (int) $value)) {
+                        $fail('El estilista seleccionado no es válido.');
+                    }
+                },
+            ],
         ], [
             'tipocita_id.exists' => 'El tipo de cita seleccionado no es válido.',
+            'entrenador_id.required' => 'Selecciona el estilista que atenderá tu cita.',
         ]);
 
         if ($validator->fails()) {
@@ -209,6 +227,12 @@ class BookingController extends Controller
         $fin = (clone $inicio)->addMinutes($duracion);
 
         $conflicto = Reserva::where('estado', '<>', 'Cancelada')
+            ->when(! empty($data['entrenador_id']), function ($query) use ($data) {
+                $query->where(function ($sub) use ($data) {
+                    $sub->whereNull('entrenador_id')
+                        ->orWhere('entrenador_id', $data['entrenador_id']);
+                });
+            })
             ->where(function ($query) use ($inicio, $fin) {
                 $query->whereBetween('fecha', [$inicio, $fin->copy()->subSecond()])
                     ->orWhere(function ($sub) use ($inicio, $fin) {
@@ -237,6 +261,7 @@ class BookingController extends Controller
             'estado' => 'Pendiente',
             'tipo' => $tipoCita?->nombre ?? 'Reserva',
             'nota_cliente' => $data['nota_cliente'] ?? null,
+            'entrenador_id' => $data['entrenador_id'],
         ]);
 
         $recipients = User::where('peluqueria_id', $peluqueria->id)
@@ -308,18 +333,34 @@ class BookingController extends Controller
         $this->setTenantConnection($peluqueria);
 
         $date = $request->query('date');
+        $rawStylistId = $request->query('entrenador_id');
+        $stylistId = $this->normalizeStylistId($rawStylistId);
         if (! $date) {
             return response()->json(['error' => 'Debes indicar la fecha.'], 422);
+        }
+
+        if ($rawStylistId !== null && $rawStylistId !== '' && $stylistId === null) {
+            return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
+        }
+
+        if ($stylistId && ! $this->stylistExists($peluqueria, $stylistId)) {
+            return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
         }
 
         try {
             $inicioJornada = Carbon::parse($date . ' 08:00:00');
             $finJornada = Carbon::parse($date . ' 20:00:00');
-            $intervalo = 30;
+            $intervalo = 15;
 
             $reservas = Reserva::whereDate('fecha', $date)
                 ->where('estado', '<>', 'Cancelada')
-                ->get(['fecha', 'duracion']);
+                ->when($stylistId, function ($query) use ($stylistId) {
+                    $query->where(function ($sub) use ($stylistId) {
+                        $sub->whereNull('entrenador_id')
+                            ->orWhere('entrenador_id', $stylistId);
+                    });
+                })
+                ->get(['fecha', 'duracion', 'entrenador_id']);
 
             $ocupados = [];
             foreach ($reservas as $reserva) {
@@ -352,6 +393,100 @@ class BookingController extends Controller
         } catch (\Throwable $exception) {
             return response()->json(['error' => 'No se pudo calcular la disponibilidad.'], 500);
         }
+    }
+
+    private function availableStylists(Peluqueria $peluqueria)
+    {
+        $stylists = collect();
+
+        foreach ($this->connectionsFor($peluqueria) as $connection) {
+            $connectionStylists = User::on($connection)
+                ->where('peluqueria_id', $peluqueria->id)
+                ->whereIn('role', [11, '11'])
+                ->orderBy('nombre')
+                ->orderBy('apellidos')
+                ->get();
+
+            if ($connectionStylists->isEmpty()) {
+                $connectionStylists = User::on($connection)
+                    ->where('peluqueria_id', $peluqueria->id)
+                    ->orderBy('nombre')
+                    ->orderBy('apellidos')
+                    ->get();
+            }
+
+            if ($connectionStylists->isNotEmpty()) {
+                $stylists = $stylists->merge($connectionStylists);
+            }
+        }
+
+        return $stylists->unique('id')->values();
+    }
+
+    private function normalizeStylistId($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_array($value)) {
+            $value = reset($value);
+        }
+
+        if (is_string($value)) {
+            $value = trim($value);
+
+            if ($value === '') {
+                return null;
+            }
+
+            if (str_contains($value, ':')) {
+                $parts = array_values(array_filter(array_map('trim', explode(':', $value)), fn ($segment) => $segment !== ''));
+                $value = end($parts) ?: reset($parts);
+            }
+
+            if (! is_numeric($value)) {
+                preg_match_all('/\d+/', $value, $matches);
+                if (! empty($matches[0])) {
+                    $value = end($matches[0]);
+                }
+            }
+        }
+
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $intValue = (int) $value;
+
+        return $intValue > 0 ? $intValue : null;
+    }
+
+    private function connectionsFor(Peluqueria $peluqueria): array
+    {
+        $connections = ['mysql'];
+
+        if (! empty($peluqueria->db)) {
+            $connections[] = 'tenant';
+        }
+
+        return array_unique($connections);
+    }
+
+    private function stylistExists(Peluqueria $peluqueria, int $stylistId): bool
+    {
+        foreach ($this->connectionsFor($peluqueria) as $connection) {
+            $exists = User::on($connection)
+                ->where('peluqueria_id', $peluqueria->id)
+                ->where('id', $stylistId)
+                ->exists();
+
+            if ($exists) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function setTenantConnection(Peluqueria $peluqueria): void
