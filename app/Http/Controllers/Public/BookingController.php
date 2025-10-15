@@ -29,11 +29,7 @@ class BookingController extends Controller
 
         $cliente = $this->currentClient($peluqueria);
         $tipocitas = Tipocita::orderBy('nombre')->get();
-        $estilistas = User::where('peluqueria_id', $peluqueria->id)
-            ->where('role', 11)
-            ->orderBy('nombre')
-            ->orderBy('apellidos')
-            ->get();
+        $estilistas = $this->availableStylists($peluqueria);
         $proximasReservas = collect();
 
         $captcha = $this->regenerateCaptcha($request, $peluqueria);
@@ -192,6 +188,8 @@ class BookingController extends Controller
             ]);
         }
 
+        $availableStylistIds = $this->availableStylistIds($peluqueria);
+
         $validator = Validator::make($request->all(), [
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
@@ -200,15 +198,12 @@ class BookingController extends Controller
             'entrenador_id' => [
                 'required',
                 'integer',
-                Rule::exists('mysql.usuarios', 'id')->where(fn ($query) => $query
-                    ->where('peluqueria_id', $peluqueria->id)
-                    ->where('role', 11)
-                ),
+                Rule::in($availableStylistIds),
             ],
         ], [
             'tipocita_id.exists' => 'El tipo de cita seleccionado no es válido.',
             'entrenador_id.required' => 'Selecciona el estilista que atenderá tu cita.',
-            'entrenador_id.exists' => 'El estilista seleccionado no es válido.',
+            'entrenador_id.in' => 'El estilista seleccionado no es válido.',
         ]);
 
         if ($validator->fails()) {
@@ -340,6 +335,7 @@ class BookingController extends Controller
         $date = $request->query('date');
         $rawStylistId = $request->query('entrenador_id');
         $stylistId = $this->normalizeStylistId($rawStylistId);
+        $availableStylistIds = $this->availableStylistIds($peluqueria);
         if (! $date) {
             return response()->json(['error' => 'Debes indicar la fecha.'], 422);
         }
@@ -348,10 +344,7 @@ class BookingController extends Controller
             return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
         }
 
-        if ($stylistId && ! User::where('peluqueria_id', $peluqueria->id)
-            ->where('role', 11)
-            ->where('id', $stylistId)
-            ->exists()) {
+        if ($stylistId && ! in_array($stylistId, $availableStylistIds, true)) {
             return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
         }
 
@@ -403,6 +396,50 @@ class BookingController extends Controller
         }
     }
 
+    private function availableStylists(Peluqueria $peluqueria)
+    {
+        $connections = ['mysql'];
+
+        if (! empty($peluqueria->db)) {
+            $connections[] = 'tenant';
+        }
+
+        $stylists = collect();
+
+        foreach (array_unique($connections) as $connection) {
+            $connectionStylists = User::on($connection)
+                ->where('peluqueria_id', $peluqueria->id)
+                ->whereIn('role', [11, '11'])
+                ->orderBy('nombre')
+                ->orderBy('apellidos')
+                ->get();
+
+            if ($connectionStylists->isEmpty()) {
+                $connectionStylists = User::on($connection)
+                    ->where('peluqueria_id', $peluqueria->id)
+                    ->orderBy('nombre')
+                    ->orderBy('apellidos')
+                    ->get();
+            }
+
+            if ($connectionStylists->isNotEmpty()) {
+                $stylists = $stylists->merge($connectionStylists);
+            }
+        }
+
+        return $stylists->unique('id')->values();
+    }
+
+    private function availableStylistIds(Peluqueria $peluqueria): array
+    {
+        return $this->availableStylists($peluqueria)
+            ->map(fn ($stylist) => $this->normalizeStylistId($stylist->id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     private function normalizeStylistId($value): ?int
     {
         if ($value === null || $value === '') {
@@ -413,9 +450,24 @@ class BookingController extends Controller
             $value = reset($value);
         }
 
-        if (is_string($value) && str_contains($value, ':')) {
-            $parts = array_values(array_filter(explode(':', $value), fn ($segment) => $segment !== ''));
-            $value = end($parts) ?: reset($parts);
+        if (is_string($value)) {
+            $value = trim($value);
+
+            if ($value === '') {
+                return null;
+            }
+
+            if (str_contains($value, ':')) {
+                $parts = array_values(array_filter(array_map('trim', explode(':', $value)), fn ($segment) => $segment !== ''));
+                $value = end($parts) ?: reset($parts);
+            }
+
+            if (! is_numeric($value)) {
+                preg_match_all('/\d+/', $value, $matches);
+                if (! empty($matches[0])) {
+                    $value = end($matches[0]);
+                }
+            }
         }
 
         if (! is_numeric($value)) {
