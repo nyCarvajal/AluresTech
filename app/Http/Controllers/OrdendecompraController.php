@@ -12,7 +12,10 @@ class OrdenDeCompraController extends Controller
 {
     public function index()
     {
-        $ordenes = OrdenDeCompra::orderBy('fecha_hora', 'desc')->whereNotNull('cliente')->paginate(15);
+        $ordenes = OrdenDeCompra::with('clienterel')
+            ->orderBy('fecha_hora', 'desc')
+            ->whereNotNull('cliente')
+            ->paginate(15);
         return view('ordendecompras.index', compact('ordenes'));
     }
 	
