@@ -489,10 +489,18 @@ form.action                          = '/reservas/' + ev.id;
 
       try {
         await axios.delete(`/reservas/${reservaId}`);
-        const calendarEvent = calendar.getEventById(reservaId);
+
+        const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
           calendarEvent.remove();
+        } else {
+          calendar.refetchEvents();
         }
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
         toggleCancelButton(false);
         modal.hide();
         window.alert('La cita ha sido cancelada correctamente.');
