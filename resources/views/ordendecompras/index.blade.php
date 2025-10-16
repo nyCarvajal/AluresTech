@@ -24,7 +24,13 @@
                 <tr>
                     <td>{{ $orden->id }}</td>
                     <td>{{ $orden->fecha_hora}}</td>
-                    <td>{{ $orden->cliente->nombres }} {{ $orden->cliente->apellidos }}</td>
+                    <td>
+                        @if($orden->clienterel)
+                            {{ $orden->clienterel->nombres }} {{ $orden->clienterel->apellidos }}
+                        @else
+                            <span class="text-muted">Sin cliente</span>
+                        @endif
+                    </td>
                     <td>
                         @if($orden->activa)
                             <span class="badge bg-success">Sí</span>
@@ -47,6 +53,6 @@
         </tbody>
     </table>
 
-    {{ $ordenes->links() }}
+    {{ $ordenes->links('vendor.pagination.bootstrap-5-sm') }}
 </div>
 @endsection
