@@ -78,10 +78,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showCancelButton = (reservaId) => {
     if (!cancelBtn) return;
+    const id = String(reservaId ?? '').trim();
+    if (!id) {
+      hideCancelButton();
+      return;
+    }
     cancelBtn.classList.remove('d-none');
     cancelBtn.disabled = false;
     cancelBtn.innerHTML = cancelBtnDefaultText;
-    cancelBtn.dataset.reservaId = String(reservaId ?? '');
+    cancelBtn.dataset.reservaId = id;
+  };
+
+  const updateCancelButtonVisibility = () => {
+    if (!cancelBtn || !eventIdInput) return;
+    const reservaId = eventIdInput.value?.trim();
+    if (reservaId) {
+      showCancelButton(reservaId);
+    } else {
+      hideCancelButton();
+    }
   };
 
   hideCancelButton();
@@ -92,14 +107,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  modalEl.addEventListener('show.bs.modal', () => {
-    const reservaId = eventIdInput ? eventIdInput.value : '';
-    if (reservaId) {
-      showCancelButton(reservaId);
-    } else {
-      hideCancelButton();
-    }
-  });
+  modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
+  modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
+
+  if (eventIdInput) {
+    eventIdInput.addEventListener('input', updateCancelButtonVisibility);
+    eventIdInput.addEventListener('change', updateCancelButtonVisibility);
+  }
 
   // Campos específicos
    // ===== Campos específicos =====
@@ -281,8 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const type  = props.type;
       if (eventIdInput) {
         eventIdInput.value = ev.id;
+        updateCancelButtonVisibility();
       }
-      showCancelButton(ev.id);
   // extraemos horas y minutos en local:
   
  
@@ -532,8 +546,23 @@ form.action                          = '/reservas/' + ev.id;
         if (estadoSelect) {
           estadoSelect.value = 'Cancelada';
         }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        hideCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
         modal.hide();
         window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
+        if (eventIdInput) {
+          eventIdInput.value = '';
+        }
+        updateCancelButtonVisibility();
       } catch (error) {
         console.error('Error al cancelar la cita', error);
         window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
