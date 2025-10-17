@@ -561,6 +561,29 @@ form.action                          = '/reservas/' + ev.id;
         const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
           calendarEvent.remove();
+        } else {
+          calendar.refetchEvents();
+        }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        hideCancelButton();
+        if (estadoSelect) {
+          estadoSelect.value = 'Cancelada';
+        }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        hideCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
         }
         await calendar.refetchEvents();
 

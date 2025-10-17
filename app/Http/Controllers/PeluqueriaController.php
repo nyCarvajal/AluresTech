@@ -25,6 +25,8 @@ public function updateOwn(Request $request)
         'nombre'           => 'required|string', 
       
         'color'            => 'nullable|string',
+        'menu_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        'topbar_color'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         'msj_reserva_confirmada' => 'nullable|string',
         'msj_bienvenida'   => 'nullable|string',
         'nit'              => 'nullable|string',
@@ -36,6 +38,9 @@ public function updateOwn(Request $request)
     $data['pos']         = $request->has('pos');
     $data['cuentaCobro'] = $request->has('cuentaCobro');
     $data['electronica'] = $request->has('electronica');
+
+    $data['menu_color']   = $data['menu_color'] ?? null;
+    $data['topbar_color'] = $data['topbar_color'] ?? null;
 
     $peluqueria->update($data);
 
@@ -51,6 +56,8 @@ public function updateOwn(Request $request)
            
             'cuentaCobro'      => 'nullable|boolean',
             'color'            => 'nullable|string',
+            'menu_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'topbar_color'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'msj_recordatorio' => 'nullable|string',
             'msj_bienvenida'   => 'nullable|string',
             'nit'              => 'nullable|string',
@@ -61,6 +68,9 @@ public function updateOwn(Request $request)
         $data['pos'] = $request->has('pos');
         $data['cuentaCobro'] = $request->has('cuentaCobro');
         $data['electronica'] = $request->has('electronica');
+
+        $data['menu_color']   = $data['menu_color'] ?? null;
+        $data['topbar_color'] = $data['topbar_color'] ?? null;
 
         $peluqueria->update($data);
         return redirect()->route('peluquerias.show', compact('peluqueria'));
