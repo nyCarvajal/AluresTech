@@ -23,6 +23,24 @@
             <div class="border p-2 mb-3" style="white-space: pre-wrap;">{{ $peluqueria->msj_bienvenida }}</div>
             <p><strong>NIT:</strong> {{ $peluqueria->nit }}</p>
             <p><strong>Dirección:</strong> {{ $peluqueria->direccion }}</p>
+            <p><strong>Color del menú:</strong>
+                @if($peluqueria->menu_color)
+                    <span class="badge" style="background-color: {{ $peluqueria->menu_color }}; color: #fff;">
+                        {{ $peluqueria->menu_color }}
+                    </span>
+                @else
+                    <span class="text-muted">No configurado</span>
+                @endif
+            </p>
+            <p><strong>Color del topbar:</strong>
+                @if($peluqueria->topbar_color)
+                    <span class="badge" style="background-color: {{ $peluqueria->topbar_color }}; color: #fff;">
+                        {{ $peluqueria->topbar_color }}
+                    </span>
+                @else
+                    <span class="text-muted">No configurado</span>
+                @endif
+            </p>
         </div>
     </div>
 
