@@ -53,6 +53,6 @@
         </tbody>
     </table>
 
-    {{ $ordenes->links() }}
+    {{ $ordenes->links('vendor.pagination.bootstrap-5-sm') }}
 </div>
 @endsection
