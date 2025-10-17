@@ -116,7 +116,7 @@
                       class="btn btn-outline-danger d-none"
                       id="reservationCancel"
                       data-action="cancel">
-                Cancelar cita
+                Eliminar cita
               </button>
             </div>
             <div class="d-flex gap-2">

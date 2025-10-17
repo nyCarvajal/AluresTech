@@ -493,6 +493,8 @@ form.action                          = '/reservas/' + ev.id;
         const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
           calendarEvent.remove();
+        } else {
+          calendar.refetchEvents();
         }
         await calendar.refetchEvents();
 
