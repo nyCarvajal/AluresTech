@@ -68,6 +68,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelBtnDefaultText = cancelBtn ? cancelBtn.innerHTML : '';
   const estadoSelect = form.querySelector('#reservaEstado');
 
+  const TYPE_MAP = {
+    Reserva: { url: '/reservas' },
+    Clase:   { url: '/clases' },
+    Torneo:  { url: '/torneos' },
+  };
+
+  const resolveReservaId = () => {
+    if (eventIdInput && eventIdInput.value && eventIdInput.value.trim()) {
+      return eventIdInput.value.trim();
+    }
+
+    const datasetId = cancelBtn?.dataset?.reservaId;
+    if (datasetId && datasetId.trim()) {
+      return datasetId.trim();
+    }
+
+    const action = form?.getAttribute('action') ?? '';
+    const match = action.match(/\/reservas\/(\d+)/);
+    if (match && match[1]) {
+      return match[1];
+    }
+
+    return '';
+  };
+
   const hideCancelButton = () => {
     if (!cancelBtn) return;
     cancelBtn.classList.add('d-none');
@@ -90,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const updateCancelButtonVisibility = () => {
-    if (!cancelBtn || !eventIdInput) return;
-    const reservaId = eventIdInput.value?.trim();
+    if (!cancelBtn) return;
+    const reservaId = resolveReservaId();
     if (reservaId) {
       showCancelButton(reservaId);
     } else {
@@ -105,6 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (eventIdInput) {
       eventIdInput.value = '';
     }
+    if (methodIn) {
+      methodIn.value = 'POST';
+    }
+    if (form && TYPE_MAP?.Reserva?.url) {
+      form.setAttribute('action', TYPE_MAP.Reserva.url);
+    }
   });
 
   modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
@@ -113,6 +144,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (eventIdInput) {
     eventIdInput.addEventListener('input', updateCancelButtonVisibility);
     eventIdInput.addEventListener('change', updateCancelButtonVisibility);
+  }
+
+  if (methodIn) {
+    methodIn.addEventListener('change', updateCancelButtonVisibility);
   }
 
   // Campos específicos
@@ -176,15 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  // Mapeo de tipos a URL base
-  const TYPE_MAP = {
-    Reserva: { url: '/reservas' },
-    Clase:   { 
-	
-	url: '/clases'   },
-    Torneo:  { url: '/torneos'  },
-  };
-  
    // Inicializar TomSelect en el select de “Cliente”
   const clientesSelect = document.querySelector('#clientes');
   if (clientesSelect) {
@@ -528,7 +554,9 @@ form.action                          = '/reservas/' + ev.id;
       cancelBtn.innerHTML = 'Cancelando…';
 
       try {
-        const { data } = await axios.post(`/reservas/${reservaId}/cancelar`);
+        const { data } = await axios.post(`/reservas/${reservaId}/cancelar`, {
+          estado: 'Cancelada'
+        });
 
         const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
@@ -556,6 +584,23 @@ form.action                          = '/reservas/' + ev.id;
         if (estadoSelect) {
           const estadoFinal = data?.reserva?.estado || 'Cancelada';
           estadoSelect.value = estadoFinal;
+        }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        hideCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
+        if (methodIn) {
+          methodIn.value = 'POST';
+        }
+        if (form && TYPE_MAP?.Reserva?.url) {
+          form.setAttribute('action', TYPE_MAP.Reserva.url);
         }
         modal.hide();
         window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
