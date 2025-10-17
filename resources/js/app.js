@@ -488,14 +488,21 @@ form.action                          = '/reservas/' + ev.id;
       cancelBtn.innerHTML = 'Cancelando…';
 
       try {
-        await axios.delete(`/reservas/${reservaId}`);
-        const calendarEvent = calendar.getEventById(reservaId);
+        const { data } = await axios.post(`/reservas/${reservaId}/cancelar`);
+
+        const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
           calendarEvent.remove();
         }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
         toggleCancelButton(false);
         modal.hide();
-        window.alert('La cita ha sido cancelada correctamente.');
+        window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
       } catch (error) {
         console.error('Error al cancelar la cita', error);
         window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
