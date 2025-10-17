@@ -450,13 +450,14 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
      */
     public function cancel(Request $request, Reserva $reserva)
     {
-        $wasAlreadyCancelled = $this->cancelReservation($reserva);
+        [$wasAlreadyCancelled, $updatedReserva] = $this->cancelReservation($reserva);
 
         if ($request->expectsJson() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'already_cancelled' => $wasAlreadyCancelled,
                 'message' => 'Reserva cancelada correctamente.',
+                'reserva' => $updatedReserva,
             ]);
         }
 
@@ -467,13 +468,14 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
 
     public function destroy(Request $request, Reserva $reserva)
     {
-        $wasAlreadyCancelled = $this->cancelReservation($reserva);
+        [$wasAlreadyCancelled, $updatedReserva] = $this->cancelReservation($reserva);
 
         if ($request->expectsJson() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'already_cancelled' => $wasAlreadyCancelled,
                 'message' => 'Reserva cancelada correctamente.',
+                'reserva' => $updatedReserva,
             ]);
         }
 
@@ -482,13 +484,13 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
             ->with('success', 'Reserva cancelada correctamente.');
     }
 
-    protected function cancelReservation(Reserva $reserva): bool
+    protected function cancelReservation(Reserva $reserva): array
     {
-        $wasAlreadyCancelled = strcasecmp($reserva->estado ?? '', 'Cancelada') === 0;
+        $currentEstado = trim((string) $reserva->estado);
+        $wasAlreadyCancelled = strcasecmp($currentEstado, 'Cancelada') === 0;
 
         if (! $wasAlreadyCancelled) {
-            $reserva->estado = 'Cancelada';
-            $reserva->save();
+            $reserva->forceFill(['estado' => 'Cancelada'])->save();
 
             $cliente    = $reserva->cliente;
             $templateId = config('services.onemsg.templates.cancelacion');
@@ -507,6 +509,6 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
             }
         }
 
-        return $wasAlreadyCancelled;
+        return [$wasAlreadyCancelled, $reserva->fresh()];
     }
 }

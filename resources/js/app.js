@@ -496,6 +496,7 @@ form.action                          = '/reservas/' + ev.id;
         } else {
           calendar.refetchEvents();
         }
+        await calendar.refetchEvents();
 
         document.dispatchEvent(new CustomEvent('reserva:cancelada', {
           detail: { id: reservaId }
