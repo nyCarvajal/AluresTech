@@ -69,7 +69,7 @@
                          <span class="nav-icon">
 						 <i class="bx bx-dock-left"></i> 
                                </span>
-                         <span class="nav-text"> Servicios </span>
+                         <span class="nav-text"> Productos/Servicios </span>
                     </a>
                </li>
 			   

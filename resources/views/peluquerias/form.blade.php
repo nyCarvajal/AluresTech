@@ -26,3 +26,31 @@
   <input type="text" name="direccion" value="{{ old('direccion', $peluqueria->direccion ?? '') }}" class="form-control">
 </div>
 
+<div class="row mb-3">
+  <div class="col-md-6">
+    <label class="form-label" for="menu_color">Color del menú</label>
+    <input
+      type="color"
+      id="menu_color"
+      name="menu_color"
+      value="{{ old('menu_color', $peluqueria->menu_color ?: '#393f4a') }}"
+      class="form-control form-control-color"
+      title="Selecciona el color de fondo del menú"
+    >
+    <small class="form-text text-muted">Elige el color que tendrá el menú lateral.</small>
+  </div>
+
+  <div class="col-md-6">
+    <label class="form-label" for="topbar_color">Color del topbar</label>
+    <input
+      type="color"
+      id="topbar_color"
+      name="topbar_color"
+      value="{{ old('topbar_color', $peluqueria->topbar_color ?: '#393f4a') }}"
+      class="form-control form-control-color"
+      title="Selecciona el color de fondo del topbar"
+    >
+    <small class="form-text text-muted">Elige el color que tendrá la barra superior.</small>
+  </div>
+</div>
+
