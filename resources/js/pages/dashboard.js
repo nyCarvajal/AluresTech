@@ -4,6 +4,17 @@ import jsVectorMap from "jsvectormap/dist/jsvectormap.js";
 import 'jsvectormap/dist/maps/world-merc.js'
 import 'jsvectormap/dist/maps/world.js'
 
+const renderApexChart = (selector, options) => {
+    const element = document.querySelector(selector);
+    if (!element) {
+        return null;
+    }
+
+    const chart = new ApexCharts(element, options);
+    chart.render();
+    return chart;
+};
+
 var options1 = {
     chart: {
         type: 'area',
@@ -55,7 +66,7 @@ var options1 = {
     },
 }
 
-new ApexCharts(document.querySelector("#chart01"), options1).render();
+renderApexChart("#chart01", options1);
 
 
 var options1 = {
@@ -109,7 +120,7 @@ var options1 = {
     },
 }
 
-new ApexCharts(document.querySelector("#chart02"), options1).render();
+renderApexChart("#chart02", options1);
 
 
 
@@ -164,7 +175,7 @@ var options1 = {
     },
 }
 
-new ApexCharts(document.querySelector("#chart03"), options1).render();
+renderApexChart("#chart03", options1);
 
 
 var options1 = {
@@ -218,7 +229,7 @@ var options1 = {
     },
 }
 
-new ApexCharts(document.querySelector("#chart04"), options1).render();
+renderApexChart("#chart04", options1);
 
 // Conversions
 var options = {
@@ -264,11 +275,7 @@ var options = {
         type: 'gradient'
     }
 }
-var chart = new ApexCharts(
-    document.querySelector("#conversions"),
-    options
-);
-chart.render();
+renderApexChart("#conversions", options);
 
 //Sales Report -chart
 var options = {
@@ -411,20 +418,20 @@ var options = {
     },
 }
 
-var chart = new ApexCharts(
-    document.querySelector("#dash-performance-chart"),
-    options
-);
-
-chart.render();
+renderApexChart("#dash-performance-chart", options);
 
 
 class VectorMap {
 
     initWorldMapMarker() {
-        const map = new jsVectorMap({
+        const selector = '#world-map-markers';
+        if (!document.querySelector(selector)) {
+            return null;
+        }
+
+        return new jsVectorMap({
             map: 'world',
-            selector: '#world-map-markers',
+            selector,
             zoomOnScroll: true,
             zoomButtons: false,
             markersSelectable: true,
@@ -459,6 +466,6 @@ class VectorMap {
 
 }
 
-document.addEventListener('DOMContentLoaded', function (e) {
+document.addEventListener('DOMContentLoaded', function () {
     new VectorMap().init();
 });

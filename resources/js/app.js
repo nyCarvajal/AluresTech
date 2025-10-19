@@ -53,8 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1) Obtener elementos comunes
   const calendarEl = document.querySelector(cfg.selector);
   const modalEl    = document.querySelector(cfg.modalSelector);
-  const modal      = new bootstrap.Modal(modalEl);
+  if (!modalEl) {
+    console.warn('No se encontró el modal configurado para el calendario, se omite la inicialización.');
+    return;
+  }
+
   const form       = modalEl.querySelector('form');
+  if (!form) {
+    console.warn('No se encontró el formulario del calendario, se omite la inicialización.');
+    return;
+  }
+
+  const modal      = new bootstrap.Modal(modalEl);
   form.setAttribute('method', 'POST');
   const entrenadorFilter = document.querySelector(cfg.filterSelector);
 
@@ -100,15 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   hideCancelButton();
-  modalEl.addEventListener('hidden.bs.modal', () => {
-    hideCancelButton();
-    if (eventIdInput) {
-      eventIdInput.value = '';
-    }
-  });
+  if (modalEl) {
+    modalEl.addEventListener('hidden.bs.modal', () => {
+      hideCancelButton();
+      if (eventIdInput) {
+        eventIdInput.value = '';
+      }
+    });
 
-  modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
-  modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
+    modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
+    modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
+  }
 
   if (eventIdInput) {
     eventIdInput.addEventListener('input', updateCancelButtonVisibility);
@@ -127,34 +139,44 @@ document.addEventListener('DOMContentLoaded', () => {
   const responsableInput  = form.querySelector('#responsable');
 
   // Listener para cambio de tipo en el select del modal
-  typeSelect.addEventListener('change', e => {
-    switchFields(e.target.value);
-  });
-  
-  (() => {
-  const fecha  = document.getElementById('reservaFecha');
-  const hora   = document.getElementById('reservaHora');
-  const start  = document.getElementById('start');
-  const form   = fecha.closest('form');          // asumiendo que ambos están dentro
-
-  function fusionar() {
-    if (!fecha.value || !hora.value) { start.value = ''; return; }
-    // → "2025-06-17T08:30:00"
-    start.value = `${fecha.value}T${hora.value}:00`;
+  if (typeSelect) {
+    typeSelect.addEventListener('change', e => {
+      switchFields(e.target.value);
+    });
   }
 
-  fecha.addEventListener('change', fusionar);
-  hora .addEventListener('change', fusionar);
+  (() => {
+    const fecha  = document.getElementById('reservaFecha');
+    const hora   = document.getElementById('reservaHora');
+    const start  = document.getElementById('start');
 
-  // Validación extra: evita enviar si falta algo
-  form.addEventListener('submit', e => {
-    fusionar();
-    if (!start.value) {
-      e.preventDefault();
-      alert('Selecciona fecha y hora.');
+    if (!fecha || !hora || !start) {
+      return;
     }
-  });
-})();
+
+    const formWithDateFields = fecha.closest('form');
+
+    const fusionar = () => {
+      if (!fecha.value || !hora.value) {
+        start.value = '';
+        return;
+      }
+      start.value = `${fecha.value}T${hora.value}:00`;
+    };
+
+    fecha.addEventListener('change', fusionar);
+    hora.addEventListener('change', fusionar);
+
+    if (formWithDateFields) {
+      formWithDateFields.addEventListener('submit', e => {
+        fusionar();
+        if (!start.value) {
+          e.preventDefault();
+          alert('Selecciona fecha y hora.');
+        }
+      });
+    }
+  })();
 
   
   new TomSelect('#responsable', {
