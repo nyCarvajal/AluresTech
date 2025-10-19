@@ -116,8 +116,10 @@
                       class="btn btn-outline-danger border border-danger border-2 fw-semibold d-none"
                       id="reservationCancel"
                       data-action="cancel"
-                      data-editing-only="true">
-                Cancelar reserva
+                      data-editing-only="true"
+                      data-label-reserva="Cancelar reserva"
+                      data-label-clase="Cancelar clase">
+                <span data-cancel-label>Cancelar reserva</span>
               </button>
             </div>
             <div class="d-flex gap-2">

@@ -65,8 +65,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const horaSelect  = document.getElementById('reservaHora');
   const eventIdInput = form.querySelector('#eventId');
   const cancelBtn    = form.querySelector('#reservationCancel');
-  const cancelBtnDefaultText = cancelBtn ? cancelBtn.innerHTML : '';
+  const cancelBtnLabel = cancelBtn?.querySelector('[data-cancel-label]') ?? null;
+  const cancelBtnDefaultText = cancelBtnLabel
+    ? cancelBtnLabel.textContent.trim()
+    : (cancelBtn ? cancelBtn.textContent.trim() : 'Cancelar reserva');
+  const cancelLabelsByType = {
+    Reserva: cancelBtn?.dataset?.labelReserva || cancelBtnDefaultText,
+    Clase: cancelBtn?.dataset?.labelClase || cancelBtnDefaultText,
+    Torneo: cancelBtnDefaultText,
+  };
   const estadoSelect = form.querySelector('#reservaEstado');
+
+  const setCancelButtonText = (text) => {
+    if (cancelBtnLabel) {
+      cancelBtnLabel.textContent = text;
+    } else if (cancelBtn) {
+      cancelBtn.textContent = text;
+    }
+  };
+
+  const refreshCancelButtonTextForType = (typeValue) => {
+    if (!cancelBtn) return;
+    const typeKey = (typeValue || '').trim();
+    const fallback = cancelBtnDefaultText;
+    const label = cancelLabelsByType[typeKey] || fallback;
+    setCancelButtonText(label);
+  };
 
   const TYPE_MAP = {
     Reserva: { url: '/reservas' },
@@ -97,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cancelBtn) return;
     cancelBtn.classList.add('d-none');
     cancelBtn.disabled = false;
-    cancelBtn.innerHTML = cancelBtnDefaultText;
+    refreshCancelButtonTextForType(typeSelect?.value);
     delete cancelBtn.dataset.reservaId;
   };
 
@@ -110,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     cancelBtn.classList.remove('d-none');
     cancelBtn.disabled = false;
-    cancelBtn.innerHTML = cancelBtnDefaultText;
+    refreshCancelButtonTextForType(typeSelect?.value);
     cancelBtn.dataset.reservaId = id;
   };
 
@@ -163,7 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Listener para cambio de tipo en el select del modal
   typeSelect.addEventListener('change', e => {
-    switchFields(e.target.value);
+    const newType = e.target.value;
+    switchFields(newType);
+    refreshCancelButtonTextForType(newType);
   });
   
   (() => {
@@ -281,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       hideCancelButton();
       typeSelect.value     = 'Reserva';
+      refreshCancelButtonTextForType('Reserva');
       switchFields('Reserva');
       methodIn.value       = 'POST';
       form.action          = TYPE_MAP['Reserva'].url;
@@ -333,6 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	  
               console.log('[DEBUG] extendedProps:', props);
       typeSelect.value                     = type;
+      refreshCancelButtonTextForType(type);
       switchFields(type);
       methodIn.value                       = 'PUT';
 form.action                          = '/reservas/' + ev.id;
@@ -551,7 +579,10 @@ form.action                          = '/reservas/' + ev.id;
       }
 
       cancelBtn.disabled = true;
-      cancelBtn.innerHTML = 'Cancelando…';
+      setCancelButtonText('Cancelando…');
+      if (estadoSelect) {
+        estadoSelect.value = 'Cancelada';
+      }
 
       try {
         const { data } = await axios.post(`/reservas/${reservaId}/cancelar`, {
@@ -602,6 +633,23 @@ form.action                          = '/reservas/' + ev.id;
         if (form && TYPE_MAP?.Reserva?.url) {
           form.setAttribute('action', TYPE_MAP.Reserva.url);
         }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        hideCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
+        if (methodIn) {
+          methodIn.value = 'POST';
+        }
+        if (form && TYPE_MAP?.Reserva?.url) {
+          form.setAttribute('action', TYPE_MAP.Reserva.url);
+        }
         modal.hide();
         window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
         if (eventIdInput) {
@@ -614,7 +662,7 @@ form.action                          = '/reservas/' + ev.id;
         showCancelButton(reservaId);
       } finally {
         cancelBtn.disabled = false;
-        cancelBtn.innerHTML = cancelBtnDefaultText;
+        refreshCancelButtonTextForType(typeSelect?.value);
       }
     });
   }
