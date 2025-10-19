@@ -6,7 +6,7 @@ const currencyFormatter = new Intl.NumberFormat('es-CO', {
     maximumFractionDigits: 0,
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+const initIncomeExpenseChart = () => {
     const chartElement = document.getElementById('incomeExpenseChart');
     if (!chartElement) {
         return;
@@ -101,4 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const chart = new ApexCharts(chartElement, options);
     chart.render();
-});
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIncomeExpenseChart);
+} else {
+    initIncomeExpenseChart();
+}

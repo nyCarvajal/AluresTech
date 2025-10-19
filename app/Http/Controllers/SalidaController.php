@@ -44,7 +44,7 @@ class SalidaController extends Controller
             'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
             'responsable'     => 'required|exists:usuarios,id',
-            'tercero_id'         => 'nullable|exists:proveedors,id',
+            'tercero_id'         => 'nullable|exists:proveedores,id',
         ]);
 
         $data['cuenta_bancaria'] = $data['origen'] === 'banco'
@@ -95,7 +95,7 @@ class SalidaController extends Controller
             'valor'              => 'required|integer|min:0',
             'observaciones'      => 'nullable|string',
             'responsable'     => 'required|exists:usuarios,id',
-            'tercero_id'         => 'nullable|exists:proveedors,id',
+            'tercero_id'         => 'nullable|exists:proveedores,id',
         ]);
 
         $data['cuenta_bancaria'] = $data['origen'] === 'banco'
