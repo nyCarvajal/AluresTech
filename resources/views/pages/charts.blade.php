@@ -434,28 +434,6 @@
     </div>
 </section>
 
-<section id="ingresos-gastos" class="mb-5">
-    <div class="card">
-        <div class="card-header border-0 pb-0">
-            <div class="d-flex flex-column flex-md-row justify-content-between gap-3">
-                <div>
-                    <h4 class="mb-1">Ingresos vs gastos</h4>
-                    <p class="text-muted mb-0">Comparativa mensual de pagos recibidos y gastos registrados durante los últimos 12 meses.</p>
-                </div>
-            </div>
-        </div>
-        <div class="card-body">
-            @if($chartError)
-                <div class="alert alert-warning mb-0">
-                    <i class="bx bx-info-circle me-1"></i>{{ $chartError }}
-                </div>
-            @else
-                <div id="incomeExpenseChart"></div>
-                <script type="application/json" id="incomeExpenseSeries">@json($chartData)</script>
-            @endif
-        </div>
-    </div>
-</section>
 @endsection
 
 @push('styles')

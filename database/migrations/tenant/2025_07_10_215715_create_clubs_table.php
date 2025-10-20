@@ -19,6 +19,8 @@ return new class extends Migration
             $table->integer('electronica')->nullable();
             $table->longText('terminos')->nullable();
             $table->string('color', 100)->nullable();
+            $table->string('menu_color', 20)->nullable();
+            $table->string('topbar_color', 20)->nullable();
             $table->string('msj_bienvenida', 500)->nullable();
             $table->string('msj_reserva_confirmada', 500)->nullable();
 			$table->string('msj_finalizado', 500)->nullable();
