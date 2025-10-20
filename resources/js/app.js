@@ -130,6 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const disableCancelButton = () => {
     if (!cancelBtn) return;
     cancelBtn.disabled = true;
+    cancelBtn.setAttribute('disabled', 'disabled');
+    cancelBtn.setAttribute('aria-disabled', 'true');
     cancelBtn.classList.add('disabled', 'opacity-50');
     refreshCancelButtonTextForType(typeSelect?.value);
     delete cancelBtn.dataset.reservaId;
@@ -143,6 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     cancelBtn.disabled = false;
+    cancelBtn.removeAttribute('disabled');
+    cancelBtn.removeAttribute('aria-disabled');
     cancelBtn.classList.remove('disabled', 'opacity-50');
     refreshCancelButtonTextForType(typeSelect?.value);
     cancelBtn.dataset.reservaId = id;
@@ -610,6 +614,8 @@ form.action                          = '/reservas/' + ev.id;
       }
 
       cancelBtn.disabled = true;
+      cancelBtn.setAttribute('disabled', 'disabled');
+      cancelBtn.setAttribute('aria-disabled', 'true');
       setCancelButtonText('Cancelando…');
       if (estadoSelect) {
         estadoSelect.value = 'Cancelada';
@@ -688,6 +694,23 @@ form.action                          = '/reservas/' + ev.id;
         }));
 
         hideCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
+        if (methodIn) {
+          methodIn.value = 'POST';
+        }
+        if (form && TYPE_MAP?.Reserva?.url) {
+          form.setAttribute('action', TYPE_MAP.Reserva.url);
+        }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        disableCancelButton();
         if (estadoSelect) {
           const estadoFinal = data?.reserva?.estado || 'Cancelada';
           estadoSelect.value = estadoFinal;
