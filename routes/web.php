@@ -157,6 +157,8 @@ Route::get('/reservas.json', [ReservaController::class, 'events'])
      ->name('reservas.events');
 Route::post('reservas/{reserva}/cobrar', [ReservaController::class, 'cobrar'])
      ->name('reservas.cobrar');
+Route::post('reservas/{reserva}/cancelar', [ReservaController::class, 'cancel'])
+     ->name('reservas.cancel');
 Route::resource('reservas', ReservaController::class);
 Route::resource('clases',  ClaseController::class);
 //	Route::resource('torneos', TorneoController::class);

@@ -17,15 +17,18 @@
                 <table class="table table-striped mb-0">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 80px;">ID</th>
+                            <th class="text-center" style="width: 80px;">#</th>
                             <th>Descripción</th>
                             <th class="text-end" style="width: 160px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @php
+                            $startIndex = $areas->firstItem() ?? 1;
+                        @endphp
                         @forelse ($areas as $area)
                             <tr>
-                                <td class="text-center">{{ $area->id }}</td>
+                                <td class="text-center">{{ $startIndex + $loop->index }}</td>
                                 <td>{{ $area->descripcion }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('areas.edit', $area) }}" class="btn btn-sm btn-primary">Editar</a>
