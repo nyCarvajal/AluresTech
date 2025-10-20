@@ -968,11 +968,39 @@ class FormValidation {
 }
 
 
+const FALLBACK_LAYOUT_CONFIG = {
+    theme: "light",
+    topbar: { color: "light" },
+    menu: { size: "default", color: "light" },
+    color: { primary: "#0d6efd" },
+};
+
 class ThemeLayout {
     constructor() {
         (this.html = document.getElementsByTagName("html")[0]),
-            (this.config = {}),
-            (this.defaultConfig = window.config);
+            (this.config = this._buildSafeConfig(window.config)),
+            (this.defaultConfig = this._buildSafeConfig(window.defaultConfig));
+    }
+    _cloneConfig(e) {
+        if (!e || "object" != typeof e) return {};
+        try {
+            return JSON.parse(JSON.stringify(e));
+        } catch (t) {
+            return Object.assign({}, e);
+        }
+    }
+    _buildSafeConfig(e) {
+        var t = this._cloneConfig(FALLBACK_LAYOUT_CONFIG),
+            n = this._cloneConfig(e);
+        (n.topbar = Object.assign({}, t.topbar, n.topbar || {})),
+            (n.menu = Object.assign({}, t.menu, n.menu || {})),
+            (n.color = Object.assign({}, t.color, n.color || {})),
+            (n.theme = n.theme || t.theme),
+            (n.topbar.color = n.topbar.color || t.topbar.color),
+            (n.menu.size = n.menu.size || t.menu.size),
+            (n.menu.color = n.menu.color || t.menu.color),
+            (n.color.primary = n.color.primary || t.color.primary);
+        return Object.assign({}, t, n);
     }
     initVerticalMenu() {
         var e = document.querySelectorAll(".navbar-nav li .collapse");
@@ -1044,31 +1072,42 @@ class ThemeLayout {
                 }, 200));
     }
     initConfig() {
-        (this.defaultConfig = JSON.parse(JSON.stringify(window.defaultConfig))),
-            (this.config = JSON.parse(JSON.stringify(window.config))),
+        (this.defaultConfig = this._buildSafeConfig(window.defaultConfig)),
+            (this.config = this._buildSafeConfig(window.config)),
             this.setSwitchFromConfig();
     }
     changeMenuColor(e) {
-        (this.config.menu.color = e),
-            this.html.setAttribute("data-sidebar-color", e),
+        (this.config.menu = this.config.menu || {}),
+            (this.config.menu.color =
+                e || this.config.menu.color || FALLBACK_LAYOUT_CONFIG.menu.color),
+            this.html.setAttribute("data-sidebar-color", this.config.menu.color),
             this.setSwitchFromConfig();
     }
     changeMenuSize(e, t = !0) {
-        this.html.setAttribute("data-sidebar-size", e),
-            t && ((this.config.menu.size = e), this.setSwitchFromConfig());
+        (this.config.menu = this.config.menu || {}),
+            this.html.setAttribute("data-sidebar-size", e),
+            t &&
+                ((this.config.menu.size =
+                    e || this.config.menu.size || FALLBACK_LAYOUT_CONFIG.menu.size),
+                this.setSwitchFromConfig());
     }
     changeThemeMode(e) {
-        (this.config.theme = e),
-            this.html.setAttribute("data-bs-theme", e),
+        (this.config.theme =
+            e || this.config.theme || FALLBACK_LAYOUT_CONFIG.theme),
+            this.html.setAttribute("data-bs-theme", this.config.theme),
             this.setSwitchFromConfig();
     }
     changeTopbarColor(e) {
-        (this.config.topbar.color = e),
-            this.html.setAttribute("data-topbar-color", e),
+        (this.config.topbar = this.config.topbar || {}),
+            (this.config.topbar.color =
+                e ||
+                this.config.topbar.color ||
+                FALLBACK_LAYOUT_CONFIG.topbar.color),
+            this.html.setAttribute("data-topbar-color", this.config.topbar.color),
             this.setSwitchFromConfig();
     }
     resetTheme() {
-        (this.config = JSON.parse(JSON.stringify(window.defaultConfig))),
+        (this.config = this._buildSafeConfig(window.defaultConfig)),
             this.changeMenuColor(this.config.menu.color),
             this.changeMenuSize(this.config.menu.size),
             this.changeThemeMode(this.config.theme),
@@ -1119,8 +1158,12 @@ class ThemeLayout {
                 }),
             (e = document.querySelector(".button-toggle-menu")) &&
                 e.addEventListener("click", function () {
-                    var e = n.config.menu.size,
-                        t = n.html.getAttribute("data-sidebar-size", e);
+                    var e =
+                            (n.config &&
+                                n.config.menu &&
+                                n.config.menu.size) ||
+                            FALLBACK_LAYOUT_CONFIG.menu.size,
+                        t = n.html.getAttribute("data-sidebar-size");
                     "hidden" !== t
                         ? "condensed" === t
                             ? n.changeMenuSize(
@@ -1155,9 +1198,14 @@ class ThemeLayout {
         });
     }
     _adjustLayout() {
+        var e =
+            (this.config &&
+                this.config.menu &&
+                this.config.menu.size) ||
+            FALLBACK_LAYOUT_CONFIG.menu.size;
         window.innerWidth <= 1140
             ? this.changeMenuSize("hidden", !1)
-            : this.changeMenuSize(this.config.menu.size);
+            : this.changeMenuSize(e);
     }
     setSwitchFromConfig() {
         try {
@@ -1179,30 +1227,37 @@ class ThemeLayout {
         var e,
             t,
             n,
-            o = this.config;
-        o &&
-            ((e = document.querySelector(
-                "input[type=radio][name=data-bs-theme][value=" + o.theme + "]"
-            )),
+            o,
+            i = this.config || {},
+            a = i.theme,
+            r = i.topbar && i.topbar.color,
+            s = i.menu && i.menu.size,
+            c = i.menu && i.menu.color;
+        a &&
+            (e = document.querySelector(
+                "input[type=radio][name=data-bs-theme][value=" + a + "]"
+            )) &&
+            (e.checked = !0);
+        r &&
             (t = document.querySelector(
                 "input[type=radio][name=data-topbar-color][value=" +
-                    o.topbar.color +
+                    r +
                     "]"
-            )),
+            )) &&
+            (t.checked = !0);
+        s &&
             (n = document.querySelector(
                 "input[type=radio][name=data-sidebar-size][value=" +
-                    o.menu.size +
+                    s +
                     "]"
-            )),
+            )) &&
+            (n.checked = !0);
+        c &&
             (o = document.querySelector(
                 "input[type=radio][name=data-sidebar-color][value=" +
-                    o.menu.color +
+                    c +
                     "]"
-            )),
-            e && (e.checked = !0),
-            t && (t.checked = !0),
-            n && (n.checked = !0),
-            o) &&
+            )) &&
             (o.checked = !0);
     }
     init() {
@@ -1214,4 +1269,33 @@ class ThemeLayout {
             this.setSwitchFromConfig();
     }
 }
-new ThemeLayout().init();
+const ensureThemeLayout = (e) => {
+    var t = window.__themeLayoutInstance;
+    if (t)
+        return (
+            e && e.syncConfig && (t.initConfig(), t._adjustLayout()),
+            t
+        );
+    var n = new ThemeLayout();
+    return n.init(), (window.__themeLayoutInstance = n), n;
+};
+(window.__layoutConfigReady ||
+    (window.config && window.config.menu && window.config.topbar))
+    ? ensureThemeLayout()
+    : (window.addEventListener(
+          "layout:config-ready",
+          function () {
+              ensureThemeLayout({ syncConfig: !0 });
+          },
+          { once: !0 }
+      ),
+      document.addEventListener(
+          "DOMContentLoaded",
+          function () {
+              ensureThemeLayout();
+          },
+          { once: !0 }
+      ),
+      ("complete" === document.readyState ||
+          "interactive" === document.readyState) &&
+          ensureThemeLayout());
