@@ -2,7 +2,7 @@
 
 @section('content')
 
-@include('layouts.partials/page-title', ['title' => 'SmashsTech', 'subtitle' => 'Inicio'])
+@include('layouts.partials/page-title', ['title' => 'Dashboard', 'subtitle' => 'Inicio'])
 
 <!doctype html>
 <html lang="es">
