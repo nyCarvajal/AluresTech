@@ -1160,15 +1160,22 @@ class ThemeLayout {
             : this.changeMenuSize(this.config.menu.size);
     }
     setSwitchFromConfig() {
-        sessionStorage.setItem(
-            "__DARKONE_CONFIG__",
-            JSON.stringify(this.config)
-        ),
-            document
-                .querySelectorAll(".settings-bar input[type=radio]")
-                .forEach(function (e) {
-                    e.checked = !1;
-                });
+        try {
+            sessionStorage.setItem(
+                "__DARKONE_CONFIG__",
+                JSON.stringify(this.config)
+            );
+        } catch (err) {
+            console.warn(
+                "No se pudo persistir la configuración del layout en sessionStorage.",
+                err
+            );
+        }
+        document
+            .querySelectorAll(".settings-bar input[type=radio]")
+            .forEach(function (e) {
+                e.checked = !1;
+            });
         var e,
             t,
             n,
