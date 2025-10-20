@@ -1279,23 +1279,22 @@ const ensureThemeLayout = (e) => {
     var n = new ThemeLayout();
     return n.init(), (window.__themeLayoutInstance = n), n;
 };
-(window.__layoutConfigReady ||
-    (window.config && window.config.menu && window.config.topbar))
-    ? ensureThemeLayout()
-    : (window.addEventListener(
-          "layout:config-ready",
-          function () {
-              ensureThemeLayout({ syncConfig: !0 });
-          },
-          { once: !0 }
-      ),
-      document.addEventListener(
-          "DOMContentLoaded",
-          function () {
-              ensureThemeLayout();
-          },
-          { once: !0 }
-      ),
-      ("complete" === document.readyState ||
-          "interactive" === document.readyState) &&
-          ensureThemeLayout());
+let domReadyFired =
+        "complete" === document.readyState ||
+        "interactive" === document.readyState,
+    needsConfigSync = !!window.__layoutConfigReady;
+const bootThemeLayout = () => ensureThemeLayout();
+const syncThemeLayoutConfig = () => ensureThemeLayout({ syncConfig: !0 });
+const handleDomReady = () => {
+    domReadyFired = !0;
+    bootThemeLayout();
+    needsConfigSync && (syncThemeLayoutConfig(), (needsConfigSync = !1));
+};
+domReadyFired
+    ? handleDomReady()
+    : document.addEventListener("DOMContentLoaded", handleDomReady, {
+          once: !0,
+      });
+window.addEventListener("layout:config-ready", function () {
+    domReadyFired ? syncThemeLayoutConfig() : (needsConfigSync = !0);
+});
