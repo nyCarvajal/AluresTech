@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peluqueria;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 
 class PeluqueriaController extends Controller
@@ -32,6 +33,7 @@ public function updateOwn(Request $request)
         'nit'              => 'nullable|string',
         'direccion'        => 'nullable|string',
         'municipio'        => 'nullable|string',
+        'logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
     ]);
 
     // Normaliza checkboxes
@@ -41,6 +43,18 @@ public function updateOwn(Request $request)
 
     $data['menu_color']   = $data['menu_color'] ?? null;
     $data['topbar_color'] = $data['topbar_color'] ?? null;
+
+    if ($request->hasFile('logo')) {
+        $uploadResult = Cloudinary::uploadApi()
+            ->upload(
+                $request->file('logo')->getRealPath(),
+                ['folder' => 'peluquerias']
+            );
+
+        $data['logo'] = $uploadResult['public_id'] ?? null;
+    } else {
+        unset($data['logo']);
+    }
 
     $peluqueria->update($data);
 
@@ -63,6 +77,7 @@ public function updateOwn(Request $request)
             'nit'              => 'nullable|string',
             'direccion'        => 'nullable|string',
             'municipio'        => 'nullable|string',
+            'logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
 
         $data['pos'] = $request->has('pos');
@@ -71,6 +86,18 @@ public function updateOwn(Request $request)
 
         $data['menu_color']   = $data['menu_color'] ?? null;
         $data['topbar_color'] = $data['topbar_color'] ?? null;
+
+        if ($request->hasFile('logo')) {
+            $uploadResult = Cloudinary::uploadApi()
+                ->upload(
+                    $request->file('logo')->getRealPath(),
+                    ['folder' => 'peluquerias']
+                );
+
+            $data['logo'] = $uploadResult['public_id'] ?? null;
+        } else {
+            unset($data['logo']);
+        }
 
         $peluqueria->update($data);
         return redirect()->route('peluquerias.show', compact('peluqueria'));
