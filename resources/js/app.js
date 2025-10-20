@@ -159,17 +159,21 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   hideCancelButton();
-  if (modalEl) {
-    modalEl.addEventListener('hidden.bs.modal', () => {
-      hideCancelButton();
-      if (eventIdInput) {
-        eventIdInput.value = '';
-      }
-    });
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    hideCancelButton();
+    if (eventIdInput) {
+      eventIdInput.value = '';
+    }
+    if (methodIn) {
+      methodIn.value = 'POST';
+    }
+    if (form && TYPE_MAP?.Reserva?.url) {
+      form.setAttribute('action', TYPE_MAP.Reserva.url);
+    }
+  });
 
-    modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
-    modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
-  }
+  modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
+  modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
 
   if (eventIdInput) {
     eventIdInput.addEventListener('input', updateCancelButtonVisibility);
@@ -192,10 +196,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const responsableInput  = form.querySelector('#responsable');
 
   // Listener para cambio de tipo en el select del modal
-  if (typeSelect) {
-    typeSelect.addEventListener('change', e => {
-      switchFields(e.target.value);
-    });
+  typeSelect.addEventListener('change', e => {
+    const newType = e.target.value;
+    switchFields(newType);
+    refreshCancelButtonTextForType(newType);
+  });
+  
+  (() => {
+  const fecha  = document.getElementById('reservaFecha');
+  const hora   = document.getElementById('reservaHora');
+  const start  = document.getElementById('start');
+  const form   = fecha.closest('form');          // asumiendo que ambos están dentro
+
+  function fusionar() {
+    if (!fecha.value || !hora.value) { start.value = ''; return; }
+    // → "2025-06-17T08:30:00"
+    start.value = `${fecha.value}T${hora.value}:00`;
   }
 
   (() => {
@@ -364,6 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventIdInput.value = ev.id;
         updateCancelButtonVisibility();
       }
+      showCancelButton(ev.id);
   // extraemos horas y minutos en local:
   
  
@@ -629,6 +646,23 @@ form.action                          = '/reservas/' + ev.id;
         if (estadoSelect) {
           const estadoFinal = data?.reserva?.estado || 'Cancelada';
           estadoSelect.value = estadoFinal;
+        }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        hideCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
+        if (methodIn) {
+          methodIn.value = 'POST';
+        }
+        if (form && TYPE_MAP?.Reserva?.url) {
+          form.setAttribute('action', TYPE_MAP.Reserva.url);
         }
         await calendar.refetchEvents();
 
