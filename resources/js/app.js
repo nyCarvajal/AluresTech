@@ -127,23 +127,23 @@ document.addEventListener('DOMContentLoaded', () => {
     return '';
   };
 
-  const hideCancelButton = () => {
+  const disableCancelButton = () => {
     if (!cancelBtn) return;
-    cancelBtn.classList.add('d-none');
-    cancelBtn.disabled = false;
+    cancelBtn.disabled = true;
+    cancelBtn.classList.add('disabled', 'opacity-50');
     refreshCancelButtonTextForType(typeSelect?.value);
     delete cancelBtn.dataset.reservaId;
   };
 
-  const showCancelButton = (reservaId) => {
+  const enableCancelButton = (reservaId) => {
     if (!cancelBtn) return;
     const id = String(reservaId ?? '').trim();
     if (!id) {
-      hideCancelButton();
+      disableCancelButton();
       return;
     }
-    cancelBtn.classList.remove('d-none');
     cancelBtn.disabled = false;
+    cancelBtn.classList.remove('disabled', 'opacity-50');
     refreshCancelButtonTextForType(typeSelect?.value);
     cancelBtn.dataset.reservaId = id;
   };
@@ -152,15 +152,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cancelBtn) return;
     const reservaId = resolveReservaId();
     if (reservaId) {
-      showCancelButton(reservaId);
+      enableCancelButton(reservaId);
     } else {
-      hideCancelButton();
+      disableCancelButton();
     }
   };
 
-  hideCancelButton();
+  disableCancelButton();
   modalEl.addEventListener('hidden.bs.modal', () => {
-    hideCancelButton();
+    disableCancelButton();
     if (eventIdInput) {
       eventIdInput.value = '';
     }
@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      hideCancelButton();
+      disableCancelButton();
       typeSelect.value     = 'Reserva';
       refreshCancelButtonTextForType('Reserva');
       switchFields('Reserva');
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      hideCancelButton();
+      disableCancelButton();
       fechaInput.value = info.dateStr
       // opcional: abrir tu modal de reserva aquí
       modal.show()
@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         eventIdInput.value = ev.id;
         updateCancelButtonVisibility();
       }
-      showCancelButton(ev.id);
+      enableCancelButton(ev.id);
   // extraemos horas y minutos en local:
   
  
@@ -698,6 +698,23 @@ form.action                          = '/reservas/' + ev.id;
         if (form && TYPE_MAP?.Reserva?.url) {
           form.setAttribute('action', TYPE_MAP.Reserva.url);
         }
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+
+        disableCancelButton();
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
+        if (methodIn) {
+          methodIn.value = 'POST';
+        }
+        if (form && TYPE_MAP?.Reserva?.url) {
+          form.setAttribute('action', TYPE_MAP.Reserva.url);
+        }
         modal.hide();
         window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
         if (eventIdInput) {
@@ -707,9 +724,8 @@ form.action                          = '/reservas/' + ev.id;
       } catch (error) {
         console.error('Error al cancelar la cita', error);
         window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
-        showCancelButton(reservaId);
+        enableCancelButton(reservaId);
       } finally {
-        cancelBtn.disabled = false;
         refreshCancelButtonTextForType(typeSelect?.value);
       }
     });
