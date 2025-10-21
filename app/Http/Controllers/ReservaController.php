@@ -374,7 +374,7 @@ public function update(Request $request, Reserva $reserva)
    $oldEstado=$reserva->estado;
    $oldfecha=$reserva->fecha;
         $data = $request->validate([
-            'type'          => ['required', Rule::in(['Reserva','Clase','Torneo'])],
+            'type'          => ['required', 'string', 'max:255'],
             'start'         => 'required|date',
             'duration'      => 'integer|min:1',
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
