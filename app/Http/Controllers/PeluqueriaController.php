@@ -19,6 +19,8 @@ class PeluqueriaController extends Controller
             $peluqueria->load('roleLabels');
         }
 
+    }
+
 public function updateOwn(Request $request)
 {
     $peluqueria = auth()->user()->peluqueria;
@@ -39,10 +41,8 @@ public function updateOwn(Request $request)
 
     $peluqueria->update($this->prepareUpdateData($request, $data));
 
-    return redirect()
-        ->route('peluquerias.show', $peluqueria->id)
-        ->with('success', 'Datos de tu peluqueria actualizados.');
-}
+   
+
         $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
 
         return view('peluquerias.edit', [
@@ -217,7 +217,7 @@ public function updateOwn(Request $request)
 
         return $this->cloudinaryCredentialsAreUsable($cloudName, $apiKey, $apiSecret);
     }
-}
+
 
     protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
     {
