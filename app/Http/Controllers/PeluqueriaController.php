@@ -45,7 +45,9 @@ class PeluqueriaController extends Controller
 
     public function showOwn()
     {
-        return view('peluquerias.show');
+        $peluqueria = auth()->user()->peluqueria;
+
+        return view('peluquerias.show', compact('peluqueria'));
     }
 
     public function show()
