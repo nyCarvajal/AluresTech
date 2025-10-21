@@ -65,20 +65,95 @@ document.addEventListener('DOMContentLoaded', () => {
   const horaSelect  = document.getElementById('reservaHora');
   const eventIdInput = form.querySelector('#eventId');
   const cancelBtn    = form.querySelector('#reservationCancel');
-  const cancelBtnDefaultText = cancelBtn ? cancelBtn.innerHTML : '';
+  const cancelBtnLabel = cancelBtn?.querySelector('[data-cancel-label]') ?? null;
+  const cancelBtnDefaultText = cancelBtnLabel
+    ? cancelBtnLabel.textContent.trim()
+    : (cancelBtn ? cancelBtn.textContent.trim() : 'Cancelar reserva');
+  const cancelLabelsByType = {
+    Reserva: cancelBtn?.dataset?.labelReserva || cancelBtnDefaultText,
+    Clase: cancelBtn?.dataset?.labelClase || cancelBtnDefaultText,
+    Torneo: cancelBtnDefaultText,
+  };
+  const estadoSelect = form.querySelector('#reservaEstado');
 
-  const toggleCancelButton = (show = false) => {
-    if (!cancelBtn) return;
-    cancelBtn.classList.toggle('d-none', !show);
-    cancelBtn.disabled = false;
-    cancelBtn.innerHTML = cancelBtnDefaultText;
+  const setCancelButtonText = (text) => {
+    if (cancelBtnLabel) {
+      cancelBtnLabel.textContent = text;
+    } else if (cancelBtn) {
+      cancelBtn.textContent = text;
+    }
   };
 
-  toggleCancelButton(false);
+  const refreshCancelButtonTextForType = (typeValue) => {
+    if (!cancelBtn) return;
+    const typeKey = (typeValue || '').trim();
+    const fallback = cancelBtnDefaultText;
+    const label = cancelLabelsByType[typeKey] || fallback;
+    setCancelButtonText(label);
+  };
+
+  const TYPE_MAP = {
+    Reserva: { url: '/reservas' },
+    Clase:   { url: '/clases' },
+    Torneo:  { url: '/torneos' },
+  };
+
+  const resolveReservaId = () => {
+    if (eventIdInput && eventIdInput.value && eventIdInput.value.trim()) {
+      return eventIdInput.value.trim();
+    }
+
+    const datasetId = cancelBtn?.dataset?.reservaId;
+    if (datasetId && datasetId.trim()) {
+      return datasetId.trim();
+    }
+
+    const action = form?.getAttribute('action') ?? '';
+    const match = action.match(/\/reservas\/(\d+)/);
+    if (match && match[1]) {
+      return match[1];
+    }
+
+    return '';
+  };
+
+  const setCancelButtonAvailability = (reservaId = '') => {
+    if (!cancelBtn) return;
+    const id = String(reservaId ?? '').trim();
+    const isEditing = id.length > 0;
+    const editingOnly = cancelBtn.dataset.editingOnly === 'true';
+
+    cancelBtn.dataset.reservaId = id;
+
+    if (isEditing) {
+      cancelBtn.disabled = false;
+      cancelBtn.removeAttribute('disabled');
+      cancelBtn.removeAttribute('aria-disabled');
+      cancelBtn.classList.remove('opacity-50', 'pe-none');
+    } else {
+      cancelBtn.disabled = true;
+      cancelBtn.setAttribute('aria-disabled', 'true');
+      cancelBtn.classList.add('opacity-50', 'pe-none');
+    }
+
+    if (editingOnly) {
+      cancelBtn.classList.toggle('d-none', !isEditing);
+    }
+
+    refreshCancelButtonTextForType(typeSelect?.value);
+  };
+
+  setCancelButtonAvailability(resolveReservaId());
   modalEl.addEventListener('hidden.bs.modal', () => {
-    toggleCancelButton(false);
+    setCancelButtonAvailability('');
     if (eventIdInput) {
       eventIdInput.value = '';
+    }
+    if (methodIn) {
+      methodIn.value = 'POST';
+    }
+    if (form && TYPE_MAP?.Reserva?.url) {
+      form.setAttribute('action', TYPE_MAP.Reserva.url);
     }
   });
 
@@ -94,9 +169,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const responsableInput  = form.querySelector('#responsable');
 
   // Listener para cambio de tipo en el select del modal
-  typeSelect.addEventListener('change', e => {
-    switchFields(e.target.value);
-  });
+  if (typeSelect) {
+    typeSelect.addEventListener('change', e => {
+      const newType = e.target.value;
+      switchFields(newType);
+      refreshCancelButtonTextForType(newType);
+    });
+  } else {
+    console.warn('⚠️  No se encontró el selector de tipo de evento en el formulario de reservas.');
+  }
   
   (() => {
   const fecha  = document.getElementById('reservaFecha');
@@ -143,15 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  // Mapeo de tipos a URL base
-  const TYPE_MAP = {
-    Reserva: { url: '/reservas' },
-    Clase:   { 
-	
-	url: '/clases'   },
-    Torneo:  { url: '/torneos'  },
-  };
-  
    // Inicializar TomSelect en el select de “Cliente”
   const clientesSelect = document.querySelector('#clientes');
   if (clientesSelect) {
@@ -220,8 +292,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      toggleCancelButton(false);
+      setCancelButtonAvailability('');
       typeSelect.value     = 'Reserva';
+      refreshCancelButtonTextForType('Reserva');
       switchFields('Reserva');
       methodIn.value       = 'POST';
       form.action          = TYPE_MAP['Reserva'].url;
@@ -249,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      toggleCancelButton(false);
+      setCancelButtonAvailability('');
       fechaInput.value = info.dateStr
       // opcional: abrir tu modal de reserva aquí
       modal.show()
@@ -263,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = ev.id;
       }
-      toggleCancelButton(true);
+      setCancelButtonAvailability(ev.id);
   // extraemos horas y minutos en local:
   
  
@@ -274,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	  
               console.log('[DEBUG] extendedProps:', props);
       typeSelect.value                     = type;
+      refreshCancelButtonTextForType(type);
       switchFields(type);
       methodIn.value                       = 'PUT';
 form.action                          = '/reservas/' + ev.id;
@@ -281,6 +355,13 @@ form.action                          = '/reservas/' + ev.id;
                  // 1) Rellenar el input de fecha (YYYY-MM-DD)
   //    ev.start.toISOString() === "2025-06-12T14:30:00.000Z"
   fechaInput.value = ev.start.toISOString().split('T')[0];
+
+      if (estadoSelect) {
+        const estadoActual = props.status || props.estado || ev.extendedProps?.estado;
+        if (estadoActual) {
+          estadoSelect.value = estadoActual;
+        }
+      }
  
          
 
@@ -473,9 +554,13 @@ form.action                          = '/reservas/' + ev.id;
 
 
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', async () => {
-      const reservaId = eventIdInput ? eventIdInput.value : '';
+    const handleReservationCancel = async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const reservaId = resolveReservaId();
       if (!reservaId) {
+        window.alert('Selecciona una reserva guardada antes de intentar cancelarla.');
         return;
       }
 
@@ -485,24 +570,61 @@ form.action                          = '/reservas/' + ev.id;
       }
 
       cancelBtn.disabled = true;
-      cancelBtn.innerHTML = 'Cancelando…';
+      cancelBtn.setAttribute('disabled', 'disabled');
+      cancelBtn.setAttribute('aria-disabled', 'true');
+      cancelBtn.classList.add('pe-none');
+      setCancelButtonText('Cancelando…');
+      const previousEstado = estadoSelect ? estadoSelect.value : null;
+      if (estadoSelect) {
+        estadoSelect.value = 'Cancelada';
+      }
 
       try {
-        await axios.delete(`/reservas/${reservaId}`);
-        const calendarEvent = calendar.getEventById(reservaId);
+        const { data } = await axios.post(`/reservas/${reservaId}/cancelar`, {
+          estado: 'Cancelada'
+        });
+
+        const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
           calendarEvent.remove();
         }
-        toggleCancelButton(false);
+        await calendar.refetchEvents();
+
+        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
+          detail: { id: reservaId }
+        }));
+        if (estadoSelect) {
+          const estadoFinal = data?.reserva?.estado || 'Cancelada';
+          estadoSelect.value = estadoFinal;
+        }
+        if (methodIn) {
+          methodIn.value = 'POST';
+        }
+        if (form && TYPE_MAP?.Reserva?.url) {
+          form.setAttribute('action', TYPE_MAP.Reserva.url);
+        }
         modal.hide();
-        window.alert('La cita ha sido cancelada correctamente.');
+        window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
+        if (eventIdInput) {
+          eventIdInput.value = '';
+        }
+        setCancelButtonAvailability('');
       } catch (error) {
         console.error('Error al cancelar la cita', error);
         window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
-        toggleCancelButton(true);
+        if (estadoSelect && previousEstado !== null) {
+          estadoSelect.value = previousEstado;
+        }
+        setCancelButtonAvailability(reservaId);
       } finally {
-        cancelBtn.disabled = false;
-        cancelBtn.innerHTML = cancelBtnDefaultText;
+        refreshCancelButtonTextForType(typeSelect?.value);
+      }
+    };
+
+    cancelBtn.addEventListener('click', handleReservationCancel);
+    cancelBtn.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        handleReservationCancel(event);
       }
     });
   }

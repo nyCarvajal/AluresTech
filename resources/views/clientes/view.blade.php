@@ -170,6 +170,7 @@
         @if($reservas->isEmpty())
           <p>No hay reservas recientes.</p>
         @else
+          <p class="text-muted mb-3">Incluye reservas confirmadas, pendientes y canceladas para mantener el historial completo del cliente.</p>
           <ul class="reservations-list">
             @foreach($reservas as $reserva)
               <li>
