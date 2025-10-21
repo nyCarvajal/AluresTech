@@ -380,7 +380,7 @@ public function update(Request $request, Reserva $reserva)
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
             
             'cliente_id'    => 'integer|exists:clientes,id',
-            'entrenador_id' => 'intreger|nullable',
+            'entrenador_id' => 'integer|nullable',
             
         ]);
     
