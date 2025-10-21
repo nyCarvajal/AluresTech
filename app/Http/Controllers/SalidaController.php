@@ -7,6 +7,7 @@ use App\Models\Salida;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SalidaController extends Controller
 {
@@ -29,35 +30,9 @@ class SalidaController extends Controller
 
     public function store(Request $request)
     {
-        $request->merge([
-            'valor' => $request->input('valor') === null || $request->input('valor') === ''
-                ? null
-                : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
-            'tercero_id' => $request->filled('tercero_id') ? $request->input('tercero_id') : null,
-        ]);
+        $data = $this->validateSalida($request);
 
-        $data = $request->validate([
-            'concepto'           => 'required|string|max:255',
-            'fecha'              => 'required|date',
-            'origen'             => 'required|in:caja,banco',
-            'cuenta_bancaria' => 'required_if:origen,banco|nullable|exists:bancos,id',
-            'valor'              => 'required|integer|min:0',
-            'observaciones'      => 'nullable|string',
-            'responsable'     => 'required|exists:usuarios,id',
-            'tercero_id'         => 'nullable|exists:proveedors,id',
-        ]);
-
-        $data['cuenta_bancaria'] = $data['origen'] === 'banco'
-            ? $data['cuenta_bancaria']
-            : null;
-
-        $data['responsable'] = Auth::id() ?? $data['responsable'];
-
-        unset($data['origen']);
-
-       $data['valor'] = (int) $data['valor'];
-
-        Salida::create($data);
+        Salida::create($this->prepareSalidaPayload($data));
         return redirect()->route('salidas.index')
                          ->with('success', 'Salida registrada correctamente.');
     }
@@ -80,33 +55,9 @@ class SalidaController extends Controller
 
     public function update(Request $request, Salida $salida)
     {
-        $request->merge([
-            'valor' => $request->input('valor') === null || $request->input('valor') === ''
-                ? null
-                : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
-            'tercero_id' => $request->filled('tercero_id') ? $request->input('tercero_id') : null,
-        ]);
+        $data = $this->validateSalida($request);
 
-        $data = $request->validate([
-            'concepto'           => 'required|string|max:255',
-            'fecha'              => 'required|date',
-            'origen'             => 'required|in:caja,banco',
-            'cuenta_bancaria' => 'required_if:origen,banco|nullable|exists:bancos,id',
-            'valor'              => 'required|integer|min:0',
-            'observaciones'      => 'nullable|string',
-            'responsable'     => 'required|exists:usuarios,id',
-            'tercero_id'         => 'nullable|exists:proveedors,id',
-        ]);
-
-        $data['cuenta_bancaria'] = $data['origen'] === 'banco'
-            ? $data['cuenta_bancaria']
-            : null;
-
-        unset($data['origen']);
-
-        $data['valor'] = (int) $data['valor'];
-
-        $salida->update($data);
+        $salida->update($this->prepareSalidaPayload($data));
         return redirect()->route('salidas.index')
                          ->with('success', 'Salida actualizada.');
     }
@@ -116,5 +67,51 @@ class SalidaController extends Controller
         $salida->delete();
         return redirect()->route('salidas.index')
                          ->with('success', 'Salida eliminada.');
+    }
+
+    private function validateSalida(Request $request): array
+    {
+        $request->merge([
+            'valor' => $request->input('valor') === null || $request->input('valor') === ''
+                ? null
+                : (int) preg_replace('/[^\d]/', '', (string) $request->input('valor')),
+            'tercero_id' => $request->filled('tercero_id') ? $request->input('tercero_id') : null,
+        ]);
+
+        return $request->validate([
+            'concepto'        => 'required|string|max:255',
+            'fecha'           => 'required|date',
+            'origen'          => 'required|in:caja,banco',
+            'cuenta_bancaria' => [
+                'required_if:origen,banco',
+                'nullable',
+                Rule::exists(Banco::class, 'id'),
+            ],
+            'valor'         => 'required|integer|min:0',
+            'observaciones' => 'nullable|string',
+            'responsable'   => [
+                'required',
+                Rule::exists(User::class, 'id'),
+            ],
+            'tercero_id' => [
+                'nullable',
+                Rule::exists(Proveedor::class, 'id'),
+            ],
+        ]);
+    }
+
+    private function prepareSalidaPayload(array $data): array
+    {
+        $data['cuenta_bancaria'] = $data['origen'] === 'banco'
+            ? $data['cuenta_bancaria']
+            : null;
+
+        $data['responsable'] = Auth::id() ?? $data['responsable'];
+
+        $data['valor'] = (int) $data['valor'];
+
+        unset($data['origen']);
+
+        return $data;
     }
 }

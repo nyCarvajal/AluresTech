@@ -1,109 +1,105 @@
 <?php
+
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Controller;
+
 use App\Models\User;
+use App\Support\RoleLabelResolver;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
     public function __construct()
     {
-        // Solo usuarios autenticados y con rol admin (solo ejemplo)
         $this->middleware('auth');
-        $this->middleware(function($req, $next){
-          //  if (auth()->user()->role != 18) {
-          
-//		  abort(403);
-        //    }
+        $this->middleware(function ($req, $next) {
             return $next($req);
         });
     }
 
-    /** 1️⃣ Crear entrenador */
     public function createTrainer()
     {
+        $labels = $this->stylistLabels();
 
-        return view('users.create_trainer');
+        return view('users.create_trainer', [
+            'trainerLabelSingular' => $labels['singular'],
+            'trainerLabelPlural' => $labels['plural'],
+        ]);
     }
 
-   public function storeTrainer(Request $request)
+    public function storeTrainer(Request $request)
     {
+        $labels = $this->stylistLabels();
+
         $data = $request->validate([
-            'nombre'                 => 'required|string|max:255',
-            'apellidos'             => 'required|string|max:255',
-            'email'                 => 'required|email|unique:usuarios,email',
-           // 'nivel'                 => 'required|string|max:100',
-            'tipo_identificacion'   => 'required|string|max:50',
+            'nombre' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'email' => 'required|email|unique:usuarios,email',
+            'tipo_identificacion' => 'required|string|max:50',
             'numero_identificacion' => 'required|string|max:50',
-            'direccion'             => 'required|string|max:255',
-            'whatsapp'              => 'required|string|max:30',
-            'password'              => 'required|string|confirmed|min:8',
-            'color'                => 'nullable|string|max:7',
+            'direccion' => 'required|string|max:255',
+            'whatsapp' => 'required|string|max:30',
+            'password' => 'required|string|confirmed|min:8',
+            'color' => 'nullable|string|max:7',
         ]);
 
         User::create([
-            'nombre'                => $data['nombre'],
-            'apellidos'             => $data['apellidos'],
-            'email'                 => $data['email'],
-         //   'nivel'                 => $data['nivel'],
-            'tipo_identificacion'   => $data['tipo_identificacion'],
+            'nombre' => $data['nombre'],
+            'apellidos' => $data['apellidos'],
+            'email' => $data['email'],
+            'tipo_identificacion' => $data['tipo_identificacion'],
             'numero_identificacion' => $data['numero_identificacion'],
-            'direccion'             => $data['direccion'],
-            'whatsapp'              => $data['whatsapp'],
-            'password'              => Hash::make($data['password']),
-            'peluqueria_id'               => Auth::user()->peluqueria_id,
-            'role'                  => 11,  // entranador
-            'color'                 => $data['color'] ?? null,
+            'direccion' => $data['direccion'],
+            'whatsapp' => $data['whatsapp'],
+            'password' => Hash::make($data['password']),
+            'peluqueria_id' => Auth::user()->peluqueria_id,
+            'role' => 11,
+            'color' => $data['color'] ?? null,
         ]);
 
         return redirect()
-       ->route('users.index')
-       ->with('success', 'Entrenador creado correctamente.');
+            ->route('users.index')
+            ->with('success', $labels['singular'] . ' creado correctamente.');
     }
 
     public function storeAdmin(Request $request)
     {
         $data = $request->validate([
-            'nombre'                  => 'required|string|max:255',
-            'apellidos'             => 'required|string|max:255',
-            'email'                 => 'required|email|unique:usuarios,email',
-         //   'nivel'                 => 'required|string|max:100',
-            'tipo_identificacion'   => 'required|string|max:50',
+            'nombre' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'email' => 'required|email|unique:usuarios,email',
+            'tipo_identificacion' => 'required|string|max:50',
             'numero_identificacion' => 'required|string|max:50',
-            'direccion'             => 'required|string|max:255',
-            'whatsapp'              => 'required|string|max:30',
-            'password'              => 'required|string|confirmed|min:8',
-            'color'                => 'nullable|string|max:7',
+            'direccion' => 'required|string|max:255',
+            'whatsapp' => 'required|string|max:30',
+            'password' => 'required|string|confirmed|min:8',
+            'color' => 'nullable|string|max:7',
         ]);
 
         User::create([
-            'nombre'                  => $data['nombre'],
-            'apellidos'             => $data['apellidos'],
-            'email'                 => $data['email'],
-       //     'nivel'                 => $data['nivel'],
-            'tipo_identificacion'   => $data['tipo_identificacion'],
+            'nombre' => $data['nombre'],
+            'apellidos' => $data['apellidos'],
+            'email' => $data['email'],
+            'tipo_identificacion' => $data['tipo_identificacion'],
             'numero_identificacion' => $data['numero_identificacion'],
-            'direccion'             => $data['direccion'],
-            'whatsapp'              => $data['whatsapp'],
-            'password'              => Hash::make($data['password']),
-            'peluqueria_id'               => Auth::user()->peluqueria_id,
-            'role'                  => 18,  // administrador
-            'color'                 => $data['color'] ?? null,
+            'direccion' => $data['direccion'],
+            'whatsapp' => $data['whatsapp'],
+            'password' => Hash::make($data['password']),
+            'peluqueria_id' => Auth::user()->peluqueria_id,
+            'role' => 18,
+            'color' => $data['color'] ?? null,
         ]);
 
         return redirect()
-       ->route('users.index')
-       ->with('success', 'Administrador creado correctamente.');
+            ->route('users.index')
+            ->with('success', 'Administrador creado correctamente.');
     }
 
-    /** 2️⃣ Crear administrador */
     public function createAdmin()
     {
         return view('users.create_admin');
     }
-
 
     public function index()
     {
@@ -114,7 +110,13 @@ class UsuarioController extends Controller
             ->orderBy('nombre')
             ->paginate(15);
 
-        return view('users.index', compact('users'));
+        $labels = $this->stylistLabels();
+
+        return view('users.index', [
+            'users' => $users,
+            'trainerLabelSingular' => $labels['singular'],
+            'trainerLabelPlural' => $labels['plural'],
+        ]);
     }
 
     public function edit(User $user)
@@ -147,7 +149,7 @@ class UsuarioController extends Controller
             'color' => $data['color'] ?? null,
         ];
 
-        if (!empty($data['password'])) {
+        if (! empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
         }
 
@@ -169,5 +171,8 @@ class UsuarioController extends Controller
             ->with('success', 'Usuario eliminado correctamente.');
     }
 
-
+    protected function stylistLabels(): array
+    {
+        return RoleLabelResolver::forStylist();
+    }
 }
