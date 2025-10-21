@@ -113,10 +113,13 @@
           <div class="modal-footer d-flex justify-content-between">
             <div class="me-auto">
               <button type="button"
-                      class="btn btn-outline-danger d-none"
+                      class="btn btn-outline-danger border border-danger border-2 fw-semibold"
                       id="reservationCancel"
-                      data-action="cancel">
-                Cancelar cita
+                      data-action="cancel"
+                      data-editing-only="true"
+                      data-label-reserva="Cancelar reserva"
+                      data-label-clase="Cancelar clase">
+                <span data-cancel-label>Cancelar reserva</span>
               </button>
             </div>
             <div class="d-flex gap-2">
