@@ -191,7 +191,7 @@ public function updateOwn(Request $request)
 
         return $this->cloudinaryCredentialsAreUsable($cloudName, $apiKey, $apiSecret);
     }
-}
+
 
     protected function prepareUpdateData(Request $request, array $data): array
     {
