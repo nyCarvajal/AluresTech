@@ -448,16 +448,52 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
     /**
      * Remove the specified resource from storage.
      */
+    public function cancel(Request $request, Reserva $reserva)
+    {
+        [$wasAlreadyCancelled, $updatedReserva] = $this->cancelReservation($reserva);
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'already_cancelled' => $wasAlreadyCancelled,
+                'message' => 'Reserva cancelada correctamente.',
+                'reserva' => $updatedReserva,
+            ]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Reserva cancelada correctamente.');
+    }
+
     public function destroy(Request $request, Reserva $reserva)
     {
-        $wasAlreadyCancelled = $reserva->estado === 'Cancelada';
+        [$wasAlreadyCancelled, $updatedReserva] = $this->cancelReservation($reserva);
 
-        $reserva->estado = 'Cancelada';
-        $reserva->save();
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'already_cancelled' => $wasAlreadyCancelled,
+                'message' => 'Reserva cancelada correctamente.',
+                'reserva' => $updatedReserva,
+            ]);
+        }
+
+        return redirect()
+            ->route('reservas.horario')
+            ->with('success', 'Reserva cancelada correctamente.');
+    }
+
+    protected function cancelReservation(Reserva $reserva): array
+    {
+        $currentEstado = trim((string) $reserva->estado);
+        $wasAlreadyCancelled = strcasecmp($currentEstado, 'Cancelada') === 0;
 
         if (! $wasAlreadyCancelled) {
-            $cliente     = $reserva->cliente;
-            $templateId  = config('services.onemsg.templates.cancelacion');
+            $reserva->forceFill(['estado' => 'Cancelada'])->save();
+
+            $cliente    = $reserva->cliente;
+            $templateId = config('services.onemsg.templates.cancelacion');
 
             if ($cliente && $cliente->whatsapp && $templateId) {
                 $payload = [
@@ -473,15 +509,6 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
             }
         }
 
-        if ($request->expectsJson() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Reserva cancelada correctamente.',
-            ]);
-        }
-
-        return redirect()
-            ->route('reservas.horario')
-            ->with('success', 'Reserva cancelada correctamente.');
+        return [$wasAlreadyCancelled, $reserva->fresh()];
     }
 }
