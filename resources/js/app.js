@@ -41,264 +41,501 @@ import 'tom-select/dist/css/tom-select.default.css';
 // Esperamos a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
   const cfg = window.CalendarConfig;
-  if (!cfg) return;
-  
-  console.log('🚀 app.js arrancó, intentando FullCalendar…');
-
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  if (csrfToken) {
-    axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
-  }
-  axios.defaults.headers.common['Accept'] = 'application/json';
-
-  // 1) Obtener elementos comunes
-  const calendarEl = document.querySelector(cfg.selector);
-  const modalEl    = document.querySelector(cfg.modalSelector);
-  const modal      = new bootstrap.Modal(modalEl);
-  const form       = modalEl.querySelector('form');
-  form.setAttribute('method', 'POST');
-  const entrenadorFilter = document.querySelector(cfg.filterSelector);
-
-  const methodIn      = form.querySelector('#reservationMethod');
-  const typeSelect    = form.querySelector('#eventType');
-  const durationSelect= form.querySelector('#reservaDuracion');
-  const fechaInput = document.getElementById('reservaFecha');
-  const horaSelect  = document.getElementById('reservaHora');
-  const eventIdInput = form.querySelector('#eventId');
-  const estadoSelect = form.querySelector('#reservaEstado');
-
-  const TYPE_MAP = {
-    Reserva: { url: '/reservas' },
-    Clase:   { url: '/clases' },
-    Torneo:  { url: '/torneos' },
-  };
-
-  modalEl.addEventListener('hidden.bs.modal', () => {
-    if (eventIdInput) {
-      eventIdInput.value = '';
-    }
-    if (methodIn) {
-      methodIn.value = 'POST';
-    }
-    if (form && TYPE_MAP?.Reserva?.url) {
-      form.setAttribute('action', TYPE_MAP.Reserva.url);
-    }
-  });
-
-  // Campos específicos
-   // ===== Campos específicos =====
-  
-  const clientesField     = form.querySelector('#fieldClientes');
-  const entrenadorField   = form.querySelector('#fieldEntrenador');
-  const responsableField  = form.querySelector('#fieldResponsable');
-  const inicioInput       = document.getElementById('reservaFecha');
-  const clienteSelect     = form.querySelector('#clientes');
-  const entrenadorSelect  = form.querySelector('#entrenador');
-  const responsableInput  = form.querySelector('#responsable');
-
-  // Listener para cambio de tipo en el select del modal
-  if (typeSelect) {
-    typeSelect.addEventListener('change', e => {
-      const newType = e.target.value;
-      switchFields(newType);
-    });
-  } else {
-    console.warn('⚠️  No se encontró el selector de tipo de evento en el formulario de reservas.');
-  }
-  
-  (() => {
-  const fecha  = document.getElementById('reservaFecha');
-  const hora   = document.getElementById('reservaHora');
-  const start  = document.getElementById('start');
-  const form   = fecha.closest('form');          // asumiendo que ambos están dentro
-
-  function fusionar() {
-    if (!fecha.value || !hora.value) { start.value = ''; return; }
-    // → "2025-06-17T08:30:00"
-    start.value = `${fecha.value}T${hora.value}:00`;
-  }
-
-  fecha.addEventListener('change', fusionar);
-  hora .addEventListener('change', fusionar);
-
-  // Validación extra: evita enviar si falta algo
-  form.addEventListener('submit', e => {
-    fusionar();
-    if (!start.value) {
-      e.preventDefault();
-      alert('Selecciona fecha y hora.');
-    }
-  });
-})();
-
-  
-  new TomSelect('#responsable', {
-  valueField: 'id',
-  labelField: 'nombre',
-  searchField: ['nombre'],
-  loadingClass: 'is-loading',
-  placeholder: 'Escribe para buscar…',
-  load(query, callback) {
-    // evita disparar la llamada si no hay texto
-    if (!query.length) return callback();
-
-   fetch(`/clientesb?q=${encodeURIComponent(query)}`)
-  .then(r => r.json())
-  .then(json => callback(json))
-  .catch(() => callback());
-  }
-});
-
-
-
-   // Inicializar TomSelect en el select de “Cliente”
-  const clientesSelect = document.querySelector('#clientes');
-  if (clientesSelect) {
-    new TomSelect(clientesSelect, {
-      maxItems: 1,
-      valueField: 'value',
-      labelField: 'text',
-      searchField: 'text',
-      placeholder: 'Selecciona un cliente',
-      create: false
-    });
-  }
-
-  // Mostrar/ocultar campos según tipo
-  function switchFields(type) {
-    if (type === 'Reserva' || type === 'Clase') {
-      clientesField.classList.remove('d-none');
-      entrenadorField.classList.remove('d-none');
-      responsableField.classList.add('d-none');
-    } else if (type === 'Torneo') {
-      clientesField.classList.add('d-none');
-      entrenadorField.classList.add('d-none');
-      responsableField.classList.remove('d-none');
-    }
-  }
-  
-  
-    
-  
-
-  // Inicializar FullCalendar
-  let calendar = new Calendar(calendarEl, {
-	   
-          
-	   plugins: [
-      interactionPlugin,
-      dayGridPlugin,
-      timeGridPlugin,
-      listPlugin                          // 👈 AÑADIDO
-    ],
-    locales: [ esLocale ],
-    locale: 'es',
-	timeZone: 'UTC',
-    headerToolbar: { left: 'prev,next today', center: 'title', right: 'listDay,timeGridWeek,dayGridMonth' },
-    buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana'},
-    initialView: 'dayGridMonth',
-	listDayFormat: { weekday: 'long', day: '2-digit', month: 'short' },
-
-    selectable: true,
-    selectMirror: true,
-	
-    eventDisplay: 'block',
-	 displayEventTime: true, // Es true por defecto, pero lo ponemos explícito
-
-    // 3) Formato de hora que quieres mostrar (por defecto FullCalendar usa algo como “13:30” en 24h)
-    eventTimeFormat: {
-      hour:   '2-digit',   // muestra 2 dígitos de la hora
-      minute: '2-digit',   // muestra 2 dígitos de los minutos
-      hour12: false        // o `true` si prefieres mostrar en formato AM/PM
-    },
-	
-	
-	
-
-    select: info => {
-      if (eventIdInput) {
-        eventIdInput.value = '';
-      }
-      typeSelect.value     = 'Reserva';
-      switchFields('Reserva');
-      methodIn.value       = 'POST';
-      form.action          = TYPE_MAP['Reserva'].url;
-      form.method          = 'POST';
-
-    //  inicioInput.value    = dt.toISOString().slice(0,16);
-      durationSelect.value = '60';
-      if (clienteSelect.tomselect) {
-        clienteSelect.tomselect.clear(true);
+  if (cfg) {
+    const calendarEl = document.querySelector(cfg.selector);
+    if (!calendarEl) {
+      console.warn('No se encontró el contenedor del calendario, se omite la inicialización.');
+    } else {
+      const modalEl = document.querySelector(cfg.modalSelector);
+      if (!modalEl) {
+        console.warn('No se encontró el modal configurado para el calendario, se omite la inicialización.');
       } else {
-        clienteSelect.value = '';
-      }
-      entrenadorSelect.value = '';
-      responsableInput.value = '';
-          fechaInput.value = info.startStr.split('T')[0];
-      // dispara la recarga de slots
-      cargarSlots();
+        const form = modalEl.querySelector('form');
+        if (!form) {
+          console.warn('No se encontró el formulario del calendario, se omite la inicialización.');
+        } else {
+          console.log('🚀 app.js arrancó, intentando FullCalendar…');
 
-      modal.show();
-    },
-	
-           // Captura el click sobre un día
-    dateClick: info => {
-      // info.dateStr viene en formato "YYYY-MM-DD"
-      if (eventIdInput) {
-        eventIdInput.value = '';
-      }
-      fechaInput.value = info.dateStr
-      // opcional: abrir tu modal de reserva aquí
-      modal.show()
-    },
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+          if (csrfToken) {
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = csrfToken;
+          }
+          axios.defaults.headers.common['Accept'] = 'application/json';
 
-      eventClick: info => {
-                 fechaInput.removeEventListener('change', cargarSlots);
-        const ev    = info.event;
-      const props = ev.extendedProps;
-      const type  = props.type;
-      if (eventIdInput) {
-        eventIdInput.value = ev.id;
-      }
-  // extraemos horas y minutos en local:
-  
- 
-  const hrs   = String(ev.start.getUTCHours()).padStart(2,'0');
-  const mins  = String(ev.start.getUTCMinutes()).padStart(2,'0');
-  const time  = `${hrs}:${mins}`;    // "07:00"
-  const date  = ev.start.toISOString().split('T')[0];
-	  
-              console.log('[DEBUG] extendedProps:', props);
-      typeSelect.value                     = type;
-      switchFields(type);
-      methodIn.value                       = 'PUT';
-form.action                          = '/reservas/' + ev.id;
-      form.method                          = 'POST';
-                 // 1) Rellenar el input de fecha (YYYY-MM-DD)
-  //    ev.start.toISOString() === "2025-06-12T14:30:00.000Z"
-  fechaInput.value = ev.start.toISOString().split('T')[0];
+          const modal = new bootstrap.Modal(modalEl);
+          form.setAttribute('method', 'POST');
+          const entrenadorFilter = cfg.filterSelector ? document.querySelector(cfg.filterSelector) : null;
 
-      if (estadoSelect) {
-        const estadoActual = props.status || props.estado || ev.extendedProps?.estado;
-        if (estadoActual) {
-          estadoSelect.value = estadoActual;
-        }
-      }
- 
-         
+          const methodInput = form.querySelector('#reservationMethod');
+          const typeSelect = form.querySelector('#eventType');
+          const durationSelect = form.querySelector('#reservaDuracion');
+          const fechaInput = form.querySelector('#reservaFecha');
+          const horaSelect = form.querySelector('#reservaHora');
+          const startInput = form.querySelector('#start');
+          const eventIdInput = form.querySelector('#eventId');
+          const cancelBtn = form.querySelector('#reservationCancel');
+          const cancelBtnLabel = cancelBtn?.querySelector('[data-cancel-label]') ?? null;
+          const cancelBtnDefaultText = cancelBtnLabel
+            ? cancelBtnLabel.textContent.trim()
+            : (cancelBtn ? cancelBtn.textContent.trim() : 'Cancelar reserva');
+          const cancelLabelsByType = {
+            Reserva: cancelBtn?.dataset?.labelReserva || cancelBtnDefaultText,
+            Clase: cancelBtn?.dataset?.labelClase || cancelBtnDefaultText,
+            Torneo: cancelBtnDefaultText,
+          };
+          const estadoSelect = form.querySelector('#reservaEstado');
 
-		
-     // inicioInput.value                    = ev.start.toISOString().slice(0,16);
-      durationSelect.value                 = props.duration;
-      entrenadorSelect.value              = props.entrenador_id || '';
-      if (clienteSelect.tomselect) {
-        const ts = clienteSelect.tomselect;
-        ts.clear(true);
-        if (props.cliente_id) {
-          const nombre = props.title || ev.title || '';
-          ts.addOption({ value: String(props.cliente_id), text: nombre });
-          ts.setValue(String(props.cliente_id), true);
-        }
+          const clientesField = form.querySelector('#fieldClientes');
+          const entrenadorField = form.querySelector('#fieldEntrenador');
+          const responsableField = form.querySelector('#fieldResponsable');
+          const clienteSelect = form.querySelector('#clientes');
+          const entrenadorSelect = form.querySelector('#entrenador');
+          const responsableSelect = form.querySelector('#responsable');
+
+          const setCancelButtonText = (text) => {
+            if (cancelBtnLabel) {
+              cancelBtnLabel.textContent = text;
+            } else if (cancelBtn) {
+              cancelBtn.textContent = text;
+            }
+          };
+
+          const refreshCancelButtonTextForType = (typeValue) => {
+            if (!cancelBtn) return;
+            const typeKey = (typeValue || '').trim();
+            const fallback = cancelBtnDefaultText;
+            const label = cancelLabelsByType[typeKey] || fallback;
+            setCancelButtonText(label);
+          };
+
+          const TYPE_MAP = {
+            Reserva: { url: '/reservas' },
+            Clase: { url: '/clases' },
+            Torneo: { url: '/torneos' },
+          };
+          const defaultReservaAction = TYPE_MAP.Reserva?.url || form.getAttribute('action') || '/reservas';
+
+          const showCancelButton = () => {
+            if (!cancelBtn) return;
+            cancelBtn.classList.remove('d-none');
+          };
+
+          const hideCancelButton = () => {
+            if (!cancelBtn) return;
+            cancelBtn.classList.add('d-none');
+            delete cancelBtn.dataset.reservaId;
+          };
+
+          const disableCancelButton = () => {
+            if (!cancelBtn) return;
+            cancelBtn.disabled = true;
+            cancelBtn.setAttribute('disabled', 'disabled');
+            cancelBtn.setAttribute('aria-disabled', 'true');
+            cancelBtn.classList.add('disabled', 'opacity-50');
+            refreshCancelButtonTextForType(typeSelect?.value);
+          };
+
+          const enableCancelButton = (reservaId) => {
+            if (!cancelBtn) return;
+            const id = String(reservaId ?? '').trim();
+            if (!id) {
+              disableCancelButton();
+              hideCancelButton();
+              return;
+            }
+            showCancelButton();
+            cancelBtn.disabled = false;
+            cancelBtn.removeAttribute('disabled');
+            cancelBtn.removeAttribute('aria-disabled');
+            cancelBtn.classList.remove('disabled', 'opacity-50');
+            cancelBtn.dataset.reservaId = id;
+            refreshCancelButtonTextForType(typeSelect?.value);
+          };
+
+          const resolveReservaId = () => {
+            if (eventIdInput?.value && eventIdInput.value.trim()) {
+              return eventIdInput.value.trim();
+            }
+
+            const datasetId = cancelBtn?.dataset?.reservaId;
+            if (datasetId && datasetId.trim()) {
+              return datasetId.trim();
+            }
+
+            const action = form.getAttribute('action') ?? '';
+            const match = action.match(/\/reservas\/(\d+)/);
+            if (match && match[1]) {
+              return match[1];
+            }
+
+            return '';
+          };
+
+          const updateCancelButtonVisibility = () => {
+            if (!cancelBtn) return;
+            const reservaId = resolveReservaId();
+            if (reservaId) {
+              enableCancelButton(reservaId);
+            } else {
+              disableCancelButton();
+              hideCancelButton();
+            }
+          };
+
+          const switchFields = (type) => {
+            if (!clientesField || !entrenadorField || !responsableField) {
+              return;
+            }
+
+            if (type === 'Reserva' || type === 'Clase') {
+              clientesField.classList.remove('d-none');
+              entrenadorField.classList.remove('d-none');
+              responsableField.classList.add('d-none');
+            } else if (type === 'Torneo') {
+              clientesField.classList.add('d-none');
+              entrenadorField.classList.add('d-none');
+              responsableField.classList.remove('d-none');
+            } else {
+              clientesField.classList.add('d-none');
+              entrenadorField.classList.add('d-none');
+              responsableField.classList.add('d-none');
+            }
+          };
+
+          const cargarSlots = () => {
+            if (!fechaInput || !horaSelect) {
+              return Promise.resolve();
+            }
+
+            const dateValue = fechaInput.value;
+            if (!dateValue) {
+              horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
+              return Promise.resolve();
+            }
+
+            return axios
+              .get('/reserva/availability', { params: { date: dateValue } })
+              .then((res) => {
+                horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
+                res.data.slots.forEach((slot) => {
+                  const option = document.createElement('option');
+                  option.value = slot;
+                  option.textContent = slot;
+                  horaSelect.appendChild(option);
+                });
+              })
+              .catch((error) => {
+                console.error(error.response?.data || error);
+              });
+          };
+
+          const updateStartField = () => {
+            if (!startInput || !fechaInput || !horaSelect) {
+              return;
+            }
+
+            if (!fechaInput.value || !horaSelect.value) {
+              startInput.value = '';
+              return;
+            }
+
+            startInput.value = `${fechaInput.value}T${horaSelect.value}:00`;
+          };
+
+          const handleFechaChange = () => {
+            cargarSlots();
+            updateStartField();
+          };
+
+          if (typeSelect) {
+            typeSelect.addEventListener('change', (event) => {
+              const newType = event.target.value;
+              switchFields(newType);
+              refreshCancelButtonTextForType(newType);
+            });
+          }
+
+          if (clienteSelect && !clienteSelect.tomselect) {
+            new TomSelect(clienteSelect, {
+              maxItems: 1,
+              valueField: 'value',
+              labelField: 'text',
+              searchField: 'text',
+              placeholder: 'Selecciona un cliente',
+              create: false,
+            });
+          }
+
+          if (responsableSelect && !responsableSelect.tomselect) {
+            new TomSelect(responsableSelect, {
+              valueField: 'id',
+              labelField: 'nombre',
+              searchField: ['nombre'],
+              loadingClass: 'is-loading',
+              placeholder: 'Escribe para buscar…',
+              load(query, callback) {
+                if (!query.length) {
+                  callback();
+                  return;
+                }
+
+                fetch(`/clientesb?q=${encodeURIComponent(query)}`)
+                  .then((response) => response.json())
+                  .then((json) => callback(json))
+                  .catch(() => callback());
+              },
+            });
+          }
+
+          switchFields(typeSelect?.value || 'Reserva');
+          refreshCancelButtonTextForType(typeSelect?.value);
+          disableCancelButton();
+          hideCancelButton();
+
+          const calendar = new Calendar(calendarEl, {
+            plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
+            locales: [esLocale],
+            locale: 'es',
+            timeZone: 'UTC',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'listDay,timeGridWeek,dayGridMonth' },
+            buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana' },
+            initialView: 'dayGridMonth',
+            listDayFormat: { weekday: 'long', day: '2-digit', month: 'short' },
+            selectable: true,
+            selectMirror: true,
+            eventDisplay: 'block',
+            displayEventTime: true,
+            eventTimeFormat: {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            },
+            select: (info) => {
+              if (eventIdInput) {
+                eventIdInput.value = '';
+              }
+              disableCancelButton();
+              hideCancelButton();
+
+              if (typeSelect) {
+                typeSelect.value = 'Reserva';
+                refreshCancelButtonTextForType('Reserva');
+                switchFields('Reserva');
+              }
+
+              if (methodInput) {
+                methodInput.value = 'POST';
+              }
+              form.setAttribute('action', defaultReservaAction);
+
+              if (durationSelect) {
+                durationSelect.value = '60';
+              }
+
+              if (clienteSelect?.tomselect) {
+                clienteSelect.tomselect.clear(true);
+              } else if (clienteSelect) {
+                clienteSelect.value = '';
+              }
+
+              if (entrenadorSelect) {
+                entrenadorSelect.value = '';
+              }
+
+              if (responsableSelect?.tomselect) {
+                responsableSelect.tomselect.clear(true);
+              } else if (responsableSelect) {
+                responsableSelect.value = '';
+              }
+
+              if (fechaInput) {
+                fechaInput.value = info.startStr.split('T')[0];
+              }
+
+              cargarSlots().then(() => {
+                if (horaSelect) {
+                  horaSelect.value = '';
+                }
+                updateStartField();
+              });
+
+              modal.show();
+            },
+            dateClick: (info) => {
+              if (eventIdInput) {
+                eventIdInput.value = '';
+              }
+              disableCancelButton();
+              hideCancelButton();
+
+              if (fechaInput) {
+                fechaInput.value = info.dateStr;
+              }
+
+              if (typeSelect) {
+                typeSelect.value = 'Reserva';
+                refreshCancelButtonTextForType('Reserva');
+                switchFields('Reserva');
+              }
+
+              if (methodInput) {
+                methodInput.value = 'POST';
+              }
+              form.setAttribute('action', defaultReservaAction);
+
+              cargarSlots().then(() => {
+                updateStartField();
+              });
+
+              modal.show();
+            },
+            eventClick: (info) => {
+              const ev = info.event;
+              const props = ev.extendedProps || {};
+              const type = props.type || 'Reserva';
+
+              if (eventIdInput) {
+                eventIdInput.value = ev.id;
+              }
+
+              if (typeSelect) {
+                typeSelect.value = type;
+                refreshCancelButtonTextForType(type);
+                switchFields(type);
+              }
+
+              if (methodInput) {
+                methodInput.value = 'PUT';
+              }
+              form.setAttribute('action', `/reservas/${ev.id}`);
+
+              if (estadoSelect) {
+                const estadoActual = props.status || props.estado || ev.extendedProps?.estado;
+                if (estadoActual) {
+                  estadoSelect.value = estadoActual;
+                }
+              }
+
+              if (durationSelect && props.duration) {
+                durationSelect.value = props.duration;
+              }
+
+              if (entrenadorSelect) {
+                entrenadorSelect.value = props.entrenador_id || '';
+              }
+
+              if (clienteSelect?.tomselect) {
+                const ts = clienteSelect.tomselect;
+                ts.clear(true);
+                if (props.cliente_id) {
+                  const nombre = props.title || ev.title || '';
+                  ts.addOption({ value: String(props.cliente_id), text: nombre });
+                  ts.setValue(String(props.cliente_id), true);
+                }
+              } else if (clienteSelect) {
+                clienteSelect.value = props.cliente_id || '';
+              }
+
+              if (responsableSelect?.tomselect) {
+                const rs = responsableSelect.tomselect;
+                rs.clear(true);
+                if (props.responsable_id && props.responsable_nombre) {
+                  rs.addOption({ id: String(props.responsable_id), nombre: props.responsable_nombre });
+                  rs.setValue(String(props.responsable_id), true);
+                }
+              } else if (responsableSelect) {
+                responsableSelect.value = props.responsable_id || '';
+              }
+
+              const eventStart = ev.start;
+              let time = '';
+              if (eventStart) {
+                const hrs = String(eventStart.getUTCHours()).padStart(2, '0');
+                const mins = String(eventStart.getUTCMinutes()).padStart(2, '0');
+                time = `${hrs}:${mins}`;
+                if (fechaInput) {
+                  fechaInput.value = eventStart.toISOString().split('T')[0];
+                }
+              }
+
+              cargarSlots().then(() => {
+                if (horaSelect && time) {
+                  const exists = Array.from(horaSelect.options).some((option) => option.value === time);
+                  if (!exists) {
+                    const extra = document.createElement('option');
+                    extra.value = time;
+                    extra.text = time;
+                    horaSelect.insertBefore(extra, horaSelect.options[1] || null);
+                  }
+
+                  horaSelect.options[0]?.classList?.remove('selected');
+                  horaSelect.value = time;
+                }
+                updateStartField();
+              });
+
+              enableCancelButton(ev.id);
+              modal.show();
+            },
+            events: {
+              url: cfg.eventsUrl,
+              method: 'GET',
+              extraParams: () => ({ entrenador_id: entrenadorFilter ? entrenadorFilter.value : '' }),
+            },
+            eventDataTransform: (raw) => ({
+              id: raw.id,
+              title: raw.title,
+              start: raw.start,
+              end: raw.end,
+              backgroundColor: raw.backgroundColor,
+              borderColor: raw.borderColor,
+              display: 'block',
+              extendedProps: raw,
+            }),
+            datesSet: (info) => {
+              const date = info.startStr.split('T')[0];
+              axios
+                .get('/reserva/availability', { params: { date } })
+                .then((res) => {
+                  const { minTime, maxTime } = res.data;
+                  calendar.setOption('slotMinTime', minTime);
+                  calendar.setOption('slotMaxTime', maxTime);
+                })
+                .catch((error) => {
+                  console.error('No se pudo actualizar la disponibilidad del calendario.', error);
+                });
+            },
+            eventContent: (arg) => {
+              const esLista = arg.view.type.startsWith('list');
+
+              let rawTitle = arg.event.title || '';
+              rawTitle = rawTitle.replace(/\n/g, "\n");
+              const lineas = rawTitle.split("\n");
+
+              const estado = arg.event.extendedProps.status;
+              const timeText = arg.timeText;
+              const estadoBadgeClasses = {
+                Confirmada: ['bg-success'],
+                Pendiente: ['bg-warning', 'text-dark'],
+                Cancelada: ['bg-danger'],
+                'No Asistida': ['bg-primary'],
+              };
+              const estadoClasses = estadoBadgeClasses[estado] || ['bg-secondary'];
+
+              if (esLista) {
+                const cont = document.createElement('div');
+                cont.classList.add('d-flex', 'flex-column', 'gap-1');
+
+                const fila1 = document.createElement('div');
+                fila1.innerHTML = `<span class="fw-bold">${lineas[0]}</span>`;
+                cont.appendChild(fila1);
+
+                lineas.slice(1).forEach((texto) => {
+                  const span = document.createElement('span');
+                  span.classList.add('text-muted', 'fs-7');
+                  span.innerText = texto;
+                  cont.appendChild(span);
+                });
 
                 if (estado) {
                   const badge = document.createElement('span');
@@ -456,7 +693,43 @@ form.action                          = '/reservas/' + ev.id;
   if (modalPago) {
     let triggerButton = null;
 
-  calendar.render();
+    modalPago.addEventListener('show.bs.modal', (event) => {
+      triggerButton = event.relatedTarget || null;
+    });
+
+    const actualizarTotales = () => {
+      if (!triggerButton) {
+        return;
+      }
+
+      const ordenId = triggerButton.getAttribute('data-cuenta');
+      if (!ordenId) {
+        return;
+      }
+
+      fetch(`/orden/${ordenId}/totales`)
+        .then((res) => res.json())
+        .then((data) => {
+          const totalFactura = document.querySelector('#cardTotalFactura');
+          if (totalFactura) {
+            totalFactura.textContent = data.totalVentas.toLocaleString('es-CO', {
+              style: 'currency',
+              currency: 'COP',
+            });
+          }
+
+          const totalDisplay = document.querySelector('#totalInvoiceDisplay');
+          if (totalDisplay) {
+            totalDisplay.textContent = data.resta.toLocaleString('es-CO', {
+              style: 'currency',
+              currency: 'COP',
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('No se pudieron actualizar los totales de la orden.', error);
+        });
+    };
 
     const confirmarPagoBtn = modalPago.querySelector('.btn-confirmar-pago');
     if (confirmarPagoBtn) {
