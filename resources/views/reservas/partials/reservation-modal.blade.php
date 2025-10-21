@@ -123,8 +123,7 @@
                       data-action="cancel"
                       data-editing-only="true"
                       data-label-reserva="Cancelar reserva"
-                      data-label-clase="Cancelar clase"
-                      disabled>
+                      data-label-clase="Cancelar clase">
                 <span data-cancel-label>Cancelar reserva</span>
               </button>
             </div>
