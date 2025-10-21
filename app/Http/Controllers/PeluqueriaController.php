@@ -45,7 +45,9 @@ class PeluqueriaController extends Controller
 
     public function showOwn()
     {
-        return view('peluquerias.show');
+        $peluqueria = auth()->user()->peluqueria;
+
+        return view('peluquerias.show', compact('peluqueria'));
     }
 
     public function show()
@@ -165,9 +167,13 @@ class PeluqueriaController extends Controller
         return true;
     }
 
-    private function cloudinaryUrlContainsCredentials(?string $url): bool
+    private function cloudinaryUrlContainsCredentials(string|array|null $url): bool
     {
         if (!$url) {
+            return false;
+        }
+
+        if (is_array($url)) {
             return false;
         }
 
