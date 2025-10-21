@@ -28,7 +28,7 @@ class ProveedorController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'tipo_documento_id' => 'required|exists:Tipo_identificacions,id',
+            'tipo_documento_id' => 'required|exists:tipo_identificacions,id',
             'numero_documento'  => 'required|string|unique:proveedores,numero_documento',
             'nombre'            => 'required|string|max:255',
             'regimen'           => 'required|in:1,2',
