@@ -407,17 +407,13 @@ public function update(Request $request, Reserva $reserva)
             )));
         }
 	 
-	
-
-    
-   
 }
 
 // 2) Actualizar los campos de la reserva
     $reserva->fill([
         'tipo'          => $data['type'],
         'fecha'         => $data['start'],
-        'duracion'      => $data['duration'] ?? $reserva->duration,
+        'duracion'      => $data['duration'],
         'estado'        => $data['estado'],
        'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
         'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
