@@ -1041,12 +1041,13 @@ class ThemeLayout {
                 "light" === n.config.theme
                     ? n.changeThemeMode("dark")
                     : n.changeThemeMode("light");
-            }),
-            (e = document.querySelector("#reset-layout")) &&
-                e.addEventListener("click", function (e) {
-                    n.resetTheme();
-                }),
-            (e = document.querySelector(".button-toggle-menu")) &&
+            });
+        if ((e = document.querySelector("#reset-layout")))
+            e.addEventListener("click", function (e) {
+                n.resetTheme();
+            });
+        if ((e = document.querySelector(".button-toggle-menu"))) {
+            if ("1" !== e.dataset.themeLayoutBound) {
                 e.addEventListener("click", function () {
                     var e =
                             (n.config &&
@@ -1062,8 +1063,13 @@ class ThemeLayout {
                               )
                             : n.changeMenuSize("condensed", !1)
                         : n.showBackdrop(),
-                        n.html.classList.toggle("sidebar-enable");
+                        n.html.classList.toggle("sidebar-enable"),
+                        recordLayoutDiagnostics({ toggleBound: !0 });
                 });
+                e.dataset.themeLayoutBound = "1";
+            }
+            recordLayoutDiagnostics({ toggleBound: !0 });
+        }
     }
     showBackdrop() {
         let t = document.createElement("div"),
@@ -1159,6 +1165,51 @@ class ThemeLayout {
             this.setSwitchFromConfig();
     }
 }
+const recordLayoutDiagnostics = (e = {}, t = {}) => {
+    if ("undefined" == typeof window || "undefined" == typeof document)
+        return window && window.__themeLayoutDiagnostics;
+    const n = document.documentElement,
+        o = document.querySelector(".button-toggle-menu"),
+        i = window.__themeLayoutDiagnostics || {},
+        a = Object.assign(
+            {
+                bootedAt: i.bootedAt || null,
+                configReady: !!window.__layoutConfigReady,
+                hasInstance: !!window.__themeLayoutInstance,
+                sidebarSize: n ? n.getAttribute("data-sidebar-size") : null,
+                togglePresent: !!o,
+                toggleBound:
+                    (o && o.dataset && "1" === o.dataset.themeLayoutBound) ||
+                    !!i.toggleBound,
+            },
+            i,
+            e
+        );
+    return (
+        (a.bootedAt = e.bootedAt || a.bootedAt || new Date().toISOString()),
+        (window.__themeLayoutDiagnostics = a),
+        t.broadcast &&
+            window.console &&
+            "function" == typeof window.console.debug &&
+            window.console.debug("[ThemeLayout] Boot diagnostics", a),
+        t.broadcast &&
+            (function () {
+                try {
+                    window.dispatchEvent(
+                        new CustomEvent("themeLayout:boot", { detail: a })
+                    );
+                } catch (e) {
+                    if (window.dispatchEvent && document.createEvent) {
+                        const t = document.createEvent("Event");
+                        t.initEvent("themeLayout:boot", !0, !0),
+                            (t.detail = a),
+                            window.dispatchEvent(t);
+                    }
+                }
+            })(),
+        a
+    );
+};
 const ensureThemeLayout = (e) => {
     var t = window.__themeLayoutInstance;
     if (t)
@@ -1175,10 +1226,16 @@ let domReadyFired =
     needsConfigSync = !!window.__layoutConfigReady;
 const bootThemeLayout = () => ensureThemeLayout();
 const syncThemeLayoutConfig = () => ensureThemeLayout({ syncConfig: !0 });
+"undefined" != typeof window &&
+    ((window.bootThemeLayout = bootThemeLayout),
+    (window.ensureThemeLayout = ensureThemeLayout),
+    (window.syncThemeLayoutConfig = syncThemeLayoutConfig));
 const handleDomReady = () => {
     domReadyFired = !0;
+    const e = new Date().toISOString();
     bootThemeLayout();
     needsConfigSync && (syncThemeLayoutConfig(), (needsConfigSync = !1));
+    recordLayoutDiagnostics({ bootedAt: e }, { broadcast: !0 });
 };
 domReadyFired
     ? handleDomReady()
@@ -1186,5 +1243,7 @@ domReadyFired
           once: !0,
       });
 window.addEventListener("layout:config-ready", function () {
-    domReadyFired ? syncThemeLayoutConfig() : (needsConfigSync = !0);
+    domReadyFired
+        ? (syncThemeLayoutConfig(), recordLayoutDiagnostics({}, { broadcast: !0 }))
+        : (needsConfigSync = !0);
 });
