@@ -1,3 +1,8 @@
+@php
+    $sidebarStylistLabels = \App\Support\RoleLabelResolver::forStylist();
+    $sidebarStylistLabelSingular = $sidebarStylistLabels['singular'];
+@endphp
+
 <div class="app-sidebar">
      <!-- Sidebar Logo -->
      <div class="logo-box">
@@ -69,7 +74,7 @@
                          <span class="nav-icon">
 						 <i class="bx bx-dock-left"></i> 
                                </span>
-                         <span class="nav-text"> Servicios </span>
+                         <span class="nav-text"> Productos/Servicios </span>
                     </a>
                </li>
 			   
@@ -127,7 +132,7 @@
                                    <a class="sub-nav-link" href="{{ route('users.admins.create') }}">Crea Usuario</a>
                               </li>
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('users.trainers.create') }}">Crea Estilista</a>
+                                   <a class="sub-nav-link" href="{{ route('users.trainers.create') }}">Crea {{ $sidebarStylistLabelSingular }}</a>
                               </li>
                               <li class="sub-nav-item">
                                    <a class="sub-nav-link" href="{{ route ('users.index') }}">Listar Usuarios</a>
