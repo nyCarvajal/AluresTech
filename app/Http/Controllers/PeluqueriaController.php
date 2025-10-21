@@ -11,9 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 class PeluqueriaController extends Controller
 {
-    public function editOwn()
-    {
-        $peluqueria = auth()->user()->peluqueria;
+  
 
 public function editOwn()
 {
@@ -50,28 +48,6 @@ public function updateOwn(Request $request)
 }
 
 
-    public function updateOwn(Request $request)
-    {
-        $peluqueria = auth()->user()->peluqueria;
-
-        $data = $request->validate([
-            'nombre'           => 'required|string',
-
-            'cuentaCobro'      => 'nullable|boolean',
-            'color'            => 'nullable|string',
-            'menu_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'topbar_color'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'msj_recordatorio' => 'nullable|string',
-            'msj_bienvenida'   => 'nullable|string',
-            'nit'              => 'nullable|string',
-            'direccion'        => 'nullable|string',
-            'municipio'        => 'nullable|string',
-            'logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-        ]);
-
-        $peluqueria->update($this->prepareUpdateData($request, $data));
-        return redirect()->route('peluquerias.show', compact('peluqueria'));
-    }
 	
 	public function showOwn(){
 		
