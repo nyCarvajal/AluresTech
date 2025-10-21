@@ -407,7 +407,7 @@ public function update(Request $request, Reserva $reserva)
             )));
         }
 	 
-}
+
 
 // 2) Actualizar los campos de la reserva
     $reserva->fill([
