@@ -21,36 +21,7 @@ class PeluqueriaController extends Controller
 
     }
 
-public function updateOwn(Request $request)
-{
-    $peluqueria = auth()->user()->peluqueria;
 
-    $data = $request->validate([
-        'nombre'           => 'required|string',
-
-        'color'            => 'nullable|string',
-        'menu_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        'topbar_color'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        'msj_reserva_confirmada' => 'nullable|string',
-        'msj_bienvenida'   => 'nullable|string',
-        'nit'              => 'nullable|string',
-        'direccion'        => 'nullable|string',
-        'municipio'        => 'nullable|string',
-        'logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-    ]);
-
-    $peluqueria->update($this->prepareUpdateData($request, $data));
-
-   
-
-        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
-
-        return view('peluquerias.edit', [
-            'peluqueria' => $peluqueria,
-            'stylistLabelSingular' => $stylistLabels['singular'],
-            'stylistLabelPlural' => $stylistLabels['plural'],
-        ]);
-    }
 
     public function updateOwn(Request $request)
     {
@@ -72,7 +43,14 @@ public function updateOwn(Request $request)
         ]);
 
         $peluqueria->update($this->prepareUpdateData($request, $data));
-        return redirect()->route('peluquerias.show', compact('peluqueria'));
+       
+        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
+
+        return view('peluquerias.edit', [
+            'peluqueria' => $peluqueria,
+            'stylistLabelSingular' => $stylistLabels['singular'],
+            'stylistLabelPlural' => $stylistLabels['plural'],
+        ]);
     }
 	
 	public function showOwn(){
