@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Peluqueria;
 use App\Support\RoleLabelResolver;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
 
 class PeluqueriaController extends Controller
 {
@@ -41,6 +44,7 @@ class PeluqueriaController extends Controller
             'municipio' => 'nullable|string',
             'trainer_label_singular' => 'nullable|string|max:191',
             'trainer_label_plural' => 'nullable|string|max:191',
+            'logo'             => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
 
         $data['pos'] = $request->has('pos');
@@ -116,6 +120,66 @@ class PeluqueriaController extends Controller
 
         return back();
     }
+
+    protected function prepareUpdateData(Request $request, array $data): array
+    {
+        $data['pos'] = $request->has('pos');
+        $data['cuentaCobro'] = $request->has('cuentaCobro');
+        $data['electronica'] = $request->has('electronica');
+
+        $data['menu_color'] = $data['menu_color'] ?? null;
+        $data['topbar_color'] = $data['topbar_color'] ?? null;
+
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $this->uploadLogo($request->file('logo'));
+        } else {
+            unset($data['logo']);
+        }
+
+        return $data;
+    }
+
+    protected function uploadLogo(UploadedFile $file): string
+    {
+        if (! $this->cloudinaryIsConfigured()) {
+            throw ValidationException::withMessages([
+                'logo' => 'No se puede subir el logo porque Cloudinary no está configurado correctamente.',
+            ]);
+        }
+
+        $folder = trim(config('cloudinary.upload.folder') ?? '', '/');
+        if ($folder === '') {
+            $folder = 'peluquerias';
+        }
+
+        try {
+            $uploadedFile = Cloudinary::uploadFile(
+                $file->getRealPath(),
+                [
+                    'folder' => $folder,
+                    'resource_type' => 'image',
+                ]
+            );
+
+            return $uploadedFile->getPublicId();
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            throw ValidationException::withMessages([
+                'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
+            ]);
+        }
+    }
+
+    protected function cloudinaryIsConfigured(): bool
+    {
+        $config = config('cloudinary.cloud', []);
+
+        return ! empty($config['cloud_name'])
+            && ! empty($config['api_key'])
+            && ! empty($config['api_secret']);
+    }
+}
 
     protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
     {

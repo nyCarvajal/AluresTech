@@ -31,6 +31,30 @@
   <input type="text" name="direccion" value="{{ old('direccion', $peluqueria->direccion ?? '') }}" class="form-control">
 </div>
 
+<div class="mb-3">
+  <label class="form-label" for="logo">Logo</label>
+  <input
+    type="file"
+    id="logo"
+    name="logo"
+    accept="image/*"
+    class="form-control"
+  >
+  <small class="form-text text-muted">Sube una imagen en formato JPG, PNG, GIF o WebP (máx. 10&nbsp;MB).</small>
+
+  @if(isset($peluqueria) && ($peluqueria->logo || $peluqueria->logo_url))
+    <div class="mt-3">
+      <p class="mb-2 text-muted">Logo actual:</p>
+      <img
+        src="{{ $peluqueria->resolvedLogoUrl() }}"
+        alt="Logo actual de la peluquería"
+        class="img-fluid rounded border"
+        style="max-height: 160px;"
+      >
+    </div>
+  @endif
+</div>
+
 <div class="row mb-3">
   <div class="col-md-6">
     <label class="form-label" for="menu_color">Color del menú</label>
