@@ -108,13 +108,18 @@
               </select>
             </div>
 
-  <!-- Estilista -->
+  @php
+      $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+      $stylistLabelPlural = $stylistLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+  @endphp
+
+  <!-- {{ $stylistLabelSingular }} -->
           <div id="fieldEntrenador" class="mb-3 d-none">
-            <label for="entrenador" class="form-label">Estilista</label>
+            <label for="entrenador" class="form-label">{{ $stylistLabelSingular }}</label>
             <select id="entrenador"
                     name="entrenador_id"
                     class="form-select">
-              <option value="">Selecciona entrenador</option>
+              <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($stylistLabelSingular) }}</option>
               @foreach($entrenadores as $u)
                 <option value="{{ $u->id }}">{{ $u->nombre }}</option>
               @endforeach

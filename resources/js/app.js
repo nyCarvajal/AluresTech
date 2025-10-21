@@ -37,6 +37,7 @@ import 'tom-select/dist/css/tom-select.default.css';
 //calendario
 
 
+
 // Esperamos a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
   const cfg = window.CalendarConfig;
@@ -53,18 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1) Obtener elementos comunes
   const calendarEl = document.querySelector(cfg.selector);
   const modalEl    = document.querySelector(cfg.modalSelector);
-  if (!modalEl) {
-    console.warn('No se encontró el modal configurado para el calendario, se omite la inicialización.');
-    return;
-  }
-
-  const form       = modalEl.querySelector('form');
-  if (!form) {
-    console.warn('No se encontró el formulario del calendario, se omite la inicialización.');
-    return;
-  }
-
   const modal      = new bootstrap.Modal(modalEl);
+  const form       = modalEl.querySelector('form');
   form.setAttribute('method', 'POST');
   const entrenadorFilter = document.querySelector(cfg.filterSelector);
 
@@ -127,44 +118,35 @@ document.addEventListener('DOMContentLoaded', () => {
     return '';
   };
 
-  const disableCancelButton = () => {
-    if (!cancelBtn) return;
-    cancelBtn.disabled = true;
-    cancelBtn.setAttribute('disabled', 'disabled');
-    cancelBtn.setAttribute('aria-disabled', 'true');
-    cancelBtn.classList.add('disabled', 'opacity-50');
-    refreshCancelButtonTextForType(typeSelect?.value);
-    delete cancelBtn.dataset.reservaId;
-  };
-
-  const enableCancelButton = (reservaId) => {
+  const setCancelButtonAvailability = (reservaId = '') => {
     if (!cancelBtn) return;
     const id = String(reservaId ?? '').trim();
-    if (!id) {
-      disableCancelButton();
-      return;
-    }
-    cancelBtn.disabled = false;
-    cancelBtn.removeAttribute('disabled');
-    cancelBtn.removeAttribute('aria-disabled');
-    cancelBtn.classList.remove('disabled', 'opacity-50');
-    refreshCancelButtonTextForType(typeSelect?.value);
+    const isEditing = id.length > 0;
+    const editingOnly = cancelBtn.dataset.editingOnly === 'true';
+
     cancelBtn.dataset.reservaId = id;
-  };
 
-  const updateCancelButtonVisibility = () => {
-    if (!cancelBtn) return;
-    const reservaId = resolveReservaId();
-    if (reservaId) {
-      enableCancelButton(reservaId);
+    if (isEditing) {
+      cancelBtn.disabled = false;
+      cancelBtn.removeAttribute('disabled');
+      cancelBtn.removeAttribute('aria-disabled');
+      cancelBtn.classList.remove('opacity-50', 'pe-none');
     } else {
-      disableCancelButton();
+      cancelBtn.disabled = true;
+      cancelBtn.setAttribute('aria-disabled', 'true');
+      cancelBtn.classList.add('opacity-50', 'pe-none');
     }
+
+    if (editingOnly) {
+      cancelBtn.classList.toggle('d-none', !isEditing);
+    }
+
+    refreshCancelButtonTextForType(typeSelect?.value);
   };
 
-  disableCancelButton();
+  setCancelButtonAvailability(resolveReservaId());
   modalEl.addEventListener('hidden.bs.modal', () => {
-    disableCancelButton();
+    setCancelButtonAvailability('');
     if (eventIdInput) {
       eventIdInput.value = '';
     }
@@ -175,18 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
       form.setAttribute('action', TYPE_MAP.Reserva.url);
     }
   });
-
-  modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
-  modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
-
-  if (eventIdInput) {
-    eventIdInput.addEventListener('input', updateCancelButtonVisibility);
-    eventIdInput.addEventListener('change', updateCancelButtonVisibility);
-  }
-
-  if (methodIn) {
-    methodIn.addEventListener('change', updateCancelButtonVisibility);
-  }
 
   // Campos específicos
    // ===== Campos específicos =====
@@ -200,11 +170,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const responsableInput  = form.querySelector('#responsable');
 
   // Listener para cambio de tipo en el select del modal
-  typeSelect.addEventListener('change', e => {
-    const newType = e.target.value;
-    switchFields(newType);
-    refreshCancelButtonTextForType(newType);
-  });
+  if (typeSelect) {
+    typeSelect.addEventListener('change', e => {
+      const newType = e.target.value;
+      switchFields(newType);
+      refreshCancelButtonTextForType(newType);
+    });
+  } else {
+    console.warn('⚠️  No se encontró el selector de tipo de evento en el formulario de reservas.');
+  }
   
   (() => {
   const fecha  = document.getElementById('reservaFecha');
@@ -218,38 +192,18 @@ document.addEventListener('DOMContentLoaded', () => {
     start.value = `${fecha.value}T${hora.value}:00`;
   }
 
-  (() => {
-    const fecha  = document.getElementById('reservaFecha');
-    const hora   = document.getElementById('reservaHora');
-    const start  = document.getElementById('start');
+  fecha.addEventListener('change', fusionar);
+  hora .addEventListener('change', fusionar);
 
-    if (!fecha || !hora || !start) {
-      return;
+  // Validación extra: evita enviar si falta algo
+  form.addEventListener('submit', e => {
+    fusionar();
+    if (!start.value) {
+      e.preventDefault();
+      alert('Selecciona fecha y hora.');
     }
-
-    const formWithDateFields = fecha.closest('form');
-
-    const fusionar = () => {
-      if (!fecha.value || !hora.value) {
-        start.value = '';
-        return;
-      }
-      start.value = `${fecha.value}T${hora.value}:00`;
-    };
-
-    fecha.addEventListener('change', fusionar);
-    hora.addEventListener('change', fusionar);
-
-    if (formWithDateFields) {
-      formWithDateFields.addEventListener('submit', e => {
-        fusionar();
-        if (!start.value) {
-          e.preventDefault();
-          alert('Selecciona fecha y hora.');
-        }
-      });
-    }
-  })();
+  });
+})();
 
   
   new TomSelect('#responsable', {
@@ -339,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      disableCancelButton();
+      setCancelButtonAvailability('');
       typeSelect.value     = 'Reserva';
       refreshCancelButtonTextForType('Reserva');
       switchFields('Reserva');
@@ -369,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      disableCancelButton();
+      setCancelButtonAvailability('');
       fechaInput.value = info.dateStr
       // opcional: abrir tu modal de reserva aquí
       modal.show()
@@ -382,9 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const type  = props.type;
       if (eventIdInput) {
         eventIdInput.value = ev.id;
-        updateCancelButtonVisibility();
       }
-      enableCancelButton(ev.id);
+      setCancelButtonAvailability(ev.id);
   // extraemos horas y minutos en local:
   
  
@@ -426,197 +379,185 @@ form.action                          = '/reservas/' + ev.id;
           ts.setValue(String(props.cliente_id), true);
         }
 
-      } else {
-        clienteSelect.value = props.cliente_id || '';
+                if (estado) {
+                  const badge = document.createElement('span');
+                  badge.classList.add('badge', 'align-self-start', 'fs-8');
+                  estadoClasses.forEach((cls) => badge.classList.add(cls));
+                  badge.innerText = estado;
+                  cont.appendChild(badge);
+                }
+
+                return { domNodes: [cont] };
+              }
+
+              const container = document.createElement('div');
+              container.classList.add('d-flex', 'flex-column', 'align-items-start', 'position-relative');
+
+              if (timeText) {
+                const timeBadge = document.createElement('span');
+                timeBadge.classList.add('badge', 'bg-primary', 'mb-1', 'fs-7');
+                timeBadge.innerText = timeText;
+                container.appendChild(timeBadge);
+              }
+
+              if (estado) {
+                const badge = document.createElement('span');
+                badge.classList.add('badge', 'ms-auto', 'position-absolute', 'top-0', 'end-0', 'me-1', 'mt-1', 'fs-8');
+                estadoClasses.forEach((cls) => badge.classList.add(cls));
+                badge.innerText = estado;
+                container.appendChild(badge);
+              }
+
+              lineas.forEach((linea, idx) => {
+                const span = document.createElement('span');
+                span.innerText = linea;
+                span.classList.add(idx === 0 ? 'fw-bold' : 'text-muted', 'fs-7');
+                container.appendChild(span);
+              });
+
+              return { domNodes: [container] };
+            },
+          });
+
+          calendar.render();
+
+          if (entrenadorFilter) {
+            entrenadorFilter.addEventListener('change', () => {
+              calendar.refetchEvents();
+            });
+          }
+
+          if (fechaInput) {
+            fechaInput.addEventListener('change', handleFechaChange);
+          }
+
+          if (horaSelect) {
+            horaSelect.addEventListener('change', updateStartField);
+          }
+
+          if (form) {
+            form.addEventListener('submit', (event) => {
+              updateStartField();
+              if (startInput && (!startInput.value || !fechaInput?.value || !horaSelect?.value)) {
+                event.preventDefault();
+                window.alert('Selecciona fecha y hora.');
+              }
+            });
+          }
+
+          if (cancelBtn) {
+            cancelBtn.addEventListener('click', async () => {
+              const reservaId = cancelBtn.dataset.reservaId || eventIdInput?.value || '';
+              if (!reservaId) {
+                return;
+              }
+
+              if (!window.confirm('¿Deseas cancelar esta cita?')) {
+                return;
+              }
+
+              disableCancelButton();
+              setCancelButtonText('Cancelando…');
+              if (estadoSelect) {
+                estadoSelect.value = 'Cancelada';
+              }
+
+              try {
+                const { data } = await axios.post(`/reservas/${reservaId}/cancelar`, { estado: 'Cancelada' });
+
+                const calendarEvent = calendar.getEventById(String(reservaId));
+                if (calendarEvent) {
+                  calendarEvent.remove();
+                }
+                await calendar.refetchEvents();
+
+                document.dispatchEvent(new CustomEvent('reserva:cancelada', { detail: { id: reservaId } }));
+
+                hideCancelButton();
+                if (estadoSelect) {
+                  const estadoFinal = data?.reserva?.estado || 'Cancelada';
+                  estadoSelect.value = estadoFinal;
+                }
+                if (methodInput) {
+                  methodInput.value = 'POST';
+                }
+                form.setAttribute('action', defaultReservaAction);
+                modal.hide();
+                window.alert(data?.message ?? 'La cita ha sido cancelada correctamente.');
+                if (eventIdInput) {
+                  eventIdInput.value = '';
+                }
+                updateCancelButtonVisibility();
+              } catch (error) {
+                console.error('Error al cancelar la cita', error);
+                window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
+                enableCancelButton(reservaId);
+              } finally {
+                refreshCancelButtonTextForType(typeSelect?.value);
+              }
+            });
+          }
+
+          modalEl.addEventListener('hidden.bs.modal', () => {
+            disableCancelButton();
+            hideCancelButton();
+            if (eventIdInput) {
+              eventIdInput.value = '';
+            }
+            if (methodInput) {
+              methodInput.value = 'POST';
+            }
+            form.setAttribute('action', defaultReservaAction);
+            if (typeSelect) {
+              typeSelect.value = 'Reserva';
+              refreshCancelButtonTextForType('Reserva');
+            }
+            switchFields('Reserva');
+          });
+
+          modalEl.addEventListener('show.bs.modal', updateCancelButtonVisibility);
+          modalEl.addEventListener('shown.bs.modal', updateCancelButtonVisibility);
+
+          if (eventIdInput) {
+            eventIdInput.addEventListener('input', updateCancelButtonVisibility);
+            eventIdInput.addEventListener('change', updateCancelButtonVisibility);
+          }
+
+          if (methodInput) {
+            methodInput.addEventListener('change', updateCancelButtonVisibility);
+          }
+        }
       }
-
-        
-      
-	  
-	  // 2) Rellenar el select de hora (HH:mm)
-  //    Usamos substring de la parte de hora
-  
-   cargarSlots().then(() => {
-    // Inyectar opción extra si hace falta
-    const exists = [...horaSelect.options].some(o => o.value === time);
-    if (!exists) {
-      const extra = document.createElement('option');
-      extra.value = time;
-      extra.text  = time;
-      horaSelect.insertBefore(extra, horaSelect.options[1] || null);
     }
-    // Desmarcamos la blank y seleccionamos tu hora
-    horaSelect.options[0].selected = false;
-    horaSelect.value = time;
+  }
 
-    // 5) Volvemos a colocar los listeners
-    fechaInput.addEventListener('change',   cargarSlots);
+  const modalPago = document.getElementById('modalPagarFactura');
+  if (modalPago) {
+    let triggerButton = null;
 
-    // 6) Abrimos el modal
-    modal.show();
-  });
-    },
-
-      events: {
-        url: cfg.eventsUrl,   // p.ej. '/reservas.json'
-        method: 'GET',
-        extraParams: () => ({
-          entrenador_id: entrenadorFilter ? entrenadorFilter.value : ''
-        })
-      },
-	   // 2) Permite seleccionar rangos
-    
-    
-    eventDataTransform: raw => ({
-      id:              raw.id,
-      title:           raw.title,
-      start:           raw.start,
-      end:             raw.end,
-      backgroundColor: raw.backgroundColor,
-      borderColor:     raw.borderColor,
-      display:         'block',
-      extendedProps:   raw,
-	   
-    }),
-	
-        datesSet: info => {
-      // cada vez que cambias de día, recarga disponibilidad
-      const date = info.startStr.split('T')[0];
-      axios.get('/reserva/availability', { params: { date } })
-        .then(res => {
-          const { minTime, maxTime } = res.data;
-          calendar.setOption('slotMinTime', minTime);
-          calendar.setOption('slotMaxTime', maxTime);
-        });
-    },
-
-	
-	 // — AÑADE ESTE CALLBACK PARA INTERPRETAR SALTOS DE LÍNEA —
-   
-
-      eventContent: function(arg) {
-		  
-		  
-  /* ---- 0)  Detectamos si estamos en una vista de LISTA ---- */
-  const esLista = arg.view.type.startsWith('list');
-
-  /* ---- 1)  Preprocesamos el título (tu lógica actual) ---- */
-  let rawTitle = arg.event.title || '';
-  rawTitle = rawTitle.replace(/\\n/g, '\n');
-  const lineas = rawTitle.split('\n');
-
-  /* ---- 2)  COMMON data: extended props ---- */
-  const estado = arg.event.extendedProps.status;      // Confirmada / Pendiente…
-  const time   = arg.timeText;
-  const estadoBadgeClasses = {
-    'Confirmada': ['bg-success'],
-    'Pendiente': ['bg-warning', 'text-dark'],
-    'Cancelada': ['bg-danger'],
-    'No Asistida': ['bg-primary']
-  };
-  const estadoClasses = estadoBadgeClasses[estado] || ['bg-secondary'];
-
-   
-
-
-  /* ********************************************************************* *
-   *  A)  RENDER PARA VISTAS LIST*  (listDay, listWeek, listMonth, …)      *
-   * ********************************************************************* */
-  if (esLista) {
-    /*  FullCalendar envuelve cada evento de lista así:
-          <tr class="fc-list-event">  <td class="fc-list-event-time"> … </td>
-                                       <td class="fc-list-event-title"> … </td> </tr>
-        Lo que devuelvas aquí se inserta dentro de <td class="fc-list-event-title">
-    */
-    const cont = document.createElement('div');
-    cont.classList.add('d-flex', 'flex-column', 'gap-1');
-
-    // línea 1: título principal
-    const fila1 = document.createElement('div');
-    fila1.innerHTML = `<span class="fw-bold">${lineas[0]}</span>`;
-    cont.appendChild(fila1);
-
-    // líneas extra del título, si las hubiera
-    lineas.slice(1).forEach(t => {
-      const s = document.createElement('span');
-      s.classList.add('text-muted', 'fs-7');
-      s.innerText = t;
-      cont.appendChild(s);
+    modalPago.addEventListener('show.bs.modal', (event) => {
+      triggerButton = event.relatedTarget || null;
     });
-
-    // badge de estado (Confirmada / Pendiente…)
-    if (estado) {
-      const badge = document.createElement('span');
-      badge.classList.add('badge', 'align-self-start', 'fs-8');
-      estadoClasses.forEach(cls => badge.classList.add(cls));
-      badge.innerText = estado;
-      cont.appendChild(badge);
-    }
-
-    // devolvemos sólo la parte del título; la hora ya la pinta FC en la 1ª columna
-    return { domNodes: [cont] };
-  }
-
-  /* ********************************************************************* *
-   *  B)  RENDER PARA dayGrid / timeGrid  (tu código original, retocado)   *
-   * ********************************************************************* */
-  const container = document.createElement('div');
-  container.classList.add('d-flex', 'flex-column', 'align-items-start');
-
-  /*  Hora en badge */
- if (time) {
-  const timeEl = document.createElement('span');
-  timeEl.classList.add('badge', 'bg-primary', 'mb-1', 'fs-7');
-  timeEl.innerText = time;
-  container.appendChild(timeEl);
-}
-
-  /*  Estado en la esquina superior derecha */
-  if (estado) {
-    const badge = document.createElement('span');
-    badge.classList.add('badge', 'ms-auto', 'position-absolute', 'top-0', 'end-0', 'me-1', 'mt-1', 'fs-8');
-    estadoClasses.forEach(cls => badge.classList.add(cls));
-    badge.innerText = estado;
-    container.appendChild(badge);
-  }
-
-  /*  Líneas de título */
-  lineas.forEach((l, idx) => {
-    const span = document.createElement('span');
-    span.innerText = l;
-    span.classList.add(idx === 0 ? 'fw-bold' : 'text-muted', 'fs-7');
-    container.appendChild(span);
-  });
-		  
-		  
-		
-
-      return { domNodes: [ container ] };
-	  
-    }
-
-  
-  });
-
-
-
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', async () => {
       const reservaId = cancelBtn.dataset.reservaId || (eventIdInput ? eventIdInput.value : '');
       if (!reservaId) {
+        window.alert('Selecciona una reserva guardada antes de intentar cancelarla.');
         return;
       }
 
-      const confirmCancel = window.confirm('¿Deseas cancelar esta cita?');
-      if (!confirmCancel) {
+      const ordenId = triggerButton.getAttribute('data-cuenta');
+      if (!ordenId) {
         return;
       }
 
       cancelBtn.disabled = true;
       cancelBtn.setAttribute('disabled', 'disabled');
       cancelBtn.setAttribute('aria-disabled', 'true');
+      cancelBtn.classList.add('pe-none');
       setCancelButtonText('Cancelando…');
+      const previousEstado = estadoSelect ? estadoSelect.value : null;
       if (estadoSelect) {
         estadoSelect.value = 'Cancelada';
       }
@@ -629,105 +570,12 @@ form.action                          = '/reservas/' + ev.id;
         const calendarEvent = calendar.getEventById(String(reservaId));
         if (calendarEvent) {
           calendarEvent.remove();
-        } else {
-          calendar.refetchEvents();
         }
         await calendar.refetchEvents();
 
         document.dispatchEvent(new CustomEvent('reserva:cancelada', {
           detail: { id: reservaId }
         }));
-
-        hideCancelButton();
-        if (estadoSelect) {
-          estadoSelect.value = 'Cancelada';
-        }
-        await calendar.refetchEvents();
-
-        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
-          detail: { id: reservaId }
-        }));
-
-        hideCancelButton();
-        if (estadoSelect) {
-          const estadoFinal = data?.reserva?.estado || 'Cancelada';
-          estadoSelect.value = estadoFinal;
-        }
-        await calendar.refetchEvents();
-
-        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
-          detail: { id: reservaId }
-        }));
-
-        hideCancelButton();
-        if (estadoSelect) {
-          const estadoFinal = data?.reserva?.estado || 'Cancelada';
-          estadoSelect.value = estadoFinal;
-        }
-        if (methodIn) {
-          methodIn.value = 'POST';
-        }
-        if (form && TYPE_MAP?.Reserva?.url) {
-          form.setAttribute('action', TYPE_MAP.Reserva.url);
-        }
-        await calendar.refetchEvents();
-
-        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
-          detail: { id: reservaId }
-        }));
-
-        hideCancelButton();
-        if (estadoSelect) {
-          const estadoFinal = data?.reserva?.estado || 'Cancelada';
-          estadoSelect.value = estadoFinal;
-        }
-        if (methodIn) {
-          methodIn.value = 'POST';
-        }
-        if (form && TYPE_MAP?.Reserva?.url) {
-          form.setAttribute('action', TYPE_MAP.Reserva.url);
-        }
-        await calendar.refetchEvents();
-
-        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
-          detail: { id: reservaId }
-        }));
-
-        hideCancelButton();
-        if (estadoSelect) {
-          const estadoFinal = data?.reserva?.estado || 'Cancelada';
-          estadoSelect.value = estadoFinal;
-        }
-        if (methodIn) {
-          methodIn.value = 'POST';
-        }
-        if (form && TYPE_MAP?.Reserva?.url) {
-          form.setAttribute('action', TYPE_MAP.Reserva.url);
-        }
-        await calendar.refetchEvents();
-
-        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
-          detail: { id: reservaId }
-        }));
-
-        disableCancelButton();
-        if (estadoSelect) {
-          const estadoFinal = data?.reserva?.estado || 'Cancelada';
-          estadoSelect.value = estadoFinal;
-        }
-        if (methodIn) {
-          methodIn.value = 'POST';
-        }
-        if (form && TYPE_MAP?.Reserva?.url) {
-          form.setAttribute('action', TYPE_MAP.Reserva.url);
-        }
-        await calendar.refetchEvents();
-
-        document.dispatchEvent(new CustomEvent('reserva:cancelada', {
-          detail: { id: reservaId }
-        }));
-
-        disableCancelButton();
         if (estadoSelect) {
           const estadoFinal = data?.reserva?.estado || 'Cancelada';
           estadoSelect.value = estadoFinal;
@@ -743,110 +591,39 @@ form.action                          = '/reservas/' + ev.id;
         if (eventIdInput) {
           eventIdInput.value = '';
         }
-        updateCancelButtonVisibility();
+        setCancelButtonAvailability('');
       } catch (error) {
         console.error('Error al cancelar la cita', error);
         window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
-        enableCancelButton(reservaId);
+        if (estadoSelect && previousEstado !== null) {
+          estadoSelect.value = previousEstado;
+        }
+        setCancelButtonAvailability(reservaId);
       } finally {
         refreshCancelButtonTextForType(typeSelect?.value);
       }
     });
   }
 
-  calendar.render();
+          const totalDisplay = document.querySelector('#totalInvoiceDisplay');
+          if (totalDisplay) {
+            totalDisplay.textContent = data.resta.toLocaleString('es-CO', {
+              style: 'currency',
+              currency: 'COP',
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('No se pudieron actualizar los totales de la orden.', error);
+        });
+    };
 
-  if (entrenadorFilter) {
-    entrenadorFilter.addEventListener('change', () => calendar.refetchEvents());
-  }
-  
- 
-  form.addEventListener('submit', () => {
- /**   const dt     = new Date(inicioInput.value);
-    const durMin = parseInt(durationSelect.value, 10);
-    const endDt  = new Date(dt.getTime() + durMin*60000);
-
-    let endInput = form.querySelector('input[name="end"]');
-    if (!endInput) {
-      endInput = document.createElement('input');
-      endInput.type = 'hidden';
-      endInput.name = 'end';
-      form.appendChild(endInput);
+    const confirmarPagoBtn = modalPago.querySelector('.btn-confirmar-pago');
+    if (confirmarPagoBtn) {
+      confirmarPagoBtn.addEventListener('click', actualizarTotales);
     }
-    endInput.value = endDt.toISOString().slice(0,16); */
-  });
-  
-  
-   const modalPago = document.getElementById('modalPagarFactura');
-  // ... toda la inicialización del modal aquí ...
-  
-  modalPago.addEventListener('show.bs.modal', function(event) {
-    triggerButton = event.relatedTarget;
-    // ... resto de lógica de show.bs.modal ...
-  });
-
-  // Aquí defines actualizarTotales justo después de capturar triggerButton:
-  function actualizarTotales() {
-    const ordenId = triggerButton.getAttribute('data-cuenta');
-    fetch(`/orden/${ordenId}/totales`)
-      .then(res => res.json())
-      .then(data => {
-        document.querySelector('#cardTotalFactura').textContent =
-          data.totalVentas.toLocaleString('es-CO', { style: 'currency', currency: 'COP' });
-        document.querySelector('#totalInvoiceDisplay').textContent =
-          data.resta.toLocaleString('es-CO', { style: 'currency', currency: 'COP' });
-      });
   }
-
-  // Y luego, tras la llamada que crea la venta o el pago (por AJAX o submit),
-  // llamas a actualizarTotales():
-  document.querySelector('.btn-confirmar-pago').addEventListener('click', function() {
-    // ... lógica que envía el formulario (o AJAX) ...
-    actualizarTotales();
-  });
-  
-  
-  
 });
-
-
-const fechaInput  = document.getElementById('reservaFecha');
-const horaSelect  = document.getElementById('reservaHora');
-
-function cargarSlots() {
-  const date = fechaInput.value;
-
-  if (!date) {
-    horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
-    return Promise.resolve();
-  }
-
-  return axios.get('/reserva/availability', {
-    params: { date }
-  })
-  .then(res => {
-    horaSelect.innerHTML = '<option value="">-- Elige hora --</option>';
-    res.data.slots.forEach(h => {
-      // `h` ya viene como "HH:mm"
-      const opt = document.createElement('option');
-      opt.value   = h;    // <— aquí solo la parte de la hora
-      opt.textContent = h;
-      horaSelect.appendChild(opt);
-    });
-  })
-  .catch(err => console.error(err.response?.data || err));
-}
-
-// Cuando cambie la fecha..
-
-fechaInput.addEventListener('change', cargarSlots);
-
-
-
-
-
-
-
 
 
 // ...tu código JS existente (Bootstrap, intl-tel-input, etc.)...
@@ -968,11 +745,39 @@ class FormValidation {
 }
 
 
+const FALLBACK_LAYOUT_CONFIG = {
+    theme: "light",
+    topbar: { color: "light" },
+    menu: { size: "default", color: "light" },
+    color: { primary: "#0d6efd" },
+};
+
 class ThemeLayout {
     constructor() {
         (this.html = document.getElementsByTagName("html")[0]),
-            (this.config = {}),
-            (this.defaultConfig = window.config);
+            (this.config = this._buildSafeConfig(window.config)),
+            (this.defaultConfig = this._buildSafeConfig(window.defaultConfig));
+    }
+    _cloneConfig(e) {
+        if (!e || "object" != typeof e) return {};
+        try {
+            return JSON.parse(JSON.stringify(e));
+        } catch (t) {
+            return Object.assign({}, e);
+        }
+    }
+    _buildSafeConfig(e) {
+        var t = this._cloneConfig(FALLBACK_LAYOUT_CONFIG),
+            n = this._cloneConfig(e);
+        (n.topbar = Object.assign({}, t.topbar, n.topbar || {})),
+            (n.menu = Object.assign({}, t.menu, n.menu || {})),
+            (n.color = Object.assign({}, t.color, n.color || {})),
+            (n.theme = n.theme || t.theme),
+            (n.topbar.color = n.topbar.color || t.topbar.color),
+            (n.menu.size = n.menu.size || t.menu.size),
+            (n.menu.color = n.menu.color || t.menu.color),
+            (n.color.primary = n.color.primary || t.color.primary);
+        return Object.assign({}, t, n);
     }
     initVerticalMenu() {
         var e = document.querySelectorAll(".navbar-nav li .collapse");
@@ -1044,31 +849,42 @@ class ThemeLayout {
                 }, 200));
     }
     initConfig() {
-        (this.defaultConfig = JSON.parse(JSON.stringify(window.defaultConfig))),
-            (this.config = JSON.parse(JSON.stringify(window.config))),
+        (this.defaultConfig = this._buildSafeConfig(window.defaultConfig)),
+            (this.config = this._buildSafeConfig(window.config)),
             this.setSwitchFromConfig();
     }
     changeMenuColor(e) {
-        (this.config.menu.color = e),
-            this.html.setAttribute("data-sidebar-color", e),
+        (this.config.menu = this.config.menu || {}),
+            (this.config.menu.color =
+                e || this.config.menu.color || FALLBACK_LAYOUT_CONFIG.menu.color),
+            this.html.setAttribute("data-sidebar-color", this.config.menu.color),
             this.setSwitchFromConfig();
     }
     changeMenuSize(e, t = !0) {
-        this.html.setAttribute("data-sidebar-size", e),
-            t && ((this.config.menu.size = e), this.setSwitchFromConfig());
+        (this.config.menu = this.config.menu || {}),
+            this.html.setAttribute("data-sidebar-size", e),
+            t &&
+                ((this.config.menu.size =
+                    e || this.config.menu.size || FALLBACK_LAYOUT_CONFIG.menu.size),
+                this.setSwitchFromConfig());
     }
     changeThemeMode(e) {
-        (this.config.theme = e),
-            this.html.setAttribute("data-bs-theme", e),
+        (this.config.theme =
+            e || this.config.theme || FALLBACK_LAYOUT_CONFIG.theme),
+            this.html.setAttribute("data-bs-theme", this.config.theme),
             this.setSwitchFromConfig();
     }
     changeTopbarColor(e) {
-        (this.config.topbar.color = e),
-            this.html.setAttribute("data-topbar-color", e),
+        (this.config.topbar = this.config.topbar || {}),
+            (this.config.topbar.color =
+                e ||
+                this.config.topbar.color ||
+                FALLBACK_LAYOUT_CONFIG.topbar.color),
+            this.html.setAttribute("data-topbar-color", this.config.topbar.color),
             this.setSwitchFromConfig();
     }
     resetTheme() {
-        (this.config = JSON.parse(JSON.stringify(window.defaultConfig))),
+        (this.config = this._buildSafeConfig(window.defaultConfig)),
             this.changeMenuColor(this.config.menu.color),
             this.changeMenuSize(this.config.menu.size),
             this.changeThemeMode(this.config.theme),
@@ -1119,8 +935,12 @@ class ThemeLayout {
                 }),
             (e = document.querySelector(".button-toggle-menu")) &&
                 e.addEventListener("click", function () {
-                    var e = n.config.menu.size,
-                        t = n.html.getAttribute("data-sidebar-size", e);
+                    var e =
+                            (n.config &&
+                                n.config.menu &&
+                                n.config.menu.size) ||
+                            FALLBACK_LAYOUT_CONFIG.menu.size,
+                        t = n.html.getAttribute("data-sidebar-size");
                     "hidden" !== t
                         ? "condensed" === t
                             ? n.changeMenuSize(
@@ -1155,47 +975,66 @@ class ThemeLayout {
         });
     }
     _adjustLayout() {
+        var e =
+            (this.config &&
+                this.config.menu &&
+                this.config.menu.size) ||
+            FALLBACK_LAYOUT_CONFIG.menu.size;
         window.innerWidth <= 1140
             ? this.changeMenuSize("hidden", !1)
-            : this.changeMenuSize(this.config.menu.size);
+            : this.changeMenuSize(e);
     }
     setSwitchFromConfig() {
-        sessionStorage.setItem(
-            "__DARKONE_CONFIG__",
-            JSON.stringify(this.config)
-        ),
-            document
-                .querySelectorAll(".settings-bar input[type=radio]")
-                .forEach(function (e) {
-                    e.checked = !1;
-                });
+        try {
+            sessionStorage.setItem(
+                "__DARKONE_CONFIG__",
+                JSON.stringify(this.config)
+            );
+        } catch (err) {
+            console.warn(
+                "No se pudo persistir la configuración del layout en sessionStorage.",
+                err
+            );
+        }
+        document
+            .querySelectorAll(".settings-bar input[type=radio]")
+            .forEach(function (e) {
+                e.checked = !1;
+            });
         var e,
             t,
             n,
-            o = this.config;
-        o &&
-            ((e = document.querySelector(
-                "input[type=radio][name=data-bs-theme][value=" + o.theme + "]"
-            )),
+            o,
+            i = this.config || {},
+            a = i.theme,
+            r = i.topbar && i.topbar.color,
+            s = i.menu && i.menu.size,
+            c = i.menu && i.menu.color;
+        a &&
+            (e = document.querySelector(
+                "input[type=radio][name=data-bs-theme][value=" + a + "]"
+            )) &&
+            (e.checked = !0);
+        r &&
             (t = document.querySelector(
                 "input[type=radio][name=data-topbar-color][value=" +
-                    o.topbar.color +
+                    r +
                     "]"
-            )),
+            )) &&
+            (t.checked = !0);
+        s &&
             (n = document.querySelector(
                 "input[type=radio][name=data-sidebar-size][value=" +
-                    o.menu.size +
+                    s +
                     "]"
-            )),
+            )) &&
+            (n.checked = !0);
+        c &&
             (o = document.querySelector(
                 "input[type=radio][name=data-sidebar-color][value=" +
-                    o.menu.color +
+                    c +
                     "]"
-            )),
-            e && (e.checked = !0),
-            t && (t.checked = !0),
-            n && (n.checked = !0),
-            o) &&
+            )) &&
             (o.checked = !0);
     }
     init() {
@@ -1207,4 +1046,32 @@ class ThemeLayout {
             this.setSwitchFromConfig();
     }
 }
-new ThemeLayout().init();
+const ensureThemeLayout = (e) => {
+    var t = window.__themeLayoutInstance;
+    if (t)
+        return (
+            e && e.syncConfig && (t.initConfig(), t._adjustLayout()),
+            t
+        );
+    var n = new ThemeLayout();
+    return n.init(), (window.__themeLayoutInstance = n), n;
+};
+let domReadyFired =
+        "complete" === document.readyState ||
+        "interactive" === document.readyState,
+    needsConfigSync = !!window.__layoutConfigReady;
+const bootThemeLayout = () => ensureThemeLayout();
+const syncThemeLayoutConfig = () => ensureThemeLayout({ syncConfig: !0 });
+const handleDomReady = () => {
+    domReadyFired = !0;
+    bootThemeLayout();
+    needsConfigSync && (syncThemeLayoutConfig(), (needsConfigSync = !1));
+};
+domReadyFired
+    ? handleDomReady()
+    : document.addEventListener("DOMContentLoaded", handleDomReady, {
+          once: !0,
+      });
+window.addEventListener("layout:config-ready", function () {
+    domReadyFired ? syncThemeLayoutConfig() : (needsConfigSync = !0);
+});
