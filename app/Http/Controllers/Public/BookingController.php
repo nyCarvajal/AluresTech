@@ -549,31 +549,6 @@ class BookingController extends Controller
 
     private function resolveLogoUrl(Peluqueria $peluqueria): string
     {
-        $candidates = [
-            $peluqueria->logo_url ?? null,
-            $peluqueria->logo ?? null,
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (! $candidate) {
-                continue;
-            }
-
-            if (filter_var($candidate, FILTER_VALIDATE_URL)) {
-                return $candidate;
-            }
-
-            if (Str::startsWith($candidate, ['/'])) {
-                return asset(ltrim($candidate, '/'));
-            }
-
-            if (Str::startsWith($candidate, ['storage/', 'images/'])) {
-                return asset($candidate);
-            }
-
-            return asset('storage/' . ltrim($candidate, '/'));
-        }
-
-        return asset('images/logoligth.png');
+        return $peluqueria->resolvedLogoUrl();
     }
 }
