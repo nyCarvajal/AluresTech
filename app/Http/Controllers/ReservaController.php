@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use App\Notifications\OneMsgTemplateNotification;
 use Illuminate\Support\Facades\Log;
+use App\Support\RoleLabelResolver;
 
 
 class ReservaController extends Controller
@@ -25,9 +26,16 @@ class ReservaController extends Controller
         public function calendar()
 {
     $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
-        
+
     $tipocitas    = Tipocita::all();
-    return view('reservas.calendar', compact('entrenadores', 'tipocitas'));
+    $labels = RoleLabelResolver::forStylist();
+
+    return view('reservas.calendar', [
+        'entrenadores' => $entrenadores,
+        'tipocitas' => $tipocitas,
+        'stylistLabelSingular' => $labels['singular'],
+        'stylistLabelPlural' => $labels['plural'],
+    ]);
 
 
 }
@@ -37,8 +45,8 @@ class ReservaController extends Controller
         $date = $request->input('date', Carbon::today()->toDateString());
         $prevDate = Carbon::parse($date)->subDay()->toDateString();
         $nextDate = Carbon::parse($date)->addDay()->toDateString();
-		 $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
-    
+                 $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
+
         $canchas = Cancha::all();
         $canchaIds = $canchas->pluck('id')->toArray();
 
@@ -53,7 +61,7 @@ class ReservaController extends Controller
 
         $reservas = Reserva::whereDate('fecha', $date)
             ->whereIn('cancha_id', $canchaIds)
-			->where('estado', '<>', 'Cancelada')
+                        ->where('estado', '<>', 'Cancelada')
             ->get();
 
         // Inicializar eventos
@@ -83,8 +91,14 @@ class ReservaController extends Controller
             }
         }
 
-        return view('reservas.horario', compact(
-            'canchas', 'timeslots', 'events', 'prevDate', 'nextDate', 'entrenadores'
+        $labels = RoleLabelResolver::forStylist();
+
+        return view('reservas.horario', array_merge(
+            compact('canchas', 'timeslots', 'events', 'prevDate', 'nextDate', 'entrenadores'),
+            [
+                'stylistLabelSingular' => $labels['singular'],
+                'stylistLabelPlural' => $labels['plural'],
+            ]
         ));
     }
 
@@ -448,16 +462,52 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
     /**
      * Remove the specified resource from storage.
      */
+    public function cancel(Request $request, Reserva $reserva)
+    {
+        [$wasAlreadyCancelled, $updatedReserva] = $this->cancelReservation($reserva);
+
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'already_cancelled' => $wasAlreadyCancelled,
+                'message' => 'Reserva cancelada correctamente.',
+                'reserva' => $updatedReserva,
+            ]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Reserva cancelada correctamente.');
+    }
+
     public function destroy(Request $request, Reserva $reserva)
     {
-        $wasAlreadyCancelled = $reserva->estado === 'Cancelada';
+        [$wasAlreadyCancelled, $updatedReserva] = $this->cancelReservation($reserva);
 
-        $reserva->estado = 'Cancelada';
-        $reserva->save();
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'already_cancelled' => $wasAlreadyCancelled,
+                'message' => 'Reserva cancelada correctamente.',
+                'reserva' => $updatedReserva,
+            ]);
+        }
+
+        return redirect()
+            ->route('reservas.horario')
+            ->with('success', 'Reserva cancelada correctamente.');
+    }
+
+    protected function cancelReservation(Reserva $reserva): array
+    {
+        $currentEstado = trim((string) $reserva->estado);
+        $wasAlreadyCancelled = strcasecmp($currentEstado, 'Cancelada') === 0;
 
         if (! $wasAlreadyCancelled) {
-            $cliente     = $reserva->cliente;
-            $templateId  = config('services.onemsg.templates.cancelacion');
+            $reserva->forceFill(['estado' => 'Cancelada'])->save();
+
+            $cliente    = $reserva->cliente;
+            $templateId = config('services.onemsg.templates.cancelacion');
 
             if ($cliente && $cliente->whatsapp && $templateId) {
                 $payload = [
@@ -473,15 +523,6 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
             }
         }
 
-        if ($request->expectsJson() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Reserva cancelada correctamente.',
-            ]);
-        }
-
-        return redirect()
-            ->route('reservas.horario')
-            ->with('success', 'Reserva cancelada correctamente.');
+        return [$wasAlreadyCancelled, $reserva->fresh()];
     }
 }

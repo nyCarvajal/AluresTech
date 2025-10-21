@@ -1,6 +1,11 @@
 @extends('layouts.vertical', ['subtitle' => 'Calendario de Reservas'])
 
 
+@php
+    $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+    $stylistLabelPlural = $stylistLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+@endphp
+
 @section('content')
 
   <div class="card">
@@ -8,7 +13,7 @@
       <h5 class="mb-0">Calendario de Clases y Reservas</h5>
       <div class="mt-2 mt-sm-0">
         <select id="entrenadorFilter" class="form-select">
-          <option value="">Todos los estilistas</option>
+          <option value="">Todos los {{ \Illuminate\Support\Str::lower($stylistLabelPlural) }}</option>
           @foreach($entrenadores as $e)
             <option value="{{ $e->id }}">{{ $e->nombre }}</option>
           @endforeach

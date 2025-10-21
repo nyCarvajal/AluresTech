@@ -2,19 +2,7 @@
 
 @section('content')
 
-@include('layouts.partials/page-title', ['title' => 'SmashsTech', 'subtitle' => 'Inicio'])
-
-<!doctype html>
-<html lang="es">
-<head>
-  <link href="{{ asset('vendor/darkone/css/app.css') }}" rel="stylesheet">
-</head>
-<body>
-  @yield('content')
-  <script src="{{ asset('vendor/darkone/js/app.js') }}"></script>
-</body>
-</html>
-
+@include('layouts.partials/page-title', ['title' => 'Dashboard', 'subtitle' => 'Inicio'])
 
 <div class="row">
     <!-- Card 1 -->

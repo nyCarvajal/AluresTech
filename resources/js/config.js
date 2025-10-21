@@ -24,8 +24,16 @@
   window.defaultConfig = JSON.parse(JSON.stringify(config));
 
   // 6) Si hay config previa en sessionStorage, la funde sobre el config actual
-  var stored = sessionStorage.getItem("__DARKONE_CONFIG__");
-  if (stored !== null) {
+  var stored = null;
+  try {
+    stored = sessionStorage.getItem("__DARKONE_CONFIG__");
+  } catch (err) {
+    console.warn(
+      "sessionStorage no está disponible; se omite la configuración persistida.",
+      err
+    );
+  }
+  if (stored) {
     try {
       var saved = JSON.parse(stored);
       // Fusiona saved sobre config manteniendo estructuras necesarias
@@ -60,5 +68,19 @@
     htmlEl.setAttribute("data-sidebar-size", "hidden");
   } else {
     htmlEl.setAttribute("data-sidebar-size", config.menu.size);
+  }
+
+  window.__layoutConfigReady = true;
+  try {
+    window.dispatchEvent(
+      new CustomEvent("layout:config-ready", { detail: config })
+    );
+  } catch (err) {
+    if (window.dispatchEvent && document.createEvent) {
+      var fallbackEvent = document.createEvent("Event");
+      fallbackEvent.initEvent("layout:config-ready", true, true);
+      fallbackEvent.detail = config;
+      window.dispatchEvent(fallbackEvent);
+    }
   }
 })();
