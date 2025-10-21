@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Support\RoleLabelResolver;
 
 class BookingController extends Controller
 {
@@ -33,6 +34,7 @@ class BookingController extends Controller
         $proximasReservas = collect();
 
         $captcha = $this->regenerateCaptcha($request, $peluqueria);
+        $stylistLabels = $this->stylistLabels($peluqueria);
 
         if ($cliente) {
             $proximasReservas = Reserva::where('cliente_id', $cliente->id)
@@ -51,6 +53,8 @@ class BookingController extends Controller
             'defaultDuration' => self::DEFAULT_DURATION,
             'peluqueriaLogo' => $this->resolveLogoUrl($peluqueria),
             'estilistas' => $estilistas,
+            'trainerLabelSingular' => $stylistLabels['singular'],
+            'trainerLabelPlural' => $stylistLabels['plural'],
         ]);
     }
 
@@ -188,6 +192,8 @@ class BookingController extends Controller
             ]);
         }
 
+        $stylistLabels = $this->stylistLabels($peluqueria);
+
         $validator = Validator::make($request->all(), [
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
@@ -196,15 +202,15 @@ class BookingController extends Controller
             'entrenador_id' => [
                 'required',
                 'integer',
-                function ($attribute, $value, $fail) use ($peluqueria) {
+                function ($attribute, $value, $fail) use ($peluqueria, $stylistLabels) {
                     if (! $this->stylistExists($peluqueria, (int) $value)) {
-                        $fail('El estilista seleccionado no es válido.');
+                        $fail('El ' . $stylistLabels['singular_lower'] . ' seleccionado no es válido.');
                     }
                 },
             ],
         ], [
             'tipocita_id.exists' => 'El tipo de cita seleccionado no es válido.',
-            'entrenador_id.required' => 'Selecciona el estilista que atenderá tu cita.',
+            'entrenador_id.required' => 'Selecciona a tu ' . $stylistLabels['singular_lower'] . ' que atenderá tu cita.',
         ]);
 
         if ($validator->fails()) {
@@ -336,16 +342,17 @@ class BookingController extends Controller
         $date = $request->query('date');
         $rawStylistId = $request->query('entrenador_id');
         $stylistId = $this->normalizeStylistId($rawStylistId);
+        $stylistLabels = $this->stylistLabels($peluqueria);
         if (! $date) {
             return response()->json(['error' => 'Debes indicar la fecha.'], 422);
         }
 
         if ($rawStylistId !== null && $rawStylistId !== '' && $stylistId === null) {
-            return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
+            return response()->json(['error' => 'El ' . $stylistLabels['singular_lower'] . ' seleccionado no es válido.'], 422);
         }
 
         if ($stylistId && ! $this->stylistExists($peluqueria, $stylistId)) {
-            return response()->json(['error' => 'El estilista seleccionado no es válido.'], 422);
+            return response()->json(['error' => 'El ' . $stylistLabels['singular_lower'] . ' seleccionado no es válido.'], 422);
         }
 
         try {
@@ -547,33 +554,20 @@ class BookingController extends Controller
         return 'public_captcha_' . $peluqueria->id;
     }
 
+    private function stylistLabels(Peluqueria $peluqueria): array
+    {
+        $labels = RoleLabelResolver::forStylist($peluqueria);
+
+        return [
+            'singular' => $labels['singular'],
+            'plural' => $labels['plural'],
+            'singular_lower' => Str::lower($labels['singular']),
+            'plural_lower' => Str::lower($labels['plural']),
+        ];
+    }
+
     private function resolveLogoUrl(Peluqueria $peluqueria): string
     {
-        $candidates = [
-            $peluqueria->logo_url ?? null,
-            $peluqueria->logo ?? null,
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (! $candidate) {
-                continue;
-            }
-
-            if (filter_var($candidate, FILTER_VALIDATE_URL)) {
-                return $candidate;
-            }
-
-            if (Str::startsWith($candidate, ['/'])) {
-                return asset(ltrim($candidate, '/'));
-            }
-
-            if (Str::startsWith($candidate, ['storage/', 'images/'])) {
-                return asset($candidate);
-            }
-
-            return asset('storage/' . ltrim($candidate, '/'));
-        }
-
-        return asset('images/logoligth.png');
+        return $peluqueria->resolvedLogoUrl();
     }
 }
