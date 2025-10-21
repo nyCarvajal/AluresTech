@@ -378,18 +378,10 @@ public function update(Request $request, Reserva $reserva)
             'start'         => 'required|date',
             'duration'      => 'integer|min:1',
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
-            'cancha_id'     => [
-                Rule::requiredIf(fn () => in_array($request->input('type'), ['Reserva','Clase'])
-                    && $request->input('estado') !== 'Cancelada'
-                    && $reserva->cancha_id),
-                'nullable',
-                'exists:canchas,id',
-            ],
-            'cliente_id'    => 'required_if:type,Reserva,Clase|exists:clientes,id',
-            'entrenador_id' => 'required_if:type,Clase|nullable',
-            'responsable_id'=> 'required_if:type,Torneo|exists:clientes,id',
-            'canchas'       => 'required_if:type,Torneo|array',
-            'canchas.*'     => 'exists:canchas,id',
+            
+            'cliente_id'    => 'integer|exists:clientes,id',
+            'entrenador_id' => 'intreger|nullable',
+            
         ]);
     
 	 $newEstado = $data['estado'];
@@ -416,25 +408,9 @@ public function update(Request $request, Reserva $reserva)
         }
 	 
 	
- 
-if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) {
-    $clienteId = $data['cliente_id'];
+
+    
    
-
-    if ($newEstado === 'Cancelada') {
-        if ($memb) {
-            $memb->decrement($campo);
-        }
-
-    }
-    elseif ($newEstado === 'Confirmada') {
-        if ($memb) {
-            $memb->increment($campo);
-        }
-        Log::info("Reserva #{$reserva->id} CONFIRMADA: -" .
-                  ($memb ? "1 en {$campo}" : "(sin membresía)") .
-                  " para cliente {$clienteId}.");
-    }
 }
 
 // 2) Actualizar los campos de la reserva
@@ -443,15 +419,11 @@ if ($oldEstado !== $newEstado && in_array($data['type'], ['Reserva', 'Clase'])) 
         'fecha'         => $data['start'],
         'duracion'      => $data['duration'] ?? $reserva->duration,
         'estado'        => $data['estado'],
-        'cancha_id'     => $data['cancha_id'] ?? $reserva->cancha_id,
-        'responsable_id'=> $data['responsable_id'] ?? $reserva->responsable_id,
-        'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
+       'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
         'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
     ])->save();
 
-    if ($data['type'] === 'Torneo') {
-        $reserva->canchas()->sync($data['canchas']);
-    }
+   
 
     return redirect()
            ->route('reservas.calendar')
