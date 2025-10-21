@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+@php
+    $trainerLabelSingular = $trainerLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+    $trainerLabelPlural = $trainerLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+@endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda tu cita - {{ $peluqueria->nombre }}</title>
@@ -248,9 +252,9 @@
                             @csrf
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label" for="appointment-stylist">Estilista</label>
+                                    <label class="form-label" for="appointment-stylist">{{ $trainerLabelSingular }}</label>
                                     <select class="form-select @if($appointmentErrors?->has('entrenador_id')) is-invalid @endif" id="appointment-stylist" name="entrenador_id" @if(($estilistas ?? collect())->isEmpty()) disabled @endif required>
-                                        <option value="">Selecciona un estilista</option>
+                                        <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($trainerLabelSingular) }}</option>
                                         @foreach($estilistas ?? [] as $estilista)
                                             @php
                                                 $estilistaId = $estilista->id;
@@ -263,7 +267,7 @@
                                         @endforeach
                                     </select>
                                     @if(($estilistas ?? collect())->isEmpty())
-                                        <div class="form-text text-danger">No hay estilistas disponibles por ahora.</div>
+                                        <div class="form-text text-danger">No hay {{ \Illuminate\Support\Str::lower($trainerLabelPlural) }} disponibles por ahora.</div>
                                     @endif
                                     @if($appointmentErrors?->has('entrenador_id'))
                                         <div class="invalid-feedback">{{ $appointmentErrors->first('entrenador_id') }}</div>
@@ -349,6 +353,8 @@
         const stylistSelect = document.getElementById('appointment-stylist');
         const storedTime = @json(old('hora'));
         const availabilityUrl = @json(route('public.booking.availability', $peluqueria));
+        const stylistLabelSingular = @json($trainerLabelSingular);
+        const stylistLabelPlural = @json($trainerLabelPlural);
 
         const setTimePlaceholder = (message) => {
             if (!timeSelect) {
@@ -372,7 +378,7 @@
             }
 
             if (stylistSelect && !stylistValue) {
-                setTimePlaceholder('Selecciona un estilista');
+                setTimePlaceholder(`Selecciona a tu ${stylistLabelSingular}`);
                 return;
             }
 
