@@ -1,4 +1,9 @@
 {{-- resources/views/users/index.blade.php --}}
+@php
+    $trainerLabelSingular = $trainerLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+    $trainerLabelPlural = $trainerLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+@endphp
+
 @extends('layouts.vertical', ['subtitle' => 'Ver Usuarios'])
 
 
@@ -14,7 +19,7 @@
     <h1>Usuarios</h1>
     <div>
       <a href="{{ route('users.trainers.create') }}" class="btn btn-primary me-2">
-        + Nuevo Estilista
+        + Nuevo {{ $trainerLabelSingular }}
       </a>
       @if(auth()->user()->role == 18)
         <a href="{{ route('users.admins.create') }}" class="btn btn-success">
@@ -50,7 +55,7 @@
           <td>
 		  
             @if($user->role == 11)
-              Estilista
+              {{ $trainerLabelSingular }}
             @elseif($user->role == 18)
               Administrador
             @else

@@ -65,13 +65,18 @@
 <!-- Cita & Clase: clientes -->
 
  <!-- === CAMPOS PARA “Clase” === -->
-         <!-- Estilista -->
+@php
+    $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+    $stylistLabelPlural = $stylistLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+@endphp
+
+         <!-- {{ $stylistLabelSingular }} -->
          <div id="fieldEntrenador" class="mb-3 d-none">
-           <label for="entrenador" class="form-label">Estilista</label>
+           <label for="entrenador" class="form-label">{{ $stylistLabelSingular }}</label>
             <select id="entrenador"
                     name="entrenador_id"
                     class="form-select">
-                <option value="">Selecciona estilista</option>
+                <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($stylistLabelSingular) }}</option>
                 @foreach($entrenadores as $u)
                   <option value="{{ $u->id }}">{{ $u->nombre }}</option>
                 @endforeach
@@ -110,19 +115,7 @@
 
 			
           </div>
-          <div class="modal-footer d-flex justify-content-between">
-            <div class="me-auto">
-              <button type="button"
-                      class="btn btn-outline-danger border border-danger border-2 fw-semibold"
-                      id="reservationCancel"
-                      data-action="cancel"
-                      data-editing-only="true"
-                      data-label-reserva="Cancelar reserva"
-                      data-label-clase="Cancelar clase"
-                      disabled>
-                <span data-cancel-label>Cancelar reserva</span>
-              </button>
-            </div>
+          <div class="modal-footer d-flex justify-content-end">
             <div class="d-flex gap-2">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                 Cerrar
