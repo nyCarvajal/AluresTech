@@ -64,21 +64,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const fechaInput = document.getElementById('reservaFecha');
   const horaSelect  = document.getElementById('reservaHora');
   const eventIdInput = form.querySelector('#eventId');
-  const cancelBtn    = form.querySelector('#reservationCancel');
-  const cancelBtnDefaultText = cancelBtn ? cancelBtn.innerHTML : '';
+  const estadoSelect = form.querySelector('#reservaEstado');
 
-  const toggleCancelButton = (show = false) => {
-    if (!cancelBtn) return;
-    cancelBtn.classList.toggle('d-none', !show);
-    cancelBtn.disabled = false;
-    cancelBtn.innerHTML = cancelBtnDefaultText;
+  const TYPE_MAP = {
+    Reserva: { url: '/reservas' },
+    Clase:   { url: '/clases' },
+    Torneo:  { url: '/torneos' },
   };
 
-  toggleCancelButton(false);
   modalEl.addEventListener('hidden.bs.modal', () => {
-    toggleCancelButton(false);
     if (eventIdInput) {
       eventIdInput.value = '';
+    }
+    if (methodIn) {
+      methodIn.value = 'POST';
+    }
+    if (form && TYPE_MAP?.Reserva?.url) {
+      form.setAttribute('action', TYPE_MAP.Reserva.url);
     }
   });
 
@@ -94,9 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const responsableInput  = form.querySelector('#responsable');
 
   // Listener para cambio de tipo en el select del modal
-  typeSelect.addEventListener('change', e => {
-    switchFields(e.target.value);
-  });
+  if (typeSelect) {
+    typeSelect.addEventListener('change', e => {
+      const newType = e.target.value;
+      switchFields(newType);
+    });
+  } else {
+    console.warn('⚠️  No se encontró el selector de tipo de evento en el formulario de reservas.');
+  }
   
   (() => {
   const fecha  = document.getElementById('reservaFecha');
@@ -143,15 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  // Mapeo de tipos a URL base
-  const TYPE_MAP = {
-    Reserva: { url: '/reservas' },
-    Clase:   { 
-	
-	url: '/clases'   },
-    Torneo:  { url: '/torneos'  },
-  };
-  
    // Inicializar TomSelect en el select de “Cliente”
   const clientesSelect = document.querySelector('#clientes');
   if (clientesSelect) {
@@ -220,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      toggleCancelButton(false);
       typeSelect.value     = 'Reserva';
       switchFields('Reserva');
       methodIn.value       = 'POST';
@@ -249,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = '';
       }
-      toggleCancelButton(false);
       fechaInput.value = info.dateStr
       // opcional: abrir tu modal de reserva aquí
       modal.show()
@@ -263,7 +259,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (eventIdInput) {
         eventIdInput.value = ev.id;
       }
-      toggleCancelButton(true);
   // extraemos horas y minutos en local:
   
  
@@ -281,6 +276,13 @@ form.action                          = '/reservas/' + ev.id;
                  // 1) Rellenar el input de fecha (YYYY-MM-DD)
   //    ev.start.toISOString() === "2025-06-12T14:30:00.000Z"
   fechaInput.value = ev.start.toISOString().split('T')[0];
+
+      if (estadoSelect) {
+        const estadoActual = props.status || props.estado || ev.extendedProps?.estado;
+        if (estadoActual) {
+          estadoSelect.value = estadoActual;
+        }
+      }
  
          
 
@@ -470,42 +472,6 @@ form.action                          = '/reservas/' + ev.id;
   });
 
 
-
-
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', async () => {
-      const reservaId = eventIdInput ? eventIdInput.value : '';
-      if (!reservaId) {
-        return;
-      }
-
-      const confirmCancel = window.confirm('¿Deseas cancelar esta cita?');
-      if (!confirmCancel) {
-        return;
-      }
-
-      cancelBtn.disabled = true;
-      cancelBtn.innerHTML = 'Cancelando…';
-
-      try {
-        await axios.delete(`/reservas/${reservaId}`);
-        const calendarEvent = calendar.getEventById(reservaId);
-        if (calendarEvent) {
-          calendarEvent.remove();
-        }
-        toggleCancelButton(false);
-        modal.hide();
-        window.alert('La cita ha sido cancelada correctamente.');
-      } catch (error) {
-        console.error('Error al cancelar la cita', error);
-        window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
-        toggleCancelButton(true);
-      } finally {
-        cancelBtn.disabled = false;
-        cancelBtn.innerHTML = cancelBtnDefaultText;
-      }
-    });
-  }
 
   calendar.render();
 

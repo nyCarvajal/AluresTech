@@ -19,10 +19,13 @@
     </div>
 
     @if ($items->count())
+        @php
+            $startIndex = $items->firstItem() ?? 1;
+        @endphp
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Nombre</th>
                     <th>Valor</th>
                     <th>Tipo</th>
@@ -35,7 +38,7 @@
             <tbody>
                 @foreach ($items as $item)
                     <tr>
-                        <td>{{ $item->id }}</td>
+                        <td>{{ $startIndex + $loop->index }}</td>
                         <td>{{ $item->nombre }}</td>
                         <td>{{ number_format($item->valor, 2, ',', '.') }}</td>
                         <td>{{ $item->tipo == 1 ? 'Producto' : 'Servicio' }}</td>
