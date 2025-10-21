@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peluqueria;
+use App\Support\RoleLabelResolver;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -10,15 +11,13 @@ use Illuminate\Validation\ValidationException;
 
 class PeluqueriaController extends Controller
 {
-   
-   // app/Http/Controllers/PeluqueriaController.php
+    public function editOwn()
+    {
+        $peluqueria = auth()->user()->peluqueria;
 
-public function editOwn()
-{
-    // Asumo que tu modelo User tiene relación peluqueria()
-   $peluqueria=auth()->user()->peluqueria;
-    return view('peluquerias.edit', compact('peluqueria'));
-}
+        if ($peluqueria) {
+            $peluqueria->load('roleLabels');
+        }
 
 public function updateOwn(Request $request)
 {
@@ -44,9 +43,19 @@ public function updateOwn(Request $request)
         ->route('peluquerias.show', $peluqueria->id)
         ->with('success', 'Datos de tu peluqueria actualizados.');
 }
+        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
 
- public function update(Request $request, Peluqueria $peluqueria)
+        return view('peluquerias.edit', [
+            'peluqueria' => $peluqueria,
+            'stylistLabelSingular' => $stylistLabels['singular'],
+            'stylistLabelPlural' => $stylistLabels['plural'],
+        ]);
+    }
+
+    public function updateOwn(Request $request)
     {
+        $peluqueria = auth()->user()->peluqueria;
+
         $data = $request->validate([
             'nombre'           => 'required|string',
 
@@ -81,6 +90,7 @@ public function updateOwn(Request $request)
     public function destroy(Peluqueria $peluqueria)
     {
         $peluqueria->delete();
+
         return back();
     }
 
@@ -209,3 +219,29 @@ public function updateOwn(Request $request)
     }
 }
 
+    protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
+    {
+        $singular = trim((string) ($singular ?? ''));
+        $plural = trim((string) ($plural ?? ''));
+
+        if ($singular === '' && $plural === '') {
+            $peluqueria->roleLabels()
+                ->where('role', Peluqueria::ROLE_STYLIST)
+                ->delete();
+
+            return;
+        }
+
+        $peluqueria->roleLabels()->updateOrCreate(
+            ['role' => Peluqueria::ROLE_STYLIST],
+            [
+                'singular' => $singular === ''
+                    ? Peluqueria::defaultRoleLabel(Peluqueria::ROLE_STYLIST)
+                    : $singular,
+                'plural' => $plural === ''
+                    ? Peluqueria::defaultRoleLabel(Peluqueria::ROLE_STYLIST, true)
+                    : $plural,
+            ]
+        );
+    }
+}
