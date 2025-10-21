@@ -13,7 +13,7 @@ class PeluqueriaController extends Controller
 {
     public function editOwn()
     {
-        $peluqueria = auth()->user()->peluqueria_id;
+        $peluqueria = auth()->user()->peluqueria;
         $formAction = route('peluquerias.update');
 
         return view('peluquerias.edit', compact('peluqueria', 'formAction'));
@@ -21,7 +21,7 @@ class PeluqueriaController extends Controller
 
     public function updateOwn(Request $request)
     {
-        $peluqueria = auth()->user()->peluqueria_id;
+        $peluqueria = auth()->user()->peluqueria;
 
         $data = $request->validate([
             'nombre'                  => 'required|string',
@@ -50,7 +50,7 @@ class PeluqueriaController extends Controller
 
     public function show()
     {
-        $peluqueria = auth()->user()->peluqueria_id;
+        $peluqueria = auth()->user()->peluqueria;
         return view('peluquerias.show', compact('peluqueria'));
     }
 
