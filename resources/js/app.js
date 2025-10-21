@@ -65,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const fechaInput = document.getElementById('reservaFecha');
   const horaSelect  = document.getElementById('reservaHora');
   const eventIdInput = form.querySelector('#eventId');
-  const cancelBtn    = form.querySelector('#reservationCancel');
+  const CANCEL_BUTTON_SELECTOR = '#reservationCancel';
+  const cancelBtn    = form.querySelector(CANCEL_BUTTON_SELECTOR);
   const cancelBtnLabel = cancelBtn?.querySelector('[data-cancel-label]') ?? null;
   const cancelBtnDefaultText = cancelBtnLabel
     ? cancelBtnLabel.textContent.trim()
@@ -99,12 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
     Torneo:  { url: '/torneos' },
   };
 
-  const resolveReservaId = () => {
+  const resolveReservaId = (triggerEl = cancelBtn) => {
     if (eventIdInput && eventIdInput.value && eventIdInput.value.trim()) {
       return eventIdInput.value.trim();
     }
 
-    const datasetId = cancelBtn?.dataset?.reservaId;
+    const datasetId = triggerEl?.dataset?.reservaId ?? cancelBtn?.dataset?.reservaId;
     if (datasetId && datasetId.trim()) {
       return datasetId.trim();
     }
@@ -118,27 +119,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return '';
   };
 
-  const setCancelButtonAvailability = (reservaId = '') => {
-    if (!cancelBtn) return;
+  const setCancelButtonAvailability = (reservaId = '', triggerEl = cancelBtn) => {
+    const button = triggerEl ?? cancelBtn;
+    if (!button) return;
     const id = String(reservaId ?? '').trim();
     const isEditing = id.length > 0;
-    const editingOnly = cancelBtn.dataset.editingOnly === 'true';
+    const editingOnly = button.dataset.editingOnly === 'true';
 
-    cancelBtn.dataset.reservaId = id;
+    button.dataset.reservaId = id;
 
     if (isEditing) {
-      cancelBtn.disabled = false;
-      cancelBtn.removeAttribute('disabled');
-      cancelBtn.removeAttribute('aria-disabled');
-      cancelBtn.classList.remove('opacity-50', 'pe-none');
+      button.disabled = false;
+      button.removeAttribute('disabled');
+      button.removeAttribute('aria-disabled');
+      button.classList.remove('opacity-50', 'pe-none');
     } else {
-      cancelBtn.disabled = true;
-      cancelBtn.setAttribute('aria-disabled', 'true');
-      cancelBtn.classList.add('opacity-50', 'pe-none');
+      button.disabled = true;
+      button.setAttribute('aria-disabled', 'true');
+      button.classList.add('opacity-50', 'pe-none');
     }
 
     if (editingOnly) {
-      cancelBtn.classList.toggle('d-none', !isEditing);
+      button.classList.toggle('d-none', !isEditing);
     }
 
     refreshCancelButtonTextForType(typeSelect?.value);
@@ -539,12 +541,17 @@ form.action                          = '/reservas/' + ev.id;
       triggerButton = event.relatedTarget || null;
     });
 
-  if (cancelBtn) {
-    const handleReservationCancel = async (event) => {
+  if (cancelBtn && form) {
+    const handleReservationCancel = async (event, triggerEl = null) => {
+      const button = triggerEl ?? event?.currentTarget ?? cancelBtn;
+      if (!button) {
+        return;
+      }
+
       event.preventDefault();
       event.stopPropagation();
 
-      const reservaId = resolveReservaId();
+      const reservaId = resolveReservaId(button);
       if (!reservaId) {
         window.alert('Selecciona una reserva guardada antes de intentar cancelarla.');
         return;
@@ -555,10 +562,10 @@ form.action                          = '/reservas/' + ev.id;
         return;
       }
 
-      cancelBtn.disabled = true;
-      cancelBtn.setAttribute('disabled', 'disabled');
-      cancelBtn.setAttribute('aria-disabled', 'true');
-      cancelBtn.classList.add('pe-none');
+      button.disabled = true;
+      button.setAttribute('disabled', 'disabled');
+      button.setAttribute('aria-disabled', 'true');
+      button.classList.add('pe-none');
       setCancelButtonText('Cancelando…');
       const previousEstado = estadoSelect ? estadoSelect.value : null;
       if (estadoSelect) {
@@ -594,24 +601,41 @@ form.action                          = '/reservas/' + ev.id;
         if (eventIdInput) {
           eventIdInput.value = '';
         }
-        setCancelButtonAvailability('');
+        setCancelButtonAvailability('', button);
       } catch (error) {
         console.error('Error al cancelar la cita', error);
         window.alert('No se pudo cancelar la cita. Inténtalo nuevamente.');
         if (estadoSelect && previousEstado !== null) {
           estadoSelect.value = previousEstado;
         }
-        setCancelButtonAvailability(reservaId);
+        setCancelButtonAvailability(reservaId, button);
       } finally {
         refreshCancelButtonTextForType(typeSelect?.value);
       }
     };
 
-    cancelBtn.addEventListener('click', handleReservationCancel);
-    cancelBtn.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        handleReservationCancel(event);
+    const isActivationKey = (event) => event.key === 'Enter' || event.key === ' ';
+
+    form.addEventListener('click', (event) => {
+      const trigger = event.target.closest(CANCEL_BUTTON_SELECTOR);
+      if (!trigger || trigger.matches('[aria-disabled="true"], :disabled')) {
+        return;
       }
+
+      handleReservationCancel(event, trigger);
+    });
+
+    form.addEventListener('keydown', (event) => {
+      if (!isActivationKey(event)) {
+        return;
+      }
+
+      const trigger = event.target.closest(CANCEL_BUTTON_SELECTOR);
+      if (!trigger || trigger.matches('[aria-disabled="true"], :disabled')) {
+        return;
+      }
+
+      handleReservationCancel(event, trigger);
     });
   }
 
