@@ -540,8 +540,11 @@ form.action                          = '/reservas/' + ev.id;
     });
 
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', async () => {
-      const reservaId = cancelBtn.dataset.reservaId || (eventIdInput ? eventIdInput.value : '');
+    const handleReservationCancel = async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const reservaId = resolveReservaId();
       if (!reservaId) {
         window.alert('Selecciona una reserva guardada antes de intentar cancelarla.');
         return;
@@ -601,6 +604,13 @@ form.action                          = '/reservas/' + ev.id;
         setCancelButtonAvailability(reservaId);
       } finally {
         refreshCancelButtonTextForType(typeSelect?.value);
+      }
+    };
+
+    cancelBtn.addEventListener('click', handleReservationCancel);
+    cancelBtn.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        handleReservationCancel(event);
       }
     });
   }
