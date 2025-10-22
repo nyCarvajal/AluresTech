@@ -17,10 +17,6 @@ class RoleLabelResolver
         $peluqueria = $peluqueria ?: optional(Auth::user())->peluqueria;
 
         if ($peluqueria) {
-            if (! $peluqueria->relationLoaded('roleLabels')) {
-                $peluqueria->load('roleLabels');
-            }
-
             return [
                 'singular' => $peluqueria->roleLabel(Peluqueria::ROLE_STYLIST),
                 'plural' => $peluqueria->roleLabel(Peluqueria::ROLE_STYLIST, true),
