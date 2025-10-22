@@ -86,23 +86,49 @@ const setupSidebarToggleFallback = () => {
     enabled: htmlEl.classList.contains('sidebar-enable'),
   });
 
+  let lastKnownNonHiddenSize = readSidebarState().size;
+  if (lastKnownNonHiddenSize === 'hidden') {
+    lastKnownNonHiddenSize = resolveDefaultSidebarSize();
+  }
+
+  const rememberCurrentSidebarSize = () => {
+    const currentSize = htmlEl.getAttribute('data-sidebar-size');
+    if (currentSize && currentSize !== 'hidden') {
+      lastKnownNonHiddenSize = currentSize;
+    }
+  };
+
+  const isMobileView = () => window.innerWidth <= 1140;
+
   const performFallbackToggle = (button) => {
     const currentState = readSidebarState();
 
-    if (currentState.size === 'hidden') {
-      const sidebarEnabled = htmlEl.classList.toggle('sidebar-enable');
-      if (sidebarEnabled) {
+    if (currentState.size !== 'hidden') {
+      rememberCurrentSidebarSize();
+    }
+
+    if (isMobileView()) {
+      const shouldOpen = !htmlEl.classList.contains('sidebar-enable');
+      if (shouldOpen) {
+        htmlEl.classList.add('sidebar-enable');
         ensureFallbackBackdrop();
       } else {
+        htmlEl.classList.remove('sidebar-enable');
         removeFallbackBackdrop();
       }
+      htmlEl.setAttribute('data-sidebar-size', 'hidden');
     } else {
-      const nextSize =
-        currentState.size === 'condensed'
-          ? resolveDefaultSidebarSize()
-          : 'condensed';
-      htmlEl.setAttribute('data-sidebar-size', nextSize);
-      htmlEl.classList.toggle('sidebar-enable');
+      const isHidden = currentState.size === 'hidden';
+      if (isHidden) {
+        const targetSize = lastKnownNonHiddenSize || resolveDefaultSidebarSize();
+        htmlEl.setAttribute('data-sidebar-size', targetSize);
+        htmlEl.classList.add('sidebar-enable');
+      } else {
+        htmlEl.setAttribute('data-sidebar-size', 'hidden');
+        htmlEl.classList.remove('sidebar-enable');
+        rememberCurrentSidebarSize();
+      }
+      removeFallbackBackdrop();
     }
 
     if (!button.dataset.fallbackReported) {
@@ -112,6 +138,13 @@ const setupSidebarToggleFallback = () => {
       button.dataset.fallbackReported = '1';
     }
   };
+
+  window.addEventListener('layout:config-ready', (event) => {
+    const configuredSize = event?.detail?.menu?.size;
+    if (configuredSize && configuredSize !== 'hidden') {
+      lastKnownNonHiddenSize = configuredSize;
+    }
+  });
 
   document.querySelectorAll('.button-toggle-menu').forEach((button) => {
     if (button.dataset.fallbackToggleBound === '1') {
@@ -990,7 +1023,20 @@ class ThemeLayout {
     constructor() {
         (this.html = document.getElementsByTagName("html")[0]),
             (this.config = this._buildSafeConfig(window.config)),
-            (this.defaultConfig = this._buildSafeConfig(window.defaultConfig));
+            (this.defaultConfig = this._buildSafeConfig(window.defaultConfig)),
+            (this._sidebarBackdrop = null),
+            (this._lastNonHiddenMenuSize =
+                this.html.getAttribute("data-sidebar-size") ||
+                (this.config &&
+                    this.config.menu &&
+                    this.config.menu.size) ||
+                FALLBACK_LAYOUT_CONFIG.menu.size),
+            "hidden" === this._lastNonHiddenMenuSize &&
+                (this._lastNonHiddenMenuSize =
+                    (this.config &&
+                        this.config.menu &&
+                        this.config.menu.size) ||
+                    FALLBACK_LAYOUT_CONFIG.menu.size);
     }
     _cloneConfig(e) {
         if (!e || "object" != typeof e) return {};
@@ -1097,6 +1143,7 @@ class ThemeLayout {
     changeMenuSize(e, t = !0) {
         (this.config.menu = this.config.menu || {}),
             this.html.setAttribute("data-sidebar-size", e),
+            "hidden" !== e && (this._lastNonHiddenMenuSize = e),
             t &&
                 ((this.config.menu.size =
                     e || this.config.menu.size || FALLBACK_LAYOUT_CONFIG.menu.size),
@@ -1170,21 +1217,36 @@ class ThemeLayout {
         if ((e = document.querySelector(".button-toggle-menu"))) {
             if ("1" !== e.dataset.themeLayoutBound) {
                 e.addEventListener("click", function () {
-                    var e =
+                    var t =
+                            n.html.getAttribute("data-sidebar-size") ||
+                            n._lastNonHiddenMenuSize ||
                             (n.config &&
                                 n.config.menu &&
                                 n.config.menu.size) ||
                             FALLBACK_LAYOUT_CONFIG.menu.size,
-                        t = n.html.getAttribute("data-sidebar-size");
-                    "hidden" !== t
-                        ? "condensed" === t
-                            ? n.changeMenuSize(
-                                  "condensed" == e ? "default" : e,
-                                  !1
-                              )
-                            : n.changeMenuSize("condensed", !1)
-                        : n.showBackdrop(),
-                        n.html.classList.toggle("sidebar-enable"),
+                        o =
+                            n._lastNonHiddenMenuSize ||
+                            (n.config &&
+                                n.config.menu &&
+                                n.config.menu.size) ||
+                            FALLBACK_LAYOUT_CONFIG.menu.size,
+                        i = window.innerWidth <= 1140;
+                    i
+                        ? (n.changeMenuSize("hidden", !1),
+                          n.html.classList.contains("sidebar-enable")
+                              ? (n.html.classList.remove("sidebar-enable"),
+                                n.removeBackdrop())
+                              : (n.html.classList.add("sidebar-enable"),
+                                n.showBackdrop()))
+                        : "hidden" === t
+                        ? (n.changeMenuSize(o, !1),
+                          n.html.classList.add("sidebar-enable"),
+                          n.removeBackdrop())
+                        : ((n._lastNonHiddenMenuSize =
+                              "hidden" !== t ? t : n._lastNonHiddenMenuSize),
+                          n.changeMenuSize("hidden", !1),
+                          n.html.classList.remove("sidebar-enable"),
+                          n.removeBackdrop()),
                         recordLayoutDiagnostics({ toggleBound: !0 });
                 });
                 e.dataset.themeLayoutBound = "1";
@@ -1193,6 +1255,7 @@ class ThemeLayout {
         }
     }
     showBackdrop() {
+        if (this._sidebarBackdrop) return this._sidebarBackdrop;
         let t = document.createElement("div"),
             n =
                 ((t.classList = "offcanvas-backdrop fade show"),
@@ -1201,12 +1264,24 @@ class ThemeLayout {
                 1040 < window.innerWidth &&
                     (document.body.style.paddingRight = "15px"),
                 this);
-        t.addEventListener("click", function (e) {
-            n.html.classList.remove("sidebar-enable"),
-                document.body.removeChild(t),
-                (document.body.style.overflow = null),
-                (document.body.style.paddingRight = null);
-        });
+        return (
+            t.addEventListener("click", function () {
+                n.html.classList.remove("sidebar-enable"),
+                    n.changeMenuSize("hidden", !1),
+                    n.removeBackdrop();
+            }),
+            (this._sidebarBackdrop = t)
+        );
+    }
+    removeBackdrop() {
+        this._sidebarBackdrop &&
+            (this._sidebarBackdrop.parentNode &&
+                this._sidebarBackdrop.parentNode.removeChild(
+                    this._sidebarBackdrop
+                ),
+            (this._sidebarBackdrop = null),
+            (document.body.style.overflow = null),
+            (document.body.style.paddingRight = null));
     }
     initWindowSize() {
         var t = this;
