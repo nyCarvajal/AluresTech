@@ -16,6 +16,7 @@ class Peluqueria extends Model
         'nombre', 'pos', 'cuentaCobro', 'electronica',
         'terminos', 'color', 'menu_color', 'topbar_color', 'msj_recordatorio', 'msj_bienvenida', 'msj_finalizado', 'msj_reserva_confirmada',
         'nit', 'direccion', 'municipio', 'db', 'slug', 'logo', 'logo_url',
+        'trainer_label_singular', 'trainer_label_plural',
     ];
 
     protected static array $defaultRoleLabels = [
@@ -63,12 +64,25 @@ class Peluqueria extends Model
     {
         $form = $plural ? 'plural' : 'singular';
 
+        if ($role === self::ROLE_STYLIST) {
+            $column = $plural ? 'trainer_label_plural' : 'trainer_label_singular';
+            $value = trim((string) ($this->{$column} ?? ''));
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
         $label = $this->relationLoaded('roleLabels')
             ? $this->roleLabels->firstWhere('role', $role)
             : $this->roleLabels()->where('role', $role)->first();
 
-        if ($label && ! empty($label->{$form})) {
-            return $label->{$form};
+        if ($label) {
+            $labelValue = trim((string) $label->{$form});
+
+            if ($labelValue !== '') {
+                return $labelValue;
+            }
         }
 
         return static::defaultRoleLabel($role, $plural);
