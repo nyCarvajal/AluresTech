@@ -6,10 +6,15 @@ use App\Models\Peluqueria;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class PeluqueriaController extends Controller
 {
+    private ?bool $hasLogoUrlColumn = null;
+
     public function editOwn()
     {
         $peluqueria = auth()->user()->peluqueria;
@@ -85,13 +90,26 @@ class PeluqueriaController extends Controller
         $data['menu_color'] = $data['menu_color'] ?? null;
         $data['topbar_color'] = $data['topbar_color'] ?? null;
 
+        $hasLogoUrlColumn = $this->peluqueriasHasLogoUrlColumn();
         $data['trainer_label_singular'] = $this->sanitizeRoleLabel($request->input('trainer_label_singular'));
         $data['trainer_label_plural'] = $this->sanitizeRoleLabel($request->input('trainer_label_plural'));
 
         if ($request->hasFile('logo')) {
-            $data['logo'] = $this->uploadLogo($request->file('logo'));
+            $upload = $this->uploadLogo($request->file('logo'));
+
+            $data['logo'] = $upload['logo'];
+
+            if ($hasLogoUrlColumn && array_key_exists('logo_url', $upload)) {
+                $data['logo_url'] = $upload['logo_url'];
+            } elseif (!empty($upload['logo_url']) && filter_var($upload['logo_url'], FILTER_VALIDATE_URL)) {
+                $data['logo'] = $upload['logo_url'];
+            }
         } else {
             unset($data['logo']);
+
+            if ($hasLogoUrlColumn) {
+                unset($data['logo_url']);
+            }
         }
 
         return $data;
@@ -128,34 +146,47 @@ class PeluqueriaController extends Controller
                     $secureUrl = $uploadedFile->getSecureUrl();
                 }
 
-                if (is_string($secureUrl) && $secureUrl !== '') {
-                    return $secureUrl;
-                }
-
                 $publicId = method_exists($uploadedFile, 'getPublicId')
                     ? $uploadedFile->getPublicId()
                     : null;
 
-                if (is_string($publicId) && $publicId !== '') {
-                    return $publicId;
-                }
+                $resultUrl = null;
 
                 if (method_exists($uploadedFile, 'getResult')) {
                     $result = $uploadedFile->getResult();
 
                     if (is_array($result)) {
-                        if (!empty($result['secure_url'])) {
-                            return $result['secure_url'];
+                        if (! $secureUrl && ! empty($result['secure_url'])) {
+                            $secureUrl = $result['secure_url'];
                         }
 
-                        if (!empty($result['public_id'])) {
-                            return $result['public_id'];
+                        if (! $publicId && ! empty($result['public_id'])) {
+                            $publicId = $result['public_id'];
                         }
 
-                        if (!empty($result['url'])) {
-                            return $result['url'];
+                        if (! empty($result['url'])) {
+                            $resultUrl = $result['url'];
                         }
                     }
+                }
+
+                if (! $secureUrl && $resultUrl && filter_var($resultUrl, FILTER_VALIDATE_URL)) {
+                    $secureUrl = $resultUrl;
+                }
+
+                if (! $publicId) {
+                    if ($secureUrl) {
+                        $publicId = $secureUrl;
+                    } elseif ($resultUrl) {
+                        $publicId = $resultUrl;
+                    }
+                }
+
+                if ($publicId) {
+                    return [
+                        'logo' => $publicId,
+                        'logo_url' => $secureUrl ?? (filter_var($publicId, FILTER_VALIDATE_URL) ? $publicId : null),
+                    ];
                 }
             } catch (\Throwable $exception) {
                 report($exception);
@@ -166,8 +197,47 @@ class PeluqueriaController extends Controller
             $path = $file->store('peluquerias', 'public');
 
             if ($path !== false) {
-                return $path;
+                $this->mirrorPublicStorageFile($path);
+
+                return [
+                    'logo' => $path,
+                    'logo_url' => Storage::disk('public')->url($path),
+                ];
             }
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        throw ValidationException::withMessages([
+            'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
+        ]);
+    }
+
+    protected function mirrorPublicStorageFile(string $path): void
+    {
+        if (config('filesystems.disks.public.driver') !== 'local') {
+            return;
+        }
+
+        $storagePath = public_path('storage');
+
+        if (is_link($storagePath)) {
+            return;
+        }
+
+        try {
+            $sourcePath = Storage::disk('public')->path($path);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return;
+        }
+
+        $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+
+        try {
+            File::ensureDirectoryExists(dirname($targetPath));
+            File::copy($sourcePath, $targetPath);
         } catch (\Throwable $exception) {
             report($exception);
         }
@@ -253,6 +323,29 @@ class PeluqueriaController extends Controller
         $apiSecret = $parts['pass'] ?? null;
 
         return $this->cloudinaryCredentialsAreUsable($cloudName, $apiKey, $apiSecret);
+    }
+
+    private function peluqueriasHasLogoUrlColumn(): bool
+    {
+        if ($this->hasLogoUrlColumn !== null) {
+            return $this->hasLogoUrlColumn;
+        }
+
+        $model = new Peluqueria();
+        $connection = $model->getConnectionName();
+        $table = $model->getTable();
+
+        try {
+            $schema = $connection
+                ? Schema::connection($connection)
+                : Schema::connection(config('database.default'));
+
+            return $this->hasLogoUrlColumn = $schema->hasColumn($table, 'logo_url');
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return $this->hasLogoUrlColumn = false;
+        }
     }
 
     protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
