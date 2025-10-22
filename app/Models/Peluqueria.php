@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Peluqueria extends Model
@@ -118,7 +119,21 @@ class Peluqueria extends Model
             }
 
             if (Str::startsWith($candidate, ['/'])) {
-                return asset(ltrim($candidate, '/'));
+                return url($candidate);
+            }
+
+            try {
+                $publicUrl = Storage::disk('public')->url($candidate);
+
+                if (is_string($publicUrl) && $publicUrl !== '') {
+                    if (! filter_var($publicUrl, FILTER_VALIDATE_URL)) {
+                        $publicUrl = url($publicUrl);
+                    }
+
+                    return $publicUrl;
+                }
+            } catch (\Throwable $exception) {
+                // Ignorar y continuar con el siguiente candidato
             }
 
             if (Str::startsWith($candidate, ['storage/', 'images/'])) {
