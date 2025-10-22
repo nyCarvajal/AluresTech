@@ -20,11 +20,13 @@ class PeluqueriaController extends Controller
         $peluqueria = auth()->user()->peluqueria;
         $formAction = route('peluquerias.update');
 
+        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
+
         return view('peluquerias.edit', [
             'peluqueria' => $peluqueria,
             'formAction' => $formAction,
-            'stylistLabelSingular' => $peluqueria?->trainer_label_singular,
-            'stylistLabelPlural' => $peluqueria?->trainer_label_plural,
+            'stylistLabelSingular' => $stylistLabels['singular'],
+            'stylistLabelPlural' => $stylistLabels['plural'],
         ]);
     }
 
@@ -44,6 +46,8 @@ class PeluqueriaController extends Controller
             'nit'                     => 'nullable|string',
             'direccion'               => 'nullable|string',
             'municipio'               => 'nullable|string',
+            'trainer_label_singular'  => 'nullable|string|max:191',
+            'trainer_label_plural'    => 'nullable|string|max:191',
             'logo'                    => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
         ]);
 
@@ -55,6 +59,12 @@ class PeluqueriaController extends Controller
             $peluqueria,
             $updateData['trainer_label_singular'] ?? null,
             $updateData['trainer_label_plural'] ?? null
+        );
+
+        $this->syncStylistLabel(
+            $peluqueria,
+            $data['trainer_label_singular'] ?? null,
+            $data['trainer_label_plural'] ?? null
         );
 
         return redirect()
@@ -91,8 +101,6 @@ class PeluqueriaController extends Controller
         $data['topbar_color'] = $data['topbar_color'] ?? null;
 
         $hasLogoUrlColumn = $this->peluqueriasHasLogoUrlColumn();
-        $data['trainer_label_singular'] = $this->sanitizeRoleLabel($request->input('trainer_label_singular'));
-        $data['trainer_label_plural'] = $this->sanitizeRoleLabel($request->input('trainer_label_plural'));
 
         if ($request->hasFile('logo')) {
             $upload = $this->uploadLogo($request->file('logo'));
@@ -114,7 +122,30 @@ class PeluqueriaController extends Controller
             }
         }
 
+        unset($data['trainer_label_singular'], $data['trainer_label_plural']);
+
         return $data;
+    }
+
+    public function sanitizeRoleLabel(Request $request)
+    {
+        $validated = $request->validate([
+            'value' => 'nullable|string|max:191',
+            'role' => 'nullable',
+            'form' => 'nullable|in:singular,plural',
+        ]);
+
+        $role = $this->determineRoleIdentifier($validated['role'] ?? null);
+        $isPlural = ($validated['form'] ?? 'singular') === 'plural';
+
+        $normalized = $this->normalizeRoleLabelInput($validated['value'] ?? null, $role, $isPlural);
+        $default = Peluqueria::defaultRoleLabel($role, $isPlural);
+
+        return response()->json([
+            'value' => $normalized ?? $default,
+            'default' => $default,
+            'is_default' => $normalized === null,
+        ]);
     }
 
     protected function uploadLogo(UploadedFile $file): array
@@ -289,6 +320,15 @@ class PeluqueriaController extends Controller
             report($exception);
         }
 
+        $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+
+        try {
+            File::ensureDirectoryExists(dirname($targetPath));
+            File::copy($sourcePath, $targetPath);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
         throw ValidationException::withMessages([
             'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
         ]);
@@ -397,10 +437,10 @@ class PeluqueriaController extends Controller
 
     protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
     {
-        $singular = trim((string) ($singular ?? ''));
-        $plural = trim((string) ($plural ?? ''));
+        $singular = $this->normalizeRoleLabelInput($singular, Peluqueria::ROLE_STYLIST, false);
+        $plural = $this->normalizeRoleLabelInput($plural, Peluqueria::ROLE_STYLIST, true);
 
-        if ($singular === '' && $plural === '') {
+        if ($singular === null && $plural === null) {
             $peluqueria->roleLabels()
                 ->where('role', Peluqueria::ROLE_STYLIST)
                 ->delete();
@@ -411,13 +451,66 @@ class PeluqueriaController extends Controller
         $peluqueria->roleLabels()->updateOrCreate(
             ['role' => Peluqueria::ROLE_STYLIST],
             [
-                'singular' => $singular === ''
+                'singular' => $singular === null
                     ? Peluqueria::defaultRoleLabel(Peluqueria::ROLE_STYLIST)
                     : $singular,
-                'plural' => $plural === ''
+                'plural' => $plural === null
                     ? Peluqueria::defaultRoleLabel(Peluqueria::ROLE_STYLIST, true)
                     : $plural,
             ]
         );
+    }
+
+    protected function normalizeRoleLabelInput(?string $value, int $role, bool $plural): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = strip_tags((string) $value);
+        $value = preg_replace('/\s+/u', ' ', $value ?? '') ?? '';
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (mb_strlen($value) > 191) {
+            $value = mb_substr($value, 0, 191);
+        }
+
+        $default = Peluqueria::defaultRoleLabel($role, $plural);
+
+        if (mb_strtolower($value) === mb_strtolower($default)) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    protected function determineRoleIdentifier($role): int
+    {
+        if (is_int($role)) {
+            return $role;
+        }
+
+        if (is_string($role)) {
+            $normalized = strtolower(trim($role));
+
+            if ($normalized === '') {
+                return Peluqueria::ROLE_STYLIST;
+            }
+
+            if (ctype_digit($normalized)) {
+                return (int) $normalized;
+            }
+
+            return match ($normalized) {
+                'stylist', 'entrenador', 'trainer', 'peluquero', 'peluquera', 'barbero', 'barbera' => Peluqueria::ROLE_STYLIST,
+                default => Peluqueria::ROLE_STYLIST,
+            };
+        }
+
+        return Peluqueria::ROLE_STYLIST;
     }
 }
