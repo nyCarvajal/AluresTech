@@ -3,95 +3,165 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peluqueria;
+use App\Support\RoleLabelResolver;
 use Illuminate\Http\Request;
 
 class PeluqueriaController extends Controller
 {
-   
-   // app/Http/Controllers/PeluqueriaController.php
-
-public function editOwn()
-{
-    // Asumo que tu modelo User tiene relación peluqueria()
-   $peluqueria=auth()->user()->peluqueria;
-    return view('peluquerias.edit', compact('peluqueria'));
-}
-
-public function updateOwn(Request $request)
-{
-    $peluqueria = auth()->user()->peluqueria;
-
-    $data = $request->validate([
-        'nombre'           => 'required|string', 
-      
-        'color'            => 'nullable|string',
-        'menu_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        'topbar_color'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-        'msj_reserva_confirmada' => 'nullable|string',
-        'msj_bienvenida'   => 'nullable|string',
-        'nit'              => 'nullable|string',
-        'direccion'        => 'nullable|string',
-        'municipio'        => 'nullable|string',
-    ]);
-
-    // Normaliza checkboxes
-    $data['pos']         = $request->has('pos');
-    $data['cuentaCobro'] = $request->has('cuentaCobro');
-    $data['electronica'] = $request->has('electronica');
-
-    $data['menu_color']   = $data['menu_color'] ?? null;
-    $data['topbar_color'] = $data['topbar_color'] ?? null;
-
-    $peluqueria->update($data);
-
-    return redirect()
-        ->route('peluquerias.show', $peluqueria->id)
-        ->with('success', 'Datos de tu peluqueria actualizados.');
-}
-
- public function update(Request $request, Peluqueria $peluqueria)
+    public function editOwn()
     {
+        $peluqueria = auth()->user()->peluqueria;
+
+        if ($peluqueria) {
+            $peluqueria->load('roleLabels');
+        }
+
+        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
+
+        return view('peluquerias.edit', [
+            'peluqueria' => $peluqueria,
+            'stylistLabelSingular' => $stylistLabels['singular'],
+            'stylistLabelPlural' => $stylistLabels['plural'],
+        ]);
+    }
+
+    public function updateOwn(Request $request)
+    {
+        $peluqueria = auth()->user()->peluqueria;
+
         $data = $request->validate([
-            'nombre'           => 'required|string',
-           
-            'cuentaCobro'      => 'nullable|boolean',
-            'color'            => 'nullable|string',
-            'menu_color'       => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'topbar_color'     => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'msj_recordatorio' => 'nullable|string',
-            'msj_bienvenida'   => 'nullable|string',
-            'nit'              => 'nullable|string',
-            'direccion'        => 'nullable|string',
-            'municipio'        => 'nullable|string',
+            'nombre' => 'required|string',
+            'color' => 'nullable|string',
+            'menu_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'topbar_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'msj_reserva_confirmada' => 'nullable|string',
+            'msj_bienvenida' => 'nullable|string',
+            'nit' => 'nullable|string',
+            'direccion' => 'nullable|string',
+            'municipio' => 'nullable|string',
+            'trainer_label_singular' => 'nullable|string|max:191',
+            'trainer_label_plural' => 'nullable|string|max:191',
         ]);
 
         $data['pos'] = $request->has('pos');
         $data['cuentaCobro'] = $request->has('cuentaCobro');
         $data['electronica'] = $request->has('electronica');
 
-        $data['menu_color']   = $data['menu_color'] ?? null;
+        $data['menu_color'] = $data['menu_color'] ?? null;
         $data['topbar_color'] = $data['topbar_color'] ?? null;
 
         $peluqueria->update($data);
+
+        $this->syncStylistLabel(
+            $peluqueria,
+            $request->input('trainer_label_singular'),
+            $request->input('trainer_label_plural')
+        );
+
+        return redirect()
+            ->route('peluquerias.show', $peluqueria->id)
+            ->with('success', 'Datos de tu peluqueria actualizados.');
+    }
+
+    public function update(Request $request, Peluqueria $peluqueria)
+    {
+        $data = $request->validate([
+            'nombre' => 'required|string',
+            'cuentaCobro' => 'nullable|boolean',
+            'color' => 'nullable|string',
+            'menu_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'topbar_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'msj_recordatorio' => 'nullable|string',
+            'msj_bienvenida' => 'nullable|string',
+            'nit' => 'nullable|string',
+            'direccion' => 'nullable|string',
+            'municipio' => 'nullable|string',
+            'trainer_label_singular' => 'nullable|string|max:191',
+            'trainer_label_plural' => 'nullable|string|max:191',
+        ]);
+
+        $data['pos'] = $request->has('pos');
+        $data['cuentaCobro'] = $request->has('cuentaCobro');
+        $data['electronica'] = $request->has('electronica');
+
+        $data['menu_color'] = $data['menu_color'] ?? null;
+        $data['topbar_color'] = $data['topbar_color'] ?? null;
+
+        $peluqueria->update($data);
+
+        $this->syncStylistLabel(
+            $peluqueria,
+            $request->input('trainer_label_singular'),
+            $request->input('trainer_label_plural')
+        );
+
         return redirect()->route('peluquerias.show', compact('peluqueria'));
     }
-	
-	public function showOwn(){
-		
-		return view('peluquerias.show');
-	}
-	
-	public function show(){
-		 $peluqueria=auth()->user()->peluqueria;
-		return view('peluquerias.show', compact('peluqueria'));
-	}
 
- 
+    public function showOwn()
+    {
+        $peluqueria = auth()->user()->peluqueria;
+
+        if ($peluqueria) {
+            $peluqueria->load('roleLabels');
+        }
+
+        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
+
+        return view('peluquerias.show', [
+            'peluqueria' => $peluqueria,
+            'stylistLabelSingular' => $stylistLabels['singular'],
+            'stylistLabelPlural' => $stylistLabels['plural'],
+        ]);
+    }
+
+    public function show()
+    {
+        $peluqueria = auth()->user()->peluqueria;
+
+        if ($peluqueria) {
+            $peluqueria->load('roleLabels');
+        }
+
+        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
+
+        return view('peluquerias.show', [
+            'peluqueria' => $peluqueria,
+            'stylistLabelSingular' => $stylistLabels['singular'],
+            'stylistLabelPlural' => $stylistLabels['plural'],
+        ]);
+    }
 
     public function destroy(Peluqueria $peluqueria)
     {
         $peluqueria->delete();
+
         return back();
     }
-}
 
+    protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
+    {
+        $singular = trim((string) ($singular ?? ''));
+        $plural = trim((string) ($plural ?? ''));
+
+        if ($singular === '' && $plural === '') {
+            $peluqueria->roleLabels()
+                ->where('role', Peluqueria::ROLE_STYLIST)
+                ->delete();
+
+            return;
+        }
+
+        $peluqueria->roleLabels()->updateOrCreate(
+            ['role' => Peluqueria::ROLE_STYLIST],
+            [
+                'singular' => $singular === ''
+                    ? Peluqueria::defaultRoleLabel(Peluqueria::ROLE_STYLIST)
+                    : $singular,
+                'plural' => $plural === ''
+                    ? Peluqueria::defaultRoleLabel(Peluqueria::ROLE_STYLIST, true)
+                    : $plural,
+            ]
+        );
+    }
+}

@@ -1,8 +1,31 @@
 @extends('layouts.vertical', ['subtitle' => 'Peluqueria'])
 
 @section('content')
+@php
+    $resolvedLabels = \App\Support\RoleLabelResolver::forStylist($peluqueria ?? null);
+    $roleLabels = [
+        'singular' => $stylistLabelSingular ?? $resolvedLabels['singular'],
+        'plural' => $stylistLabelPlural ?? $resolvedLabels['plural'],
+    ];
+@endphp
 <div class="container">
     <h1>Perfil del Peluqueria</h1>
+
+    <div class="card mb-4" id="role-labels-overview">
+        <div class="card-header">Nombres personalizados para tu equipo</div>
+        <div class="card-body">
+            <p class="mb-3">Así se mostrarán en la plataforma los integrantes de tu equipo.</p>
+            <dl class="row mb-4">
+                <dt class="col-sm-4">Nombre singular</dt>
+                <dd class="col-sm-8">{{ $roleLabels['singular'] }}</dd>
+                <dt class="col-sm-4">Nombre plural</dt>
+                <dd class="col-sm-8">{{ $roleLabels['plural'] }}</dd>
+            </dl>
+            <a class="btn btn-outline-primary" href="{{ route('peluquerias.edit') }}#role-labels">
+                Cambiar estos nombres
+            </a>
+        </div>
+    </div>
 
     <div class="card mb-4">
         <div class="card-body">
