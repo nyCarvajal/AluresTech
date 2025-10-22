@@ -81,41 +81,64 @@ const setupSidebarToggleFallback = () => {
     return configuredSize || 'default';
   };
 
+  const readSidebarState = () => ({
+    size: htmlEl.getAttribute('data-sidebar-size') || resolveDefaultSidebarSize(),
+    enabled: htmlEl.classList.contains('sidebar-enable'),
+  });
+
+  const performFallbackToggle = (button) => {
+    const currentState = readSidebarState();
+
+    if (currentState.size === 'hidden') {
+      const sidebarEnabled = htmlEl.classList.toggle('sidebar-enable');
+      if (sidebarEnabled) {
+        ensureFallbackBackdrop();
+      } else {
+        removeFallbackBackdrop();
+      }
+    } else {
+      const nextSize =
+        currentState.size === 'condensed'
+          ? resolveDefaultSidebarSize()
+          : 'condensed';
+      htmlEl.setAttribute('data-sidebar-size', nextSize);
+      htmlEl.classList.toggle('sidebar-enable');
+    }
+
+    if (!button.dataset.fallbackReported) {
+      console.warn(
+        '[Layout] Sidebar toggle handled with fallback because ThemeLayout did not respond.'
+      );
+      button.dataset.fallbackReported = '1';
+    }
+  };
+
   document.querySelectorAll('.button-toggle-menu').forEach((button) => {
     if (button.dataset.fallbackToggleBound === '1') {
       return;
     }
 
     button.addEventListener('click', () => {
-      if (button.dataset.themeLayoutBound === '1') {
-        removeFallbackBackdrop();
-        return;
-      }
+      const previousState = readSidebarState();
 
-      const currentSize =
-        htmlEl.getAttribute('data-sidebar-size') || resolveDefaultSidebarSize();
+      const finalizeToggle = () => {
+        const newState = readSidebarState();
+        const themeLayoutResponded =
+          previousState.size !== newState.size ||
+          previousState.enabled !== newState.enabled;
 
-      if (currentSize === 'hidden') {
-        const sidebarEnabled = htmlEl.classList.toggle('sidebar-enable');
-        if (sidebarEnabled) {
-          ensureFallbackBackdrop();
-        } else {
+        if (themeLayoutResponded) {
           removeFallbackBackdrop();
+          return;
         }
-      } else {
-        const nextSize =
-          currentSize === 'condensed'
-            ? resolveDefaultSidebarSize()
-            : 'condensed';
-        htmlEl.setAttribute('data-sidebar-size', nextSize);
-        htmlEl.classList.toggle('sidebar-enable');
-      }
 
-      if (!button.dataset.fallbackReported) {
-        console.warn(
-          '[Layout] Sidebar toggle handled with fallback because ThemeLayout was not bound.'
-        );
-        button.dataset.fallbackReported = '1';
+        performFallbackToggle(button);
+      };
+
+      if (button.dataset.themeLayoutBound === '1') {
+        setTimeout(finalizeToggle, 0);
+      } else {
+        finalizeToggle();
       }
     });
 
