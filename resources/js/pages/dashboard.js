@@ -10,9 +10,19 @@ const renderApexChart = (selector, options) => {
         return null;
     }
 
-    const chart = new ApexCharts(element, options);
-    chart.render();
-    return chart;
+    if (typeof ApexCharts !== 'function') {
+        console.warn('ApexCharts no está disponible; se omite el gráfico', selector);
+        return null;
+    }
+
+    try {
+        const chart = new ApexCharts(element, options);
+        chart.render();
+        return chart;
+    } catch (error) {
+        console.error(`No fue posible inicializar el gráfico ${selector}.`, error);
+        return null;
+    }
 };
 
 var options1 = {

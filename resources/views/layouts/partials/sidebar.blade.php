@@ -1,6 +1,10 @@
 @php
     $sidebarStylistLabels = \App\Support\RoleLabelResolver::forStylist();
-    $sidebarStylistLabelSingular = $sidebarStylistLabels['singular'];
+    $sidebarStylistLabelSingular = trim($sidebarStylistLabels['singular'] ?? '');
+
+    if ($sidebarStylistLabelSingular === '') {
+        $sidebarStylistLabelSingular = \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+    }
 @endphp
 
 <div class="app-sidebar">

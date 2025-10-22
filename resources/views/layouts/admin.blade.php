@@ -23,6 +23,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
     @stack('scripts')
+
+
+    @section('scripts')
+  
+
+  @vite('resources/js/app.js')
+  
+@endsection
 </body>
 </html>
-  @vite('resources/js/app.js')
+
