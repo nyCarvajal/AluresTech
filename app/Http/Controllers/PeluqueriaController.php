@@ -68,12 +68,6 @@ class PeluqueriaController extends Controller
             $data['trainer_label_plural'] ?? null
         );
 
-        $this->syncStylistLabel(
-            $peluqueria,
-            $data['trainer_label_singular'] ?? null,
-            $data['trainer_label_plural'] ?? null
-        );
-
         $redirectResponse = redirect()
             ->route('peluquerias.perfil')
             ->with('success', 'Datos de tu peluquería actualizados.');
@@ -115,12 +109,48 @@ class PeluqueriaController extends Controller
 
         $hasLogoUrlColumn = $this->peluqueriasHasLogoUrlColumn();
 
+        $logoUploadResult = null;
+        $skipLogoUpdate = false;
+
         if ($request->hasFile('logo')) {
-            $upload = $this->uploadLogo($request->file('logo'));
+            try {
+                $logoUploadResult = $this->uploadLogo($request->file('logo'));
+            } catch (ValidationException $exception) {
+                $logoErrors = $exception->errors();
+                $firstLogoError = null;
 
-            $data['logo'] = $upload['logo'];
+                if (isset($logoErrors['logo'])) {
+                    $firstLogoError = is_array($logoErrors['logo'])
+                        ? reset($logoErrors['logo'])
+                        : $logoErrors['logo'];
+                }
 
-            $logoUrl = $upload['logo_url'] ?? null;
+                $firstLogoError = is_string($firstLogoError)
+                    ? trim($firstLogoError)
+                    : null;
+
+                if ($firstLogoError && str_contains($firstLogoError, 'Ocurrió un error al subir el logo')) {
+                    report($exception);
+
+                    $skipLogoUpdate = true;
+
+                    $this->appendLogoWarning($firstLogoError . ' Se mantuvo el logo actual.');
+                } else {
+                    throw $exception;
+                }
+            }
+        }
+
+        if ($skipLogoUpdate) {
+            unset($data['logo']);
+
+            if ($hasLogoUrlColumn) {
+                unset($data['logo_url']);
+            }
+        } elseif (is_array($logoUploadResult) && ! empty($logoUploadResult)) {
+            $data['logo'] = $logoUploadResult['logo'];
+
+            $logoUrl = $logoUploadResult['logo_url'] ?? null;
 
             if ($hasLogoUrlColumn && $logoUrl) {
                 $data['logo_url'] = $logoUrl;
@@ -171,7 +201,7 @@ class PeluqueriaController extends Controller
             } catch (\Throwable $exception) {
                 report($exception);
 
-                $this->logoUploadWarning = 'No se pudo subir el logo a Cloudinary. Se utilizó el almacenamiento local en su lugar.';
+                $this->appendLogoWarning('No se pudo subir el logo a Cloudinary. Se utilizó el almacenamiento local en su lugar.');
             }
         }
 
@@ -286,6 +316,27 @@ class PeluqueriaController extends Controller
         return $result;
     }
 
+    protected function appendLogoWarning(?string $message): void
+    {
+        $message = is_string($message) ? trim($message) : '';
+
+        if ($message === '') {
+            return;
+        }
+
+        if ($this->logoUploadWarning) {
+            if (str_contains($this->logoUploadWarning, $message)) {
+                return;
+            }
+
+            $this->logoUploadWarning = trim($this->logoUploadWarning . ' ' . $message);
+
+            return;
+        }
+
+        $this->logoUploadWarning = $message;
+    }
+
     protected function cloudinaryUploadFolder(): string
     {
         $filesystemConfig = config('filesystems.disks.cloudinary', []);
@@ -327,24 +378,6 @@ class PeluqueriaController extends Controller
             report($exception);
 
             return;
-        }
-
-        $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
-
-        try {
-            File::ensureDirectoryExists(dirname($targetPath));
-            File::copy($sourcePath, $targetPath);
-        } catch (\Throwable $exception) {
-            report($exception);
-        }
-
-        $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
-
-        try {
-            File::ensureDirectoryExists(dirname($targetPath));
-            File::copy($sourcePath, $targetPath);
-        } catch (\Throwable $exception) {
-            report($exception);
         }
 
         $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
