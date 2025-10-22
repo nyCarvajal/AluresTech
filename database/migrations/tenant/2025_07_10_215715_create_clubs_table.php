@@ -23,7 +23,9 @@ return new class extends Migration
             $table->string('topbar_color', 20)->nullable();
             $table->string('msj_bienvenida', 500)->nullable();
             $table->string('msj_reserva_confirmada', 500)->nullable();
-			$table->string('msj_finalizado', 500)->nullable();
+            $table->string('msj_finalizado', 500)->nullable();
+            $table->string('trainer_label_singular', 191)->nullable();
+            $table->string('trainer_label_plural', 191)->nullable();
             $table->string('nit', 100)->nullable();
             $table->string('direccion', 300)->nullable();
             $table->integer('municipio')->nullable();
