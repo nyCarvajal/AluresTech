@@ -33,7 +33,7 @@ class PeluqueriaController extends Controller
             'nit'                     => 'nullable|string',
             'direccion'               => 'nullable|string',
             'municipio'               => 'nullable|string',
-            'logo'                    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'logo'                    => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
         ]);
 
         $peluqueria->update($this->prepareUpdateData($request, $data));
@@ -82,34 +82,75 @@ class PeluqueriaController extends Controller
 
     protected function uploadLogo(UploadedFile $file): string
     {
-        if (!$this->cloudinaryIsConfigured()) {
-            throw ValidationException::withMessages([
-                'logo' => 'No se puede subir el logo porque Cloudinary no está configurado correctamente. Verifica tus credenciales (CLOUDINARY_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) y evita usar los valores de ejemplo "demo".',
-            ]);
-        }
-
         $folder = trim(config('cloudinary.upload.folder') ?? '', '/');
         if ($folder === '') {
             $folder = 'peluquerias';
         }
 
-        try {
-            $uploadedFile = Cloudinary::uploadFile(
-                $file->getRealPath(),
-                [
-                    'folder' => $folder,
-                    'resource_type' => 'image',
-                ]
-            );
+        if ($this->cloudinaryIsConfigured()) {
+            try {
+                $uploadedFile = Cloudinary::uploadFile(
+                    $file->getRealPath(),
+                    [
+                        'folder' => $folder,
+                        'resource_type' => 'image',
+                    ]
+                );
 
-            return $uploadedFile->getPublicId();
+                $secureUrl = null;
+                if (method_exists($uploadedFile, 'getSecurePath')) {
+                    $secureUrl = $uploadedFile->getSecurePath();
+                } elseif (method_exists($uploadedFile, 'getSecureUrl')) {
+                    $secureUrl = $uploadedFile->getSecureUrl();
+                }
+
+                if (is_string($secureUrl) && $secureUrl !== '') {
+                    return $secureUrl;
+                }
+
+                $publicId = method_exists($uploadedFile, 'getPublicId')
+                    ? $uploadedFile->getPublicId()
+                    : null;
+
+                if (is_string($publicId) && $publicId !== '') {
+                    return $publicId;
+                }
+
+                if (method_exists($uploadedFile, 'getResult')) {
+                    $result = $uploadedFile->getResult();
+
+                    if (is_array($result)) {
+                        if (!empty($result['secure_url'])) {
+                            return $result['secure_url'];
+                        }
+
+                        if (!empty($result['public_id'])) {
+                            return $result['public_id'];
+                        }
+
+                        if (!empty($result['url'])) {
+                            return $result['url'];
+                        }
+                    }
+                }
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        try {
+            $path = $file->store('peluquerias', 'public');
+
+            if ($path !== false) {
+                return $path;
+            }
         } catch (\Throwable $exception) {
             report($exception);
-
-            throw ValidationException::withMessages([
-                'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
-            ]);
         }
+
+        throw ValidationException::withMessages([
+            'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
+        ]);
     }
 
     protected function cloudinaryIsConfigured(): bool
