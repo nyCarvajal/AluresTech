@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peluqueria;
-use App\Support\RoleLabelResolver;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -16,7 +15,12 @@ class PeluqueriaController extends Controller
         $peluqueria = auth()->user()->peluqueria;
         $formAction = route('peluquerias.update');
 
-        return view('peluquerias.edit', compact('peluqueria', 'formAction'));
+        return view('peluquerias.edit', [
+            'peluqueria' => $peluqueria,
+            'formAction' => $formAction,
+            'stylistLabelSingular' => $peluqueria?->trainer_label_singular,
+            'stylistLabelPlural' => $peluqueria?->trainer_label_plural,
+        ]);
     }
 
     public function updateOwn(Request $request)
@@ -30,13 +34,23 @@ class PeluqueriaController extends Controller
             'topbar_color'            => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'msj_reserva_confirmada'  => 'nullable|string',
             'msj_bienvenida'          => 'nullable|string',
+            'trainer_label_singular'  => 'nullable|string|max:191',
+            'trainer_label_plural'    => 'nullable|string|max:191',
             'nit'                     => 'nullable|string',
             'direccion'               => 'nullable|string',
             'municipio'               => 'nullable|string',
             'logo'                    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
 
-        $peluqueria->update($this->prepareUpdateData($request, $data));
+        $updateData = $this->prepareUpdateData($request, $data);
+
+        $peluqueria->update($updateData);
+
+        $this->syncStylistLabel(
+            $peluqueria,
+            $updateData['trainer_label_singular'] ?? null,
+            $updateData['trainer_label_plural'] ?? null
+        );
 
         return redirect()
             ->route('peluquerias.perfil')
@@ -71,6 +85,9 @@ class PeluqueriaController extends Controller
         $data['menu_color'] = $data['menu_color'] ?? null;
         $data['topbar_color'] = $data['topbar_color'] ?? null;
 
+        $data['trainer_label_singular'] = $this->sanitizeRoleLabel($request->input('trainer_label_singular'));
+        $data['trainer_label_plural'] = $this->sanitizeRoleLabel($request->input('trainer_label_plural'));
+
         if ($request->hasFile('logo')) {
             $data['logo'] = $this->uploadLogo($request->file('logo'));
         } else {
@@ -78,6 +95,13 @@ class PeluqueriaController extends Controller
         }
 
         return $data;
+    }
+
+    protected function sanitizeRoleLabel(?string $label): ?string
+    {
+        $label = trim((string) ($label ?? ''));
+
+        return $label === '' ? null : $label;
     }
 
     protected function uploadLogo(UploadedFile $file): string
