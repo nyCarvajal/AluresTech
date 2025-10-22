@@ -91,3 +91,194 @@
           </div>
      </div>
 </header>
+
+@once
+    <script>
+        (() => {
+            if (window.__appManualSidebarToggleInitialized) {
+                return;
+            }
+            window.__appManualSidebarToggleInitialized = true;
+
+            const MOBILE_BREAKPOINT = 1140;
+            const html = document.documentElement;
+            if (!html) {
+                return;
+            }
+
+            const readSizeFromConfig = (config) => {
+                if (!config || typeof config !== 'object') {
+                    return null;
+                }
+                const size = config.menu && config.menu.size;
+                return typeof size === 'string' && size !== 'hidden' ? size : null;
+            };
+
+            const resolveDefaultSize = () => {
+                const attributeValue = html.getAttribute('data-sidebar-size');
+                if (attributeValue && attributeValue !== 'hidden') {
+                    return attributeValue;
+                }
+
+                const inlineDefault = html.dataset.defaultSidebarSize;
+                if (inlineDefault && inlineDefault !== 'hidden') {
+                    return inlineDefault;
+                }
+
+                return (
+                    readSizeFromConfig(window.config) ||
+                    readSizeFromConfig(window.defaultConfig) ||
+                    'default'
+                );
+            };
+
+            let lastNonHiddenSize = resolveDefaultSize();
+            let backdropElement = null;
+
+            const syncLastKnownSize = () => {
+                const current = html.getAttribute('data-sidebar-size');
+                if (current && current !== 'hidden') {
+                    lastNonHiddenSize = current;
+                }
+            };
+
+            const isMobileView = () => window.innerWidth <= MOBILE_BREAKPOINT;
+
+            const removeBackdrop = () => {
+                if (!backdropElement) {
+                    return;
+                }
+                if (backdropElement.parentNode) {
+                    backdropElement.parentNode.removeChild(backdropElement);
+                }
+                backdropElement = null;
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            };
+
+            const closeSidebar = () => {
+                syncLastKnownSize();
+                html.setAttribute('data-sidebar-size', 'hidden');
+                html.classList.remove('sidebar-enable');
+                removeBackdrop();
+            };
+
+            const ensureBackdrop = () => {
+                if (backdropElement) {
+                    return backdropElement;
+                }
+                const element = document.createElement('div');
+                element.className = 'offcanvas-backdrop fade show';
+                document.body.appendChild(element);
+                document.body.style.overflow = 'hidden';
+                if (window.innerWidth > 1040) {
+                    document.body.style.paddingRight = '15px';
+                }
+                element.addEventListener('click', () => {
+                    closeSidebar();
+                });
+                backdropElement = element;
+                return backdropElement;
+            };
+
+            const openSidebar = () => {
+                if (isMobileView()) {
+                    html.setAttribute('data-sidebar-size', 'hidden');
+                    html.classList.add('sidebar-enable');
+                    ensureBackdrop();
+                    return;
+                }
+
+                const targetSize = lastNonHiddenSize || resolveDefaultSize();
+                html.setAttribute('data-sidebar-size', targetSize);
+                html.classList.add('sidebar-enable');
+                removeBackdrop();
+            };
+
+            const toggleSidebar = () => {
+                if (isMobileView()) {
+                    if (html.classList.contains('sidebar-enable')) {
+                        closeSidebar();
+                    } else {
+                        syncLastKnownSize();
+                        openSidebar();
+                    }
+                    return;
+                }
+
+                const current = html.getAttribute('data-sidebar-size');
+                if (!current || current === 'hidden') {
+                    openSidebar();
+                } else {
+                    closeSidebar();
+                }
+            };
+
+            const handleResize = () => {
+                if (isMobileView()) {
+                    html.setAttribute('data-sidebar-size', 'hidden');
+                    if (html.classList.contains('sidebar-enable')) {
+                        ensureBackdrop();
+                    } else {
+                        removeBackdrop();
+                    }
+                    return;
+                }
+
+                removeBackdrop();
+                const current = html.getAttribute('data-sidebar-size');
+                if (current && current !== 'hidden') {
+                    lastNonHiddenSize = current;
+                } else {
+                    html.setAttribute('data-sidebar-size', lastNonHiddenSize || resolveDefaultSize());
+                }
+            };
+
+            const handleKeydown = (event) => {
+                if (event.key === 'Escape' && html.classList.contains('sidebar-enable') && isMobileView()) {
+                    closeSidebar();
+                }
+            };
+
+            const bindButtons = () => {
+                const buttons = document.querySelectorAll('.button-toggle-menu');
+                if (!buttons.length) {
+                    return false;
+                }
+
+                buttons.forEach((button) => {
+                    button.dataset.manualSidebarToggle = '1';
+                    button.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        toggleSidebar();
+                    });
+                });
+
+                return true;
+            };
+
+            const init = () => {
+                if (!document.querySelector('.app-sidebar')) {
+                    return;
+                }
+
+                if (!bindButtons()) {
+                    return;
+                }
+
+                syncLastKnownSize();
+                handleResize();
+                window.addEventListener('resize', handleResize);
+                document.addEventListener('keydown', handleKeydown);
+            };
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+@endonce
+
