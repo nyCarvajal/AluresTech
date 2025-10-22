@@ -33,6 +33,104 @@ window.intlTelInput = intlTelInput;
 import TomSelect from 'tom-select';
 import 'tom-select/dist/css/tom-select.default.css';
 
+const setupSidebarToggleFallback = () => {
+  const htmlEl = document.documentElement;
+  if (!htmlEl) {
+    return;
+  }
+
+  let fallbackBackdrop = null;
+
+  const removeFallbackBackdrop = () => {
+    if (!fallbackBackdrop) {
+      return;
+    }
+    if (fallbackBackdrop.parentNode) {
+      fallbackBackdrop.parentNode.removeChild(fallbackBackdrop);
+    }
+    fallbackBackdrop = null;
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+  };
+
+  const ensureFallbackBackdrop = () => {
+    if (fallbackBackdrop) {
+      return fallbackBackdrop;
+    }
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'offcanvas-backdrop fade show';
+    document.body.appendChild(backdrop);
+    document.body.style.overflow = 'hidden';
+    if (window.innerWidth > 1040) {
+      document.body.style.paddingRight = '15px';
+    }
+
+    backdrop.addEventListener('click', () => {
+      htmlEl.classList.remove('sidebar-enable');
+      removeFallbackBackdrop();
+    });
+
+    fallbackBackdrop = backdrop;
+    return fallbackBackdrop;
+  };
+
+  const resolveDefaultSidebarSize = () => {
+    const configuredSize =
+      window.config?.menu?.size || window.defaultConfig?.menu?.size;
+    return configuredSize || 'default';
+  };
+
+  document.querySelectorAll('.button-toggle-menu').forEach((button) => {
+    if (button.dataset.fallbackToggleBound === '1') {
+      return;
+    }
+
+    button.addEventListener('click', () => {
+      if (button.dataset.themeLayoutBound === '1') {
+        removeFallbackBackdrop();
+        return;
+      }
+
+      const currentSize =
+        htmlEl.getAttribute('data-sidebar-size') || resolveDefaultSidebarSize();
+
+      if (currentSize === 'hidden') {
+        const sidebarEnabled = htmlEl.classList.toggle('sidebar-enable');
+        if (sidebarEnabled) {
+          ensureFallbackBackdrop();
+        } else {
+          removeFallbackBackdrop();
+        }
+      } else {
+        const nextSize =
+          currentSize === 'condensed'
+            ? resolveDefaultSidebarSize()
+            : 'condensed';
+        htmlEl.setAttribute('data-sidebar-size', nextSize);
+        htmlEl.classList.toggle('sidebar-enable');
+      }
+
+      if (!button.dataset.fallbackReported) {
+        console.warn(
+          '[Layout] Sidebar toggle handled with fallback because ThemeLayout was not bound.'
+        );
+        button.dataset.fallbackReported = '1';
+      }
+    });
+
+    button.dataset.fallbackToggleBound = '1';
+  });
+
+  window.addEventListener('themeLayout:boot', removeFallbackBackdrop);
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupSidebarToggleFallback);
+} else {
+  setupSidebarToggleFallback();
+}
+
 
 //calendario
 

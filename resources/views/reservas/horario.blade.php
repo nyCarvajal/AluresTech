@@ -145,13 +145,18 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const modalEl   = document.getElementById('horarioReservationModal');
-  const form      = document.getElementById('horarioReservationForm');
-  const methodInp = document.getElementById('horarioReservationMethod');
-  const dateInp   = document.getElementById('horarioFecha');
-  const timeSel   = document.getElementById('horarioHora');
-  const canchaSel = document.getElementById('horarioCancha');
-  const clientesSel= document.getElementById('clientes');
+  const modalEl    = document.getElementById('horarioReservationModal');
+  const form       = document.getElementById('horarioReservationForm');
+  const methodInp  = document.getElementById('horarioReservationMethod');
+  const dateInp    = document.getElementById('horarioFecha');
+  const timeSel    = document.getElementById('horarioHora');
+  const canchaSel  = document.getElementById('horarioCancha');
+  const clientesSel = document.getElementById('clientes');
+
+  if (!modalEl || !form || !methodInp || !dateInp || !timeSel || !canchaSel) {
+    console.warn('[Horario] No se pudieron inicializar los eventos del modal porque faltan elementos requeridos.');
+    return;
+  }
 
   // Cuando se abra el modal desde el botón
   modalEl.addEventListener('show.bs.modal', event => {
