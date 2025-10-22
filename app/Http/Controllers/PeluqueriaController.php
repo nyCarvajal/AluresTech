@@ -7,10 +7,15 @@ use App\Support\RoleLabelResolver;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class PeluqueriaController extends Controller
 {
+    private ?bool $hasLogoUrlColumn = null;
+
     public function editOwn()
     {
         $peluqueria = auth()->user()->peluqueria;
@@ -33,7 +38,7 @@ class PeluqueriaController extends Controller
             'nit'                     => 'nullable|string',
             'direccion'               => 'nullable|string',
             'municipio'               => 'nullable|string',
-            'logo'                    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'logo'                    => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
         ]);
 
         $peluqueria->update($this->prepareUpdateData($request, $data));
@@ -45,7 +50,9 @@ class PeluqueriaController extends Controller
 
     public function showOwn()
     {
-        return view('peluquerias.show');
+        $peluqueria = auth()->user()->peluqueria;
+
+        return view('peluquerias.show', compact('peluqueria'));
     }
 
     public function show()
@@ -69,44 +76,201 @@ class PeluqueriaController extends Controller
         $data['menu_color'] = $data['menu_color'] ?? null;
         $data['topbar_color'] = $data['topbar_color'] ?? null;
 
+        $hasLogoUrlColumn = $this->peluqueriasHasLogoUrlColumn();
+
         if ($request->hasFile('logo')) {
-            $data['logo'] = $this->uploadLogo($request->file('logo'));
+            $upload = $this->uploadLogo($request->file('logo'));
+
+            $data['logo'] = $upload['logo'];
+
+            $logoUrl = $upload['logo_url'] ?? null;
+
+            if ($hasLogoUrlColumn && $logoUrl) {
+                $data['logo_url'] = $logoUrl;
+            } elseif ($logoUrl && filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+                $data['logo'] = $logoUrl;
+            }
         } else {
             unset($data['logo']);
+
+            if ($hasLogoUrlColumn) {
+                unset($data['logo_url']);
+            }
         }
 
         return $data;
     }
 
-    protected function uploadLogo(UploadedFile $file): string
+    protected function uploadLogo(UploadedFile $file): array
     {
-        if (!$this->cloudinaryIsConfigured()) {
-            throw ValidationException::withMessages([
-                'logo' => 'No se puede subir el logo porque Cloudinary no está configurado correctamente. Verifica tus credenciales (CLOUDINARY_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) y evita usar los valores de ejemplo "demo".',
-            ]);
+        if ($this->cloudinaryIsConfigured()) {
+            $folder = $this->cloudinaryUploadFolder();
+
+            try {
+                $uploadedFile = Cloudinary::uploadFile(
+                    $file->getRealPath(),
+                    [
+                        'folder' => $folder,
+                        'resource_type' => 'image',
+                    ]
+                );
+
+                $secureUrl = null;
+                if (method_exists($uploadedFile, 'getSecurePath')) {
+                    $secureUrl = $uploadedFile->getSecurePath();
+                } elseif (method_exists($uploadedFile, 'getSecureUrl')) {
+                    $secureUrl = $uploadedFile->getSecureUrl();
+                }
+
+                $publicId = method_exists($uploadedFile, 'getPublicId')
+                    ? $uploadedFile->getPublicId()
+                    : null;
+
+                $resultUrl = null;
+
+                if (method_exists($uploadedFile, 'getResult')) {
+                    $result = $uploadedFile->getResult();
+
+                    if (is_array($result)) {
+                        if (! $secureUrl && ! empty($result['secure_url'])) {
+                            $secureUrl = $result['secure_url'];
+                        }
+
+                        if (! $publicId && ! empty($result['public_id'])) {
+                            $publicId = $result['public_id'];
+                        }
+
+                        if (! empty($result['url'])) {
+                            $resultUrl = $result['url'];
+                        }
+                    }
+                }
+
+                if (! $secureUrl && $resultUrl && filter_var($resultUrl, FILTER_VALIDATE_URL)) {
+                    $secureUrl = $resultUrl;
+                }
+
+                if (! $publicId) {
+                    if ($secureUrl) {
+                        $publicId = $secureUrl;
+                    } elseif ($resultUrl) {
+                        $publicId = $resultUrl;
+                    }
+                }
+
+                if (! $publicId) {
+                    throw new \RuntimeException('No se recibió un identificador público de Cloudinary.');
+                }
+
+                return [
+                    'logo' => $publicId,
+                    'logo_url' => $secureUrl ?? (filter_var($publicId, FILTER_VALIDATE_URL) ? $publicId : null),
+                ];
+            } catch (\Throwable $exception) {
+                report($exception);
+
+                throw ValidationException::withMessages([
+                    'logo' => 'Ocurrió un error al subir el logo a Cloudinary. Verifica la configuración e inténtalo de nuevo.',
+                ]);
+            }
         }
 
-        $folder = trim(config('cloudinary.upload.folder') ?? '', '/');
-        if ($folder === '') {
-            $folder = 'peluquerias';
-        }
+        return $this->storeLogoOnPublicDisk($file);
+    }
 
+    protected function storeLogoOnPublicDisk(UploadedFile $file): array
+    {
         try {
-            $uploadedFile = Cloudinary::uploadFile(
-                $file->getRealPath(),
-                [
-                    'folder' => $folder,
-                    'resource_type' => 'image',
-                ]
-            );
-
-            return $uploadedFile->getPublicId();
+            $path = $file->store('peluquerias', 'public');
         } catch (\Throwable $exception) {
             report($exception);
 
             throw ValidationException::withMessages([
                 'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
             ]);
+        }
+
+        if ($path === false) {
+            throw ValidationException::withMessages([
+                'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
+            ]);
+        }
+
+        $this->mirrorPublicStorageFile($path);
+
+        $logoUrl = null;
+
+        try {
+            $logoUrl = Storage::disk('public')->url($path);
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
+
+        if (is_string($logoUrl) && $logoUrl !== '' && ! filter_var($logoUrl, FILTER_VALIDATE_URL)) {
+            $logoUrl = url($logoUrl);
+        }
+
+        $result = [
+            'logo' => $path,
+        ];
+
+        if (is_string($logoUrl) && $logoUrl !== '') {
+            $result['logo_url'] = $logoUrl;
+        }
+
+        return $result;
+    }
+
+    protected function cloudinaryUploadFolder(): string
+    {
+        $filesystemConfig = config('filesystems.disks.cloudinary', []);
+        $prefix = '';
+
+        if (! empty($filesystemConfig['prefix']) && is_string($filesystemConfig['prefix'])) {
+            $prefix = trim($filesystemConfig['prefix'], '/');
+        }
+
+        $configuredFolder = config('cloudinary.upload.folder');
+        $folder = is_string($configuredFolder) ? trim($configuredFolder, '/') : '';
+
+        if ($folder === '') {
+            $folder = 'peluquerias';
+        }
+
+        if ($prefix !== '') {
+            return $prefix . '/' . $folder;
+        }
+
+        return $folder;
+    }
+
+    protected function mirrorPublicStorageFile(string $path): void
+    {
+        if (config('filesystems.disks.public.driver') !== 'local') {
+            return;
+        }
+
+        $storagePath = public_path('storage');
+
+        if (is_link($storagePath)) {
+            return;
+        }
+
+        try {
+            $sourcePath = Storage::disk('public')->path($path);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return;
+        }
+
+        $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+
+        try {
+            File::ensureDirectoryExists(dirname($targetPath));
+            File::copy($sourcePath, $targetPath);
+        } catch (\Throwable $exception) {
+            report($exception);
         }
     }
 
@@ -165,9 +329,13 @@ class PeluqueriaController extends Controller
         return true;
     }
 
-    private function cloudinaryUrlContainsCredentials(?string $url): bool
+    private function cloudinaryUrlContainsCredentials(string|array|null $url): bool
     {
         if (!$url) {
+            return false;
+        }
+
+        if (is_array($url)) {
             return false;
         }
 
@@ -182,6 +350,29 @@ class PeluqueriaController extends Controller
         $apiSecret = $parts['pass'] ?? null;
 
         return $this->cloudinaryCredentialsAreUsable($cloudName, $apiKey, $apiSecret);
+    }
+
+    private function peluqueriasHasLogoUrlColumn(): bool
+    {
+        if ($this->hasLogoUrlColumn !== null) {
+            return $this->hasLogoUrlColumn;
+        }
+
+        $model = new Peluqueria();
+        $connection = $model->getConnectionName();
+        $table = $model->getTable();
+
+        try {
+            $schema = $connection
+                ? Schema::connection($connection)
+                : Schema::connection(config('database.default'));
+
+            return $this->hasLogoUrlColumn = $schema->hasColumn($table, 'logo_url');
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return $this->hasLogoUrlColumn = false;
+        }
     }
 
     protected function syncStylistLabel(Peluqueria $peluqueria, ?string $singular, ?string $plural): void
