@@ -14,6 +14,7 @@ use Illuminate\Validation\ValidationException;
 class PeluqueriaController extends Controller
 {
     private ?bool $hasLogoUrlColumn = null;
+    private ?string $logoUploadWarning = null;
 
     public function editOwn()
     {
@@ -31,6 +32,8 @@ class PeluqueriaController extends Controller
     public function updateOwn(Request $request)
     {
         $peluqueria = auth()->user()->peluqueria;
+
+        $this->logoUploadWarning = null;
 
         $data = $request->validate([
             'nombre'                  => 'required|string',
@@ -65,9 +68,21 @@ class PeluqueriaController extends Controller
             $data['trainer_label_plural'] ?? null
         );
 
-        return redirect()
+        $this->syncStylistLabel(
+            $peluqueria,
+            $data['trainer_label_singular'] ?? null,
+            $data['trainer_label_plural'] ?? null
+        );
+
+        $redirectResponse = redirect()
             ->route('peluquerias.perfil')
             ->with('success', 'Datos de tu peluquería actualizados.');
+
+        if ($this->logoUploadWarning) {
+            $redirectResponse = $redirectResponse->with('warning', $this->logoUploadWarning);
+        }
+
+        return $redirectResponse;
     }
 
     public function showOwn()
@@ -149,78 +164,83 @@ class PeluqueriaController extends Controller
     protected function uploadLogo(UploadedFile $file): array
     {
         if ($this->cloudinaryIsConfigured()) {
-            $folder = $this->cloudinaryUploadFolder();
-
             try {
-                $uploadedFile = Cloudinary::uploadFile(
-                    $file->getRealPath(),
-                    [
-                        'folder' => $folder,
-                        'resource_type' => 'image',
-                    ]
-                );
-
-                $secureUrl = null;
-                if (method_exists($uploadedFile, 'getSecurePath')) {
-                    $secureUrl = $uploadedFile->getSecurePath();
-                } elseif (method_exists($uploadedFile, 'getSecureUrl')) {
-                    $secureUrl = $uploadedFile->getSecureUrl();
-                }
-
-                $publicId = method_exists($uploadedFile, 'getPublicId')
-                    ? $uploadedFile->getPublicId()
-                    : null;
-
-                $resultUrl = null;
-
-                if (method_exists($uploadedFile, 'getResult')) {
-                    $result = $uploadedFile->getResult();
-
-                    if (is_array($result)) {
-                        if (! $secureUrl && ! empty($result['secure_url'])) {
-                            $secureUrl = $result['secure_url'];
-                        }
-
-                        if (! $publicId && ! empty($result['public_id'])) {
-                            $publicId = $result['public_id'];
-                        }
-
-                        if (! empty($result['url'])) {
-                            $resultUrl = $result['url'];
-                        }
-                    }
-                }
-
-                if (! $secureUrl && $resultUrl && filter_var($resultUrl, FILTER_VALIDATE_URL)) {
-                    $secureUrl = $resultUrl;
-                }
-
-                if (! $publicId) {
-                    if ($secureUrl) {
-                        $publicId = $secureUrl;
-                    } elseif ($resultUrl) {
-                        $publicId = $resultUrl;
-                    }
-                }
-
-                if (! $publicId) {
-                    throw new \RuntimeException('No se recibió un identificador público de Cloudinary.');
-                }
-
-                return [
-                    'logo' => $publicId,
-                    'logo_url' => $secureUrl ?? (filter_var($publicId, FILTER_VALIDATE_URL) ? $publicId : null),
-                ];
+                return $this->uploadLogoToCloudinary($file);
+            } catch (ValidationException $exception) {
+                throw $exception;
             } catch (\Throwable $exception) {
                 report($exception);
 
-                throw ValidationException::withMessages([
-                    'logo' => 'Ocurrió un error al subir el logo a Cloudinary. Verifica la configuración e inténtalo de nuevo.',
-                ]);
+                $this->logoUploadWarning = 'No se pudo subir el logo a Cloudinary. Se utilizó el almacenamiento local en su lugar.';
             }
         }
 
         return $this->storeLogoOnPublicDisk($file);
+    }
+
+    protected function uploadLogoToCloudinary(UploadedFile $file): array
+    {
+        $folder = $this->cloudinaryUploadFolder();
+
+        $uploadedFile = Cloudinary::uploadFile(
+            $file->getRealPath(),
+            [
+                'folder' => $folder,
+                'resource_type' => 'image',
+            ]
+        );
+
+        $secureUrl = null;
+        if (method_exists($uploadedFile, 'getSecurePath')) {
+            $secureUrl = $uploadedFile->getSecurePath();
+        } elseif (method_exists($uploadedFile, 'getSecureUrl')) {
+            $secureUrl = $uploadedFile->getSecureUrl();
+        }
+
+        $publicId = method_exists($uploadedFile, 'getPublicId')
+            ? $uploadedFile->getPublicId()
+            : null;
+
+        $resultUrl = null;
+
+        if (method_exists($uploadedFile, 'getResult')) {
+            $result = $uploadedFile->getResult();
+
+            if (is_array($result)) {
+                if (! $secureUrl && ! empty($result['secure_url'])) {
+                    $secureUrl = $result['secure_url'];
+                }
+
+                if (! $publicId && ! empty($result['public_id'])) {
+                    $publicId = $result['public_id'];
+                }
+
+                if (! empty($result['url'])) {
+                    $resultUrl = $result['url'];
+                }
+            }
+        }
+
+        if (! $secureUrl && $resultUrl && filter_var($resultUrl, FILTER_VALIDATE_URL)) {
+            $secureUrl = $resultUrl;
+        }
+
+        if (! $publicId) {
+            if ($secureUrl) {
+                $publicId = $secureUrl;
+            } elseif ($resultUrl) {
+                $publicId = $resultUrl;
+            }
+        }
+
+        if (! $publicId) {
+            throw new \RuntimeException('No se recibió un identificador público de Cloudinary.');
+        }
+
+        return [
+            'logo' => $publicId,
+            'logo_url' => $secureUrl ?? (filter_var($publicId, FILTER_VALIDATE_URL) ? $publicId : null),
+        ];
     }
 
     protected function storeLogoOnPublicDisk(UploadedFile $file): array
@@ -307,6 +327,15 @@ class PeluqueriaController extends Controller
             report($exception);
 
             return;
+        }
+
+        $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
+
+        try {
+            File::ensureDirectoryExists(dirname($targetPath));
+            File::copy($sourcePath, $targetPath);
+        } catch (\Throwable $exception) {
+            report($exception);
         }
 
         $targetPath = $storagePath . DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR);
