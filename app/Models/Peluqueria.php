@@ -15,7 +15,7 @@ class Peluqueria extends Model
     protected $fillable = [
         'nombre', 'pos', 'cuentaCobro', 'electronica',
         'terminos', 'color', 'menu_color', 'topbar_color', 'msj_recordatorio', 'msj_bienvenida', 'msj_finalizado', 'msj_reserva_confirmada',
-        'nit', 'direccion', 'municipio', 'db', 'slug', 'logo',
+        'nit', 'direccion', 'municipio', 'db', 'slug', 'logo', 'logo_url',
     ];
 
     protected static array $defaultRoleLabels = [
