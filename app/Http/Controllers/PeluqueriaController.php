@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Peluqueria;
-use App\Support\RoleLabelResolver;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -22,13 +21,11 @@ class PeluqueriaController extends Controller
         $peluqueria = auth()->user()->peluqueria;
         $formAction = route('peluquerias.update');
 
-        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
-
+       
         return view('peluquerias.edit', [
             'peluqueria' => $peluqueria,
             'formAction' => $formAction,
-            'stylistLabelSingular' => $stylistLabels['singular'],
-            'stylistLabelPlural' => $stylistLabels['plural'],
+            
         ]);
     }
 
@@ -45,6 +42,8 @@ class PeluqueriaController extends Controller
             'topbar_color'            => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'msj_reserva_confirmada'  => 'nullable|string',
             'msj_bienvenida'          => 'nullable|string',
+            'trainer_label_singular'  => 'nullable|string|max:191',
+            'trainer_label_plural'    => 'nullable|string|max:191',
             'nit'                     => 'nullable|string',
             'direccion'               => 'nullable|string',
             'municipio'               => 'nullable|string',
@@ -53,7 +52,15 @@ class PeluqueriaController extends Controller
             'logo'                    => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif,webp', 'max:10240'],
         ]);
 
-        $peluqueria->update($this->prepareUpdateData($request, $data));
+        $updateData = $this->prepareUpdateData($request, $data);
+
+        $peluqueria->update($updateData);
+
+        $this->syncStylistLabel(
+            $peluqueria,
+            $updateData['trainer_label_singular'] ?? null,
+            $updateData['trainer_label_plural'] ?? null
+        );
 
         $this->syncStylistLabel(
             $peluqueria,
@@ -381,6 +388,10 @@ class PeluqueriaController extends Controller
         } catch (\Throwable $exception) {
             report($exception);
         }
+
+        throw ValidationException::withMessages([
+            'logo' => 'Ocurrió un error al subir el logo. Por favor inténtalo de nuevo más tarde.',
+        ]);
     }
 
     protected function cloudinaryIsConfigured(): bool

@@ -4,18 +4,6 @@
 
 @include('layouts.partials/page-title', ['title' => 'Dashboard', 'subtitle' => 'Inicio'])
 
-<!doctype html>
-<html lang="es">
-<head>
-  <link href="{{ asset('vendor/darkone/css/app.css') }}" rel="stylesheet">
-</head>
-<body>
-  @yield('content')
-  <script src="{{ asset('vendor/darkone/js/app.js') }}"></script>
-</body>
-</html>
-
-
 <div class="row">
     <!-- Card 1 -->
     <div class="col-md-6 col-xl-4">

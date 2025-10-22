@@ -1,6 +1,11 @@
 @php
-    $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
-    $stylistLabelPlural = $stylistLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+    $peluqueriaModel = $peluqueria ?? null;
+    $stylistLabelSingular = $stylistLabelSingular
+        ?? optional($peluqueriaModel)->trainer_label_singular
+        ?? '';
+    $stylistLabelPlural = $stylistLabelPlural
+        ?? optional($peluqueriaModel)->trainer_label_plural
+        ?? '';
 @endphp
 
 <div class="mb-3">
