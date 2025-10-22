@@ -6,9 +6,9 @@
         <h2 class="fw-semibold mb-1">Reportes administrativos</h2>
         <p class="text-muted mb-0">Consulta y compara la información financiera y operativa de tu club desde un solo lugar.</p>
     </div>
-    <div class="col-xl-4 text-xl-end mt-3 mt-xl-0">
+   <!-- <div class="col-xl-4 text-xl-end mt-3 mt-xl-0">
         <a href="#ingresos-gastos" class="btn btn-soft-primary"><i class="bx bx-trending-up me-1"></i> Ver gráfica ingresos vs gastos</a>
-    </div>
+    </div> -->
 </div>
 
 @if($pageError)
@@ -62,7 +62,7 @@
             </div>
         </a>
     </div>
-    <div class="col-6 col-md-4 col-xl-2">
+  <!--  <div class="col-6 col-md-4 col-xl-2">
         <a href="#ingresos-gastos" class="card quick-report h-100 border-light">
             <div class="card-body d-flex flex-column justify-content-between">
                 <div class="d-flex align-items-center mb-3">
@@ -72,7 +72,7 @@
                 <p class="fs-5 fw-semibold mb-0">Últimos 12 meses</p>
             </div>
         </a>
-    </div>
+    </div> -->
 </div>
 
 <section id="ventas" class="mb-5">

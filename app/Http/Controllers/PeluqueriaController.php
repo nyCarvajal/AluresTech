@@ -20,13 +20,11 @@ class PeluqueriaController extends Controller
         $peluqueria = auth()->user()->peluqueria;
         $formAction = route('peluquerias.update');
 
-        $stylistLabels = RoleLabelResolver::forStylist($peluqueria);
-
+       
         return view('peluquerias.edit', [
             'peluqueria' => $peluqueria,
             'formAction' => $formAction,
-            'stylistLabelSingular' => $stylistLabels['singular'],
-            'stylistLabelPlural' => $stylistLabels['plural'],
+            
         ]);
     }
 
