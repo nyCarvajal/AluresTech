@@ -170,7 +170,9 @@ Route::resource('canchas', CanchaController::class);
     Route::resource('nivels', NivelController::class);
 	Route::resource('usuario', UsuarioController::class);
 	Route::resource('clase', ClaseController::class);
-	Route::resource('clientes', ClientesController::class);
+        Route::get('clientes/cumpleanos', [ClientesController::class, 'birthdays'])
+            ->name('clientes.birthdays');
+        Route::resource('clientes', ClientesController::class);
 	Route::resource('caja', CajaController::class);
 	Route::resource('peluqueria', PeluqueriaController::class);
 	Route::resource('membresias', MembresiaController::class);
