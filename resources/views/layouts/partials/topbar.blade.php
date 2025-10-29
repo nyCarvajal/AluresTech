@@ -39,6 +39,16 @@
                               </span>
                          </a>
                     </div>
+                    <div class="topbar-item">
+                         <a href="{{ route('clientes.birthdays') }}" class="topbar-button position-relative">
+                              <iconify-icon icon="solar:cake-outline" class="fs-22 align-middle"></iconify-icon>
+                              @if(($todayBirthdayCount ?? 0) > 0)
+                                   <span class="position-absolute top-0 start-100 topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
+                                        {{ $todayBirthdayCount }}
+                                   </span>
+                              @endif
+                         </a>
+                    </div>
 
                     <!-- User -->
                     <div class="dropdown topbar-item">

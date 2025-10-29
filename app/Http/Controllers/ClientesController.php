@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 
 use App\Notifications\OneMsgTemplateNotification;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Carbon\Carbon;
 
 class ClientesController extends Controller
 {
@@ -37,6 +38,26 @@ class ClientesController extends Controller
             ->get();
 
         return view('clientes.index', compact('clientes'));
+    }
+
+    public function birthdays()
+    {
+        $today = Carbon::today();
+
+        $clientes = Cliente::with(['reservas' => function ($query) {
+                $query->latest('fecha')->limit(1);
+            }])
+            ->whereNotNull('fecha_nacimiento')
+            ->whereMonth('fecha_nacimiento', $today->month)
+            ->whereDay('fecha_nacimiento', $today->day)
+            ->orderBy('nombres')
+            ->orderBy('apellidos')
+            ->get();
+
+        return view('clientes.birthdays', [
+            'clientes' => $clientes,
+            'today' => $today,
+        ]);
     }
 
     /**
