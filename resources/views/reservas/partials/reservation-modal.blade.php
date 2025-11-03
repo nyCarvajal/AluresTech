@@ -98,6 +98,19 @@
   </select>
 </div>
 
+          <!-- Servicio -->
+          <div id="fieldServicio" class="mb-3 d-none">
+            <label for="servicio" class="form-label">Servicio</label>
+            <select id="servicio"
+                    name="servicio_id"
+                    class="form-select">
+              <option value="">Selecciona un servicio</option>
+              @foreach($servicios as $servicio)
+                <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
+              @endforeach
+            </select>
+          </div>
+
 
 
 <!-- Torneo : responsable -->
@@ -114,6 +127,19 @@
 
 
 			
+          <div id="fieldCuenta" class="alert alert-info d-none" role="status">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <span id="reservationCuentaLabel" class="fw-semibold"></span>
+              <a id="reservationCuentaLink"
+                 href="#"
+                 target="_blank"
+                 rel="noopener"
+                 class="btn btn-sm btn-primary">
+                Ver cuenta
+              </a>
+            </div>
+          </div>
+
           </div>
           <div class="modal-footer d-flex justify-content-end">
             <div class="d-flex gap-2">
