@@ -172,6 +172,8 @@ Route::resource('canchas', CanchaController::class);
 	Route::resource('clase', ClaseController::class);
         Route::get('clientes/cumpleanos', [ClientesController::class, 'birthdays'])
             ->name('clientes.birthdays');
+        Route::get('clientes/reengage', [ClientesController::class, 'reengage'])
+            ->name('clientes.reengage');
         Route::resource('clientes', ClientesController::class);
 	Route::resource('caja', CajaController::class);
 	Route::resource('peluqueria', PeluqueriaController::class);
