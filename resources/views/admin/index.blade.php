@@ -5,301 +5,270 @@
 @include('layouts.partials/page-title', ['title' => 'Dashboard', 'subtitle' => 'Inicio'])
 
 <div class="row">
-    <!-- Card 1 -->
-    <div class="col-md-6 col-xl-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-7">
-                        <p class="text-muted mb-0 text-truncate">Ventas</p>
-                        <h5 class="text-dark mt-2 mb-0">${{number_format($totalPagosMes, 0, ',', '.')}}</h5>
-                    </div>
-
-                    <div class="col-5">
-                        <div class="ms-auto avatar-md bg-soft-primary rounded">
-                            <iconify-icon icon="solar:cart-large-linear"
-                                class="fs-32 avatar-title text-primary"></iconify-icon>
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-soft-primary mb-4">
+            <div class="card-body d-flex flex-wrap align-items-start gap-4">
+                <div class="flex-grow-1">
+                    <p class="text-uppercase text-muted fw-semibold mb-1">Hoy</p>
+                    <h3 class="fw-semibold text-dark mb-3">{{ ucfirst($fechaHoyLegible) }}</h3>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Ingresos cobrados hoy</span>
+                            <span class="fw-semibold fs-5 text-dark">${{ number_format($pagosHoy, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Ingresos agendados pendientes hoy</span>
+                            <span class="fw-semibold fs-6 text-dark">${{ number_format($ingresosPendientesHoy, 0, ',', '.') }}</span>
+                        </div>
+                        <div>
+                            <span class="text-muted d-block">Asistencia</span>
+                            <span class="fw-semibold fs-5 text-dark">{{ $asistenciaPorcentaje }}%</span>
+                            <small class="text-success d-block">
+                                ({{ $ausenciasRecuperadas }} ausencia{{ $ausenciasRecuperadas === 1 ? '' : 's' }} recuperada{{ $ausenciasRecuperadas === 1 ? '' : 's' }} con recordatorio WhatsApp ✅)
+                            </small>
                         </div>
                     </div>
+                </div>
+                <div class="ms-auto">
+                    <div class="bg-white border rounded-3 p-3 shadow-sm text-end">
+                        <p class="text-muted mb-1">Citas confirmadas hoy</p>
+                        <h4 class="mb-2">{{ $confirmadasHoy }} / {{ $totalAgendadasHoy }}</h4>
+                        <span class="badge bg-soft-primary text-primary">Huecos libres: {{ $totalHuecosDisponibles }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <p class="text-muted text-uppercase fw-semibold mb-1">Caja de hoy</p>
+                    <h3 class="mb-2">${{ number_format($pagosHoy, 0, ',', '.') }}</h3>
+                    @php
+                        $variacionSigno = $variacionCaja >= 0 ? '↑' : '↓';
+                        $variacionClase = $variacionCaja >= 0 ? 'bg-soft-success text-success' : 'bg-soft-danger text-danger';
+                    @endphp
+                    <span class="badge {{ $variacionClase }}">
+                        {{ $variacionSigno }} ${{ number_format(abs($variacionCaja), 0, ',', '.') }} vs ayer
+                    </span>
+                </div>
+                <div class="ms-3 avatar-md bg-soft-primary rounded d-flex align-items-center justify-content-center">
+                    <iconify-icon icon="solar:scissors-linear" class="fs-32 text-primary"></iconify-icon>
                 </div>
             </div>
             <div id="chart01"></div>
         </div>
     </div>
-
-    <!-- Card 2 -->
     <div class="col-md-6 col-xl-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                       <p class="text-muted mb-0 text-truncate">Clientes</p>
-
-                        <h3 class="text-dark mt-2 mb-0">{{$totalClientes}}</h3>
-
-                    </div>
-
-                    <div class="col-6">
-                        <div class="ms-auto avatar-md bg-soft-primary rounded">
-                            <iconify-icon icon="solar:users-group-two-rounded-broken"
-                                class="fs-32 avatar-title text-primary"></iconify-icon>
-                        </div>
-                    </div>
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <p class="text-muted text-uppercase fw-semibold mb-1">Clientes registrados</p>
+                    <h3 class="mb-0">{{ number_format($totalClientes) }}</h3>
+                </div>
+                <div class="ms-3 avatar-md bg-soft-primary rounded d-flex align-items-center justify-content-center">
+                    <iconify-icon icon="solar:users-group-two-rounded-broken" class="fs-32 text-primary"></iconify-icon>
                 </div>
             </div>
             <div id="chart02"></div>
         </div>
     </div>
-
-    <!-- Card 3 -->
     <div class="col-md-6 col-xl-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6">
-                        <p class="text-muted mb-0 text-truncate">Citas</p>
-                        <h3 class="text-dark mt-2 mb-0">{{$totalReservas}}</h3>
-                    </div>
-
-                    <div class="col-6">
-                        <div class="ms-auto avatar-md bg-soft-primary rounded">
-                            <iconify-icon icon="solar:calendar-outline"
-                                class="fs-32 avatar-title text-primary"></iconify-icon>
-                        </div>
-                    </div>
+        <div class="card h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <p class="text-muted text-uppercase fw-semibold mb-1">Citas del mes</p>
+                    <h3 class="mb-0">{{ $totalReservas }}</h3>
+                </div>
+                <div class="ms-3 avatar-md bg-soft-primary rounded d-flex align-items-center justify-content-center">
+                    <iconify-icon icon="solar:calendar-outline" class="fs-32 text-primary"></iconify-icon>
                 </div>
             </div>
             <div id="chart03"></div>
         </div>
     </div>
-
-    <!-- Card 4 -->
-   
 </div>
 
+<div class="row g-3 mb-4">
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title mb-0">Agenda de hoy</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-4 d-flex flex-column gap-2">
+                    <li class="d-flex align-items-center gap-2">
+                        <span class="fs-4">💵</span>
+                        <span class="fw-semibold">Total cobrado hoy:</span>
+                        <span class="ms-auto fw-bold text-dark">${{ number_format($pagosHoy, 0, ',', '.') }}</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <span class="fs-4">📅</span>
+                        <span>Citas para hoy:</span>
+                        <span class="ms-auto fw-semibold text-dark">{{ $confirmadasHoy }} / {{ $totalAgendadasHoy }} confirmadas</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <span class="fs-4">⏳</span>
+                        <span>Huecos libres esta tarde:</span>
+                        <span class="ms-auto fw-semibold text-dark">{{ $totalHuecosDisponibles }}</span>
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <span class="fs-4">🚫</span>
+                        <span>Ausencias:</span>
+                        <span class="ms-auto fw-semibold text-dark">{{ $ausenciasHoy }}</span>
+                    </li>
+                </ul>
+                <a href="{{ route('clientes.reengage') }}" class="btn btn-success btn-lg w-100">
+                    Llenar huecos por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title mb-0">Rendimiento del Equipo - Hoy</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    @forelse ($teamPerformance as $registro)
+                        @php
+                            $barbero = optional($registro->barbero)->nombre_completo ?? 'Sin asignar';
+                        @endphp
+                        <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-4">💈</span>
+                                <div>
+                                    <span class="fw-semibold">{{ $barbero }}</span>
+                                    <div class="text-muted small">{{ $registro->servicios }} servicio{{ $registro->servicios == 1 ? '' : 's' }}</div>
+                                </div>
+                            </div>
+                            <span class="fw-semibold text-dark">${{ number_format((int) $registro->total_cobrado, 0, ',', '.') }}</span>
+                        </li>
+                    @empty
+                        <li class="py-4 text-center text-muted">
+                            Aún no hay ventas registradas hoy.
+                        </li>
+                    @endforelse
+                </ul>
+            </div>
+            <div class="card-footer bg-light border-0 d-flex justify-content-between align-items-center">
+                <span class="fw-semibold text-uppercase">TOTAL HOY</span>
+                <span class="fw-bold text-dark">${{ number_format($totalEquipoHoy, 0, ',', '.') }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header border-0 pb-0">
+                <h4 class="card-title mb-0">Huecos Libres de Hoy</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Quedan {{ $totalHuecosDisponibles }} espacio{{ $totalHuecosDisponibles == 1 ? '' : 's' }} libre{{ $totalHuecosDisponibles == 1 ? '' : 's' }}:</p>
+                <div class="list-group list-group-flush">
+                    @forelse ($huecosDestacados as $hueco)
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">{{ $hueco->inicio->format('H:i') }}</h5>
+                                <p class="text-muted mb-0">{{ $hueco->servicio }} ({{ $hueco->barbero }})</p>
+                            </div>
+                            <span class="badge bg-soft-primary text-primary">{{ $hueco->duracion }} min</span>
+                        </div>
+                    @empty
+                        <div class="text-muted py-4 text-center">
+                            Agenda completa por ahora.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+            <div class="card-footer bg-light border-0">
+                <a href="{{ route('clientes.reengage') }}" class="btn btn-outline-success w-100">
+                    Compartir huecos por WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row">
     <div class="col-xl-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-               <h4 class="card-title mb-0">Nuevos Clientes</h4>
-
-                <a href="{{ route('clientes.index') }}" class="btn btn-sm btn-light">
-
-                    Ver Todos
-                </a>
+                <h4 class="card-title mb-0">Nuevos Clientes</h4>
+                <a href="{{ route('clientes.index') }}" class="btn btn-sm btn-light">Ver todos</a>
             </div>
-            <!-- end card-header-->
-
             <div class="card-body pb-1">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 table-centered">
                         <thead>
-                            <th class="py-1">ID</th>
-                            <th class="py-1">Nombres</th>
-                            <th class="py-1">Whatsapp</th>
-                           
+                            <tr>
+                                <th class="py-1">ID</th>
+                                <th class="py-1">Nombres</th>
+                                <th class="py-1">WhatsApp</th>
+                            </tr>
                         </thead>
                         <tbody>
-						
-                            @forelse($clientes as $cliente)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td><a href="{{ route('clientes.show', $cliente) }}" >{{ $cliente->nombres }} {{ $cliente->apellidos }} </a></td>
-                                <td>  @php
-                  // Limpiar el número para wa.me
-                  $clean = preg_replace('/\D+/', '', $cliente->whatsapp);
-                @endphp<a href="https://wa.me/{{ $clean }}" target="_blank">
-                  {{ $cliente->whatsapp }}
-                </a></td>
-                               
-                                
-                            </tr>
-							 @empty
-                      <tr><td colspan="4" class="text-center">Aún no hay clientes</td></tr>
-                  @endforelse
-                            
-                               
-                           
+                            @forelse ($clientes as $cliente)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td><a href="{{ route('clientes.show', $cliente) }}">{{ $cliente->nombres }} {{ $cliente->apellidos }}</a></td>
+                                    <td>
+                                        @php
+                                            $clean = preg_replace('/\D+/', '', $cliente->whatsapp);
+                                        @endphp
+                                        <a href="https://wa.me/{{ $clean }}" target="_blank">{{ $cliente->whatsapp }}</a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center">Aún no hay clientes</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-            <!-- end card body -->
         </div>
-        <!-- end card-->
     </div>
-    <!-- end col -->
-
     <div class="col-xl-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title mb-0">
-                    Transacciones Recientes
-                </h4>
-
-                <a href="{{ route('orden_de_compras.index') }}" class="btn btn-sm btn-light">
-                    Ver Todas
-                </a>
+                <h4 class="card-title mb-0">Transacciones recientes</h4>
+                <a href="{{ route('orden_de_compras.index') }}" class="btn btn-sm btn-light">Ver todas</a>
             </div>
-            <!-- end card-header-->
-
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0 table-centered">
                         <thead>
-                            <th class="py-1">ID</th>
-                            <th class="py-1">Fecha</th>
-                            <th class="py-1">Cliente</th>
-                            <th class="py-1">Monto</th>
-                           
+                            <tr>
+                                <th class="py-1">ID</th>
+                                <th class="py-1">Fecha</th>
+                                <th class="py-1">Cliente</th>
+                                <th class="py-1">Monto</th>
+                            </tr>
                         </thead>
                         <tbody>
-						 @forelse($cuentas as $cuenta)
-                      <tr>
-                          <td>{{ $loop->iteration }}</td>
-						  <td><a href="{{ route('orden_de_compras.show', $cuenta) }}" >{{ $cuenta->fecha_hora->format('d/m/Y H:i') }}</a></td>
-                          <td>{{ $cuenta->clienterel->nombres }} {{ $cuenta->clienterel->apellidos }}</td>
-                          <td>${{ number_format($cuenta->monto, 0, ',', '.') }}</td>
-                          
-                      </tr>
-                  @empty
-                      <tr><td colspan="4" class="text-center">Sin cuentas</td></tr>
-                  @endforelse
-						
-						
-						
-                            
+                            @forelse ($cuentas as $cuenta)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td><a href="{{ route('orden_de_compras.show', $cuenta) }}">{{ $cuenta->fecha_hora->format('d/m/Y H:i') }}</a></td>
+                                    <td>{{ $cuenta->clienterel->nombres }} {{ $cuenta->clienterel->apellidos }}</td>
+                                    <td>${{ number_format($cuenta->monto, 0, ',', '.') }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center">Sin cuentas</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-            <!-- end card body -->
         </div>
-        <!-- end card-->
     </div>
-    <!-- end col -->
 </div>
- <!--
-<div class="row">
-    <div class="col-lg-4">
-        <div class="card card-height-100">
-            <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                <h4 class=" mb-0 flex-grow-1 mb-0">Revenue</h4>
-                <div>
-                    <button type="button" class="btn btn-sm btn-outline-light">ALL</button>
-                    <button type="button" class="btn btn-sm btn-outline-light">1M</button>
-                    <button type="button" class="btn btn-sm btn-outline-light">6M</button>
-                    <button type="button" class="btn btn-sm btn-outline-light active">1Y</button>
-                </div>
-            </div>
-
-            <div class="card-body pt-0">
-                <div dir="ltr">
-                    <div id="dash-performance-chart" class="apex-charts"></div>
-                </div>
-            </div>
-
-        </div> 
-    </div> 
-	
-
-    <div class="col-lg-4">
-        <div class="card card-height-100">
-            <div class="card-header d-flex align-items-center justify-content-between gap-2">
-                <h4 class="card-title flex-grow-1 mb-0">Sales By Category</h4>
-                <div>
-                    <button type="button" class="btn btn-sm btn-outline-light">ALL</button>
-                    <button type="button" class="btn btn-sm btn-outline-light">1M</button>
-                    <button type="button" class="btn btn-sm btn-outline-light">6M</button>
-                    <button type="button" class="btn btn-sm btn-outline-light active">1Y</button>
-                </div>
-            </div>
-
-            <div class="card-body">
-                <div dir="ltr">
-                    <div id="conversions" class="apex-charts"></div>
-                </div>
-                <div class="table-responsive mb-n1 mt-2">
-                    <table class="table table-nowrap table-borderless table-sm table-centered mb-0">
-                        <thead class="bg-light bg-opacity-50 thead-sm">
-                            <tr>
-                                <th class="py-1">
-                                    Category
-                                </th>
-                                <th class="py-1">Orders</th>
-                                <th class="py-1">Perc.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Grocery</td>
-                                <td>187,232</td>
-                                <td>
-                                    48.63%
-                                    <span class="badge badge-soft-success float-end">2.5% Up</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Electonics</td>
-                                <td>126,874</td>
-                                <td>
-                                    36.08%
-                                    <span class="badge badge-soft-success float-end">8.5% Up</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Other</td>
-                                <td>90,127</td>
-                                <td>
-                                    23.41%
-                                    <span class="badge badge-soft-danger float-end">10.98% Down</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-            </div>
-
-        </div> 
-    </div> 
-
-    <div class="col-lg-4">
-        <div class="card">
-            <div
-                class="d-flex card-header justify-content-between align-items-center border-bottom border-dashed">
-                <h4 class="card-title mb-0">Sessions by Country</h4>
-                <div class="dropdown">
-                    <a href="#" class="dropdown-toggle btn btn-sm btn-outline-light"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        View Data
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end">
-                        
-                        <a href="javascript:void(0);" class="dropdown-item">Download</a>
-                        
-                        <a href="javascript:void(0);" class="dropdown-item">Export</a>
-                        
-                        <a href="javascript:void(0);" class="dropdown-item">Import</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-body pt-0">
-                <div id="world-map-markers" class="mt-3" style="height: 309px">
-                </div>
-            </div> 
-
--->
-        </div> <!-- end card-->
-    </div> <!-- end col-->
-
-</div> <!-- End row -->
-
-<!-- end row -->
-@endsection
-
-@section('scripts')
-
 @endsection
