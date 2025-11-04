@@ -17,10 +17,21 @@
         </div>
     @endif
 
+    @isset($saldoPendiente)
+        <div class="alert alert-info">
+            <i class="fa fa-info-circle me-1"></i>
+            Saldo pendiente de la orden: <strong>COP {{ number_format($saldoPendiente, 0, ',', '.') }}</strong>
+        </div>
+    @endisset
+
     <form action="{{ route('pagos.store') }}" method="POST" id="pago-form">
         @csrf
 
-        @include('pagos._form')
+        @include('pagos._form', [
+            'saldoPendiente' => $saldoPendiente ?? null,
+            'defaultDate' => $defaultDate ?? null,
+            'useStandaloneDefaults' => true,
+        ])
     </form>
 </div>
 @endsection
