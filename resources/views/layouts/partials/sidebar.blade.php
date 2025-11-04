@@ -1,418 +1,243 @@
 @php
-    $sidebarStylistLabels = \App\Support\RoleLabelResolver::forStylist();
-    $sidebarStylistLabelSingular = trim($sidebarStylistLabels['singular'] ?? '');
+    use Illuminate\Support\Arr;
+    use Illuminate\Support\Facades\Route;
+    use Illuminate\Support\Str;
 
-    if ($sidebarStylistLabelSingular === '') {
-        $sidebarStylistLabelSingular = \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
-    }
+    $user = auth()->user();
+    $modoDemo = session('modo_demo', false) || ($user && method_exists($user, 'hasRole') && $user->hasRole('demo'));
+
+    $resolveLink = function (array $entry) {
+        $candidates = Arr::wrap($entry['route'] ?? null);
+
+        foreach ($candidates as $candidate) {
+            if (!$candidate) {
+                continue;
+            }
+
+            if (Route::has($candidate)) {
+                return route($candidate);
+            }
+
+            if (is_string($candidate) && Str::startsWith($candidate, ['http://', 'https://', '/'])) {
+                return Str::startsWith($candidate, ['http://', 'https://']) ? $candidate : url($candidate);
+            }
+        }
+
+        if (!empty($entry['url'])) {
+            return Str::startsWith($entry['url'], ['http://', 'https://'])
+                ? $entry['url']
+                : url($entry['url']);
+        }
+
+        return '#';
+    };
+
+    $canView = function (array $entry) use ($user) {
+        $ability = $entry['can'] ?? null;
+
+        if (empty($ability)) {
+            return true;
+        }
+
+        return $user?->can($ability) ?? false;
+    };
+
+    $menuDemo = [
+        ['group' => 'Menú SIMPLE (Demo / Dueño rápido)'],
+        [
+            'label' => 'Resumen de Hoy',
+            'icon' => 'lucide:home',
+            'route' => ['dashboard.index', 'dashboard'],
+        ],
+        [
+            'label' => 'Agenda & Huecos',
+            'icon' => 'lucide:calendar',
+            'route' => ['agenda.hoy', 'reservas.calendar'],
+            'badge' => 'Huecos libres',
+        ],
+        [
+            'label' => 'Caja de Hoy',
+            'icon' => 'lucide:wallet',
+            'route' => ['caja.hoy', 'cajas.index'],
+            'can' => 'ver_caja',
+        ],
+        [
+            'label' => 'Clientes (WhatsApp)',
+            'icon' => 'lucide:users',
+            'route' => ['clientes.index'],
+        ],
+        [
+            'label' => 'Reportes Rápidos',
+            'icon' => 'lucide:bar-chart-3',
+            'route' => ['reportes.rapidos', 'pages.charts'],
+        ],
+        [
+            'label' => '⚙️ Ver más opciones…',
+            'icon' => 'lucide:chevron-right',
+            'route' => ['menu.completo', 'config.index'],
+            'url' => '/config/opciones-avanzadas',
+        ],
+    ];
+
+    $menuCompleto = [
+        ['group' => 'Menú COMPLETO (No demo)'],
+        ['group' => 'Operación diaria'],
+        [
+            'label' => 'Resumen de Hoy',
+            'icon' => 'lucide:home',
+            'route' => ['dashboard.index', 'dashboard'],
+        ],
+        [
+            'label' => 'Agenda & Huecos',
+            'icon' => 'lucide:calendar',
+            'route' => ['agenda.hoy', 'reservas.calendar'],
+            'badge' => 'Huecos libres',
+            'children' => [
+                ['label' => 'Día', 'route' => ['agenda.hoy', 'reservas.calendar']],
+                ['label' => 'Semana', 'route' => ['agenda.semana']],
+                ['label' => 'Mes', 'route' => ['agenda.mes']],
+            ],
+        ],
+        [
+            'label' => 'Caja / Ventas',
+            'icon' => 'lucide:wallet',
+            'route' => ['caja.hoy', 'cajas.index'],
+            'can' => 'ver_caja',
+            'children' => [
+                ['label' => 'Movimientos', 'route' => ['caja.movimientos', 'cajas.index']],
+                ['label' => 'Apertura', 'route' => ['caja.apertura', 'cajas.create']],
+                ['label' => 'Cierre', 'route' => ['caja.cierre', 'cajas.index']],
+            ],
+        ],
+        [
+            'label' => 'Clientes (WhatsApp)',
+            'icon' => 'lucide:users',
+            'route' => ['clientes.index'],
+            'children' => [
+                ['label' => 'Segmentos', 'route' => ['clientes.segmentos', 'clientes.index']],
+                ['label' => 'Cumpleaños', 'route' => ['clientes.cumpleanios', 'clientes.index']],
+            ],
+        ],
+        [
+            'label' => 'Servicios & Precios',
+            'icon' => 'lucide:scissors',
+            'route' => ['servicios.index', 'items.index'],
+        ],
+        ['group' => 'Administración'],
+        [
+            'label' => 'Arqueo de Caja',
+            'icon' => 'lucide:clipboard-list',
+            'route' => ['caja.arqueo', 'cajas.index'],
+            'can' => 'ver_caja',
+        ],
+        [
+            'label' => 'Inventario',
+            'icon' => 'lucide:boxes',
+            'route' => ['inventario.index', 'items.index'],
+        ],
+        [
+            'label' => 'Reportes',
+            'icon' => 'lucide:bar-chart',
+            'route' => ['reportes.index', 'pages.charts'],
+            'children' => [
+                ['label' => 'Ventas diarias', 'route' => ['reportes.ventas-diarias', 'pages.charts']],
+                ['label' => 'Top barberos', 'route' => ['reportes.por-barbero', 'pages.charts']],
+                ['label' => 'Asistencia', 'route' => ['reportes.asistencia', 'pages.charts']],
+            ],
+        ],
+        ['group' => 'Ajustes'],
+        [
+            'label' => 'Usuarios & Roles',
+            'icon' => 'lucide:shield',
+            'route' => ['usuarios.index', 'users.index'],
+            'can' => 'administrar_usuarios',
+        ],
+        [
+            'label' => 'Personalizar Peluquería',
+            'icon' => 'lucide:paintbrush',
+            'route' => ['personalizar.index', 'peluquerias.edit'],
+        ],
+        [
+            'label' => 'Configuración',
+            'icon' => 'lucide:settings',
+            'route' => ['config.index', 'tipocitas.index'],
+        ],
+    ];
+
+    $items = $modoDemo ? $menuDemo : $menuCompleto;
 @endphp
 
 <div class="app-sidebar">
-     <!-- Sidebar Logo -->
      <div class="logo-box">
-          <a href="{{route('dashboard') }}" class="logo-dark">
+          <a href="{{ Route::has('dashboard.index') ? route('dashboard.index') : (Route::has('dashboard') ? route('dashboard') : url('/')) }}" class="logo-dark">
                <img src="/images/logo-sm.png" class="logo-sm" alt="logo sm">
                <img src="/images/logodarkal.png" class="logo-lg" alt="logo dark">
           </a>
 
-          <a href="" class="logo-light">
+          <a href="{{ Route::has('dashboard.index') ? route('dashboard.index') : (Route::has('dashboard') ? route('dashboard') : url('/')) }}" class="logo-light">
                <img src="/images/logo-sm.png" class="logo-sm" alt="logo sm">
                <img src="/images/logo-light.png" class="logo-lg" alt="logo light">
           </a>
      </div>
 
      <div class="scrollbar" data-simplebar>
+          <div class="px-3 pt-3 pb-2">
+               @if($modoDemo)
+                    <p class="text-uppercase text-muted fw-semibold small mb-1">Menú SIMPLE (Demo / Dueño rápido)</p>
+                    <p class="text-muted small mb-0">Pensado para cerrar ventas: plata → agenda → clientes → reporte.</p>
+               @else
+                    <p class="text-uppercase text-muted fw-semibold small mb-1">Menú COMPLETO (No demo)</p>
+                    <p class="text-muted small mb-0">Operación diaria, administración y ajustes al alcance.</p>
+               @endif
+          </div>
 
           <ul class="navbar-nav" id="navbar-nav">
+               @foreach($items as $index => $item)
+                    @if(isset($item['group']))
+                         <li class="menu-title">{{ $item['group'] }}</li>
+                         @continue
+                    @endif
 
-               <li class="menu-title">Menu...</li>
+                    @if(!$canView($item))
+                         @continue
+                    @endif
 
-               <li class="nav-item">
-                    <a class="nav-link" href="{{route('dashboard') }}">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:home-3-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Inicio </span>
-                         
-                    </a>
-               </li>
-			    <li class="nav-item">
-                    <a class="nav-link" href="{{ route('ventas.index') }}">
-                         <span class="nav-icon">
-                              <iconify-icon icon="solar:cart-large-4-bold-duotone"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Facturación </span>
-                         
-                    </a>
-               </li>
-			    <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarAuthentication" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarAuthentication">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:user-3-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Clientes </span>
-                    </a>
-                    <div class="collapse" id="sidebarAuthentication">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('clientes.create') }}">Crear</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('clientes.index') }}">Listar</a>
-                              </li>
-                            
-                         </ul>
-                    </div>
-               </li>
-			   
-               <li class="nav-item">
-                    <a class="nav-link" href="{{ route('reservas.calendar') }}">
-                         <span class="nav-icon">
-                              <i class="bx  bx-calendar-alt"  ></i> </span>
-                         <span class="nav-text"> Citas </span>
-                    </a>
-               </li>
-			     <li class="nav-item">
-                    <a class="nav-link" href="{{ route('items.index') }}">
-                         <span class="nav-icon">
-						 <i class="bx bx-dock-left"></i> 
-                               </span>
-                         <span class="nav-text"> Productos/Servicios </span>
-                    </a>
-               </li>
-			   
-			   
-			   <li class="menu-title">Configuración</li>
+                    @php
+                        $hasChildren = !empty($item['children']);
+                        $icon = $item['icon'] ?? 'lucide:circle';
+                        $url = $resolveLink($item);
+                    @endphp
 
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarLayouts" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarLayouts">
-                         <span class="nav-icon">
-                             <i class='bx  bx-cog'  ></i> 
-                         </span>
-                         <span class="nav-text"> Configuración </span>
-                    </a>
-                    <div class="collapse" id="sidebarLayouts">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('tipocitas.index') }}">
-                                        Tipos de Citas</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('tipo-identificaciones.index') }}">
-                                        Tipos de identificaciones</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('areas.index') }}">
-                                        Listar áreas</a>
-                              </li>
+                    <li class="nav-item">
+                         <a class="nav-link d-flex align-items-center gap-2" href="{{ $url }}">
+                              <span class="nav-icon d-inline-flex align-items-center justify-content-center">
+                                   <iconify-icon icon="{{ $icon }}" class="fs-5"></iconify-icon>
+                              </span>
+                              <span class="nav-text flex-grow-1">{{ $item['label'] }}</span>
+                              @if(!empty($item['badge']))
+                                   <span class="badge bg-light text-primary ms-auto">{{ $item['badge'] }}</span>
+                              @endif
+                         </a>
 
-                         </ul>
-                    </div>
-               </li>
-			   <li class="nav-item">
-                    <a class="nav-link" href="{{ route('peluquerias.edit') }}">
-                         <span class="nav-icon">
-						 <i class="bx bx-pencil"></i>
-                               </span>
-                         <span class="nav-text"> Personalizar Peluqueria  </span>
-                    </a>
-               </li>
-			   
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarAuthentication" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarAuthentication">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:user-3-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Usuarios </span>
-                    </a>
-                    <div class="collapse" id="sidebarAuthentication">
-                         <ul class="nav sub-navbar-nav">
-						 
-							<li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('users.admins.create') }}">Crea Usuario</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route('users.trainers.create') }}">Crea {{ $sidebarStylistLabelSingular }}</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('users.index') }}">Listar Usuarios</a>
-                              </li>
-							 						  
-                             
-                         </ul>
-                    </div>
-               </li>
-
-               
-
-               <li class="menu-title">Administración</li>
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarBaseUI" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarBaseUI">
-                         <span class="nav-icon"><i class="bx bx-money-withdraw"></i></span>
-                         <span class="nav-text"> Caja </span>
-                    </a>
-                    <div class="collapse" id="sidebarBaseUI">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('cajas.index') }}">Caja de hoy</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('cajas.index') }}">Listar Cajas</a>
-                              </li>
-							  <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('pagos.index') }}">Pagos</a>
-                              </li>
-							  <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('salidas.index') }}">Gastos</a>
-                              </li>
-                              
-                         </ul>
-                    </div>
-               </li>
-
-               <li class="nav-item">
-                    <a class="nav-link" href="{{ route('pages.charts') }}">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:chart-bar-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Informes Administrativos </span>
-                    </a>
-               </li>
-			   <li class="nav-item">
-                    <a class="nav-link" href="{{ route ('proveedores.index') }}">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:chart-bar-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Proveedores </span>
-                    </a>
-               </li>
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarForms" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarForms">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:box-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Salidas </span>
-                    </a>
-                    <div class="collapse" id="sidebarForms">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('salidas.index') }}">Listar</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('salidas.create') }}">Crear</a>
-                              </li>
-                             
-                         </ul>
-                    </div>
-               </li>
-<?php /**			   <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarError" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarError">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:bug-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Error Pages</span>
-                    </a>
-                    <div class="collapse" id="sidebarError">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['pages','404']) }}">Pages 404</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['pages','404-alt']) }}">Pages 404 Alt</a>
-                              </li>
-							   <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['forms','validation']) }}">Validation</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['forms','fileuploads']) }}">File Upload</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['forms','editors']) }}">Editors</a>
-                              </li>
-							  <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','avatar']) }}">Avatar</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','badge']) }}">Badge</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','breadcrumb']) }}">Breadcrumb</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','buttons']) }}">Buttons</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','card']) }}">Card</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','carousel']) }}">Carousel</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','collapse']) }}">Collapse</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','dropdown']) }}">Dropdown</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','list-group']) }}">List Group</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','modal']) }}">Modal</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','tabs']) }}">Tabs</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','offcanvas']) }}">Offcanvas</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','pagination']) }}">Pagination</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','placeholders']) }}">Placeholders</a>
-                              </li>
-							   <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['auth','signup']) }}">Sign Up</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['auth','password']) }}">Reset Password</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['auth','lock-screen']) }}">Lock Screen</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','popovers']) }}">Popovers</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','progress']) }}">Progress</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','scrollspy']) }}">Scrollspy</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','spinners']) }}">Spinners</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','toasts']) }}">Toasts</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['ui','tooltips']) }}">Tooltips</a>
-                              </li>
-                         </ul>
-                    </div>
-               </li>
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarTables" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarTables">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:table-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Tables </span>
-                    </a>
-                    <div class="collapse" id="sidebarTables">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['tables','basic']) }}">Basic Tables</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['tables','gridjs']) }}">Grid Js</a>
-                              </li>
-                         </ul>
-                    </div>
-               </li>
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarIcons" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarIcons">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:dribbble-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Icons </span>
-                    </a>
-                    <div class="collapse" id="sidebarIcons">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['icons','boxicons']) }}">Boxicons</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['icons','solar']) }}">Solar Icons</a>
-                              </li>
-                         </ul>
-                    </div>
-               </li>
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarMaps" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarMaps">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:map-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Maps </span>
-                    </a>
-                    <div class="collapse" id="sidebarMaps">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['maps','google']) }}">Google Maps</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('second' , ['maps','vector']) }}">Vector Maps</a>
-                              </li>
-                         </ul>
-                    </div>
-               </li>
-
-               
-
-               <li class="nav-item">
-                    <a class="nav-link menu-arrow" href="#sidebarMultiLevelDemo" data-bs-toggle="collapse" role="button"
-                         aria-expanded="false" aria-controls="sidebarMultiLevelDemo">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:menu-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Menu Item </span>
-                    </a>
-                    <div class="collapse" id="sidebarMultiLevelDemo">
-                         <ul class="nav sub-navbar-nav">
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="javascript:void(0);">Menu Item 1</a>
-                              </li>
-                              <li class="sub-nav-item">
-                                   <a class="sub-nav-link  menu-arrow" href="#sidebarItemDemoSubItem"
-                                        data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                        aria-controls="sidebarItemDemoSubItem">
-                                        <span> Menu Item 2 </span>
-                                   </a>
-                                   <div class="collapse" id="sidebarItemDemoSubItem">
-                                        <ul class="nav sub-navbar-nav">
+                         @if($hasChildren)
+                              <ul class="nav sub-navbar-nav ms-4 mt-1">
+                                   @foreach($item['children'] as $child)
+                                        @if($canView($child))
+                                             @php $childUrl = $resolveLink($child); @endphp
                                              <li class="sub-nav-item">
-                                                  <a class="sub-nav-link" href="javascript:void(0);">Menu Sub item</a>
+                                                  <a class="sub-nav-link d-flex justify-content-between align-items-center" href="{{ $childUrl }}">
+                                                       <span>{{ $child['label'] }}</span>
+                                                       @if(!empty($child['badge']))
+                                                            <span class="badge bg-light text-muted ms-2">{{ $child['badge'] }}</span>
+                                                       @endif
+                                                  </a>
                                              </li>
-                                        </ul>
-                                   </div>
-                              </li>
-                         </ul>
-                    </div>
-               </li>
-
-               <li class="nav-item">
-                    <a class="nav-link disabled" href="javascript:void(0);">
-                         <span class="nav-icon">
-                              <iconify-icon icon="mingcute:close-circle-line"></iconify-icon>
-                         </span>
-                         <span class="nav-text"> Disable Item </span>
-                    </a>
-               </li>
-			   */ ?>
+                                        @endif
+                                   @endforeach
+                              </ul>
+                         @endif
+                    </li>
+               @endforeach
           </ul>
      </div>
 </div>
