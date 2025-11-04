@@ -3,6 +3,12 @@
 @php
     // Si estamos en edición, $pago existe; en creación no.
     $isEdit = isset($pago);
+    $useStandaloneDefaults = $useStandaloneDefaults ?? false;
+    $saldoPendiente = $saldoPendiente ?? null;
+
+    if ($useStandaloneDefaults) {
+        $defaultDate = ($defaultDate ?? \Carbon\Carbon::now('America/Bogota')->format('Y-m-d\TH:i'));
+    }
 @endphp
 
 <input type="hidden" name="cuenta" value="{{ old('cuenta', $isEdit ? $pago->cuenta : request('cuenta')) }}">
@@ -18,7 +24,7 @@
             name="fecha_hora"
             id="fecha_hora"
             class="form-control"
-            value="{{ old('fecha_hora', $isEdit ? $pago->fecha_hora->format('Y-m-d\TH:i') : '') }}"
+            value="{{ old('fecha_hora', $isEdit && $pago->fecha_hora ? $pago->fecha_hora->format('Y-m-d\TH:i') : ($useStandaloneDefaults ? ($defaultDate ?? '') : '')) }}"
             required
         >
     </div>
@@ -34,7 +40,7 @@
             id="valor"
             class="form-control"
             placeholder="0"
-            value="{{ old('valor', $isEdit ? $pago->valor : '') }}"
+            value="{{ old('valor', $isEdit ? $pago->valor : ($useStandaloneDefaults ? ($saldoPendiente ?? '') : '')) }}"
             required
         >
     </div>
@@ -59,7 +65,7 @@
     </div>
 
     {{-- BANCO --}}
-    <div class="col-md-6 mb-3">
+    <div class="col-md-6 mb-3" id="banco-wrapper">
         <label for="banco" class="form-label">
             <i class="fa fa-building me-1"></i> Banco
         </label>
@@ -111,13 +117,39 @@
 
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('pago-form');
-        const valorInput = document.getElementById('valor');
-        form.addEventListener('submit', function() {
-            valorInput.value = valorInput.value.replace(/[^0-9]/g, '');
+@if($useStandaloneDefaults)
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('pago-form');
+            const valorInput = document.getElementById('valor');
+            const medioSelect = document.getElementById('medio_pago');
+            const bancoWrapper = document.getElementById('banco-wrapper');
+            const bancoSelect = document.getElementById('banco');
+
+            if (form && valorInput) {
+                form.addEventListener('submit', function() {
+                    valorInput.value = valorInput.value.replace(/[^0-9]/g, '');
+                });
+            }
+
+            if (!medioSelect || !bancoWrapper) {
+                return;
+            }
+
+            const toggleBanco = () => {
+                if (medioSelect.value === 'efectivo') {
+                    bancoWrapper.classList.add('d-none');
+                    if (bancoSelect) {
+                        bancoSelect.value = '';
+                    }
+                } else {
+                    bancoWrapper.classList.remove('d-none');
+                }
+            };
+
+            toggleBanco();
+            medioSelect.addEventListener('change', toggleBanco);
         });
-    });
-</script>
+    </script>
+@endif
 
