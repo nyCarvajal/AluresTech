@@ -13,6 +13,8 @@ class OrdenDeCompraController extends Controller
     public function index()
     {
         $ordenes = OrdenDeCompra::with('clienterel')
+            ->withSum('ventas as total_ventas', 'valor_total')
+            ->withSum('pagos as total_pagado', 'valor')
             ->orderBy('fecha_hora', 'desc')
             ->whereNotNull('cliente')
             ->paginate(15);
@@ -68,9 +70,11 @@ class OrdenDeCompraController extends Controller
 
     public function show(OrdenDeCompra $ordenDeCompra)
     {
-		return view('ordendecompras.view', [
-        'orden' => $ordenDeCompra
-    ]);
+        $ordenDeCompra->loadMissing(['ventas.item', 'pagos']);
+
+        return view('ordendecompras.view', [
+            'orden' => $ordenDeCompra,
+        ]);
     }
 
     public function edit(OrdenDeCompra $ordenDeCompra)
