@@ -87,9 +87,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const clientesField = form.querySelector('#fieldClientes');
           const entrenadorField = form.querySelector('#fieldEntrenador');
           const responsableField = form.querySelector('#fieldResponsable');
+          const servicioField = form.querySelector('#fieldServicio');
           const clienteSelect = form.querySelector('#clientes');
           const entrenadorSelect = form.querySelector('#entrenador');
           const responsableSelect = form.querySelector('#responsable');
+          const servicioSelect = form.querySelector('#servicio');
+          const cuentaInfo = form.querySelector('#fieldCuenta');
+          const cuentaLink = form.querySelector('#reservationCuentaLink');
+          const cuentaLabel = form.querySelector('#reservationCuentaLabel');
 
           const setCancelButtonText = (text) => {
             if (cancelBtnLabel) {
@@ -181,24 +186,71 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           };
 
-          const switchFields = (type) => {
-            if (!clientesField || !entrenadorField || !responsableField) {
+          const hideCuentaInfo = () => {
+            if (cuentaInfo) {
+              cuentaInfo.classList.add('d-none');
+            }
+            if (cuentaLink) {
+              cuentaLink.setAttribute('href', '#');
+            }
+            if (cuentaLabel) {
+              cuentaLabel.textContent = '';
+            }
+          };
+
+          const showCuentaInfo = (label, url) => {
+            if (!cuentaInfo) {
+              return;
+            }
+            if (!label || !url) {
+              hideCuentaInfo();
               return;
             }
 
-            if (type === 'Reserva' || type === 'Clase') {
-              clientesField.classList.remove('d-none');
-              entrenadorField.classList.remove('d-none');
-              responsableField.classList.add('d-none');
-            } else if (type === 'Torneo') {
-              clientesField.classList.add('d-none');
-              entrenadorField.classList.add('d-none');
-              responsableField.classList.remove('d-none');
-            } else {
-              clientesField.classList.add('d-none');
-              entrenadorField.classList.add('d-none');
-              responsableField.classList.add('d-none');
+            cuentaInfo.classList.remove('d-none');
+            if (cuentaLabel) {
+              cuentaLabel.textContent = label;
             }
+            if (cuentaLink) {
+              cuentaLink.setAttribute('href', url);
+            }
+          };
+
+          const setRequiredAttribute = (input, enabled) => {
+            if (!input) {
+              return;
+            }
+
+            if (enabled) {
+              input.setAttribute('required', 'required');
+            } else {
+              input.removeAttribute('required');
+            }
+          };
+
+          const switchFields = (type) => {
+            const currentType = (type || '').trim();
+
+            if (clientesField) {
+              clientesField.classList.remove('d-none');
+            }
+
+            if (entrenadorField) {
+              entrenadorField.classList.remove('d-none');
+            }
+
+            if (responsableField) {
+              responsableField.classList.remove('d-none');
+            }
+
+            if (servicioField) {
+              servicioField.classList.remove('d-none');
+            }
+
+            const requiresServicio = currentType === 'Reserva' || currentType === 'Clase';
+            setRequiredAttribute(servicioSelect, requiresServicio);
+            setRequiredAttribute(clienteSelect, currentType === 'Reserva');
+            setRequiredAttribute(entrenadorSelect, currentType === 'Clase');
           };
 
           const cargarSlots = () => {
@@ -290,6 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
           refreshCancelButtonTextForType(typeSelect?.value);
           disableCancelButton();
           hideCancelButton();
+          hideCuentaInfo();
 
           const calendar = new Calendar(calendarEl, {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
@@ -310,16 +363,17 @@ document.addEventListener('DOMContentLoaded', () => {
               hour12: false,
             },
             select: (info) => {
-              if (eventIdInput) {
-                eventIdInput.value = '';
-              }
-              disableCancelButton();
-              hideCancelButton();
+            if (eventIdInput) {
+              eventIdInput.value = '';
+            }
+            disableCancelButton();
+            hideCancelButton();
+            hideCuentaInfo();
 
-              if (typeSelect) {
-                typeSelect.value = 'Reserva';
-                refreshCancelButtonTextForType('Reserva');
-                switchFields('Reserva');
+            if (typeSelect) {
+              typeSelect.value = 'Reserva';
+              refreshCancelButtonTextForType('Reserva');
+              switchFields('Reserva');
               }
 
               if (methodInput) {
@@ -331,15 +385,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 durationSelect.value = '60';
               }
 
-              if (clienteSelect?.tomselect) {
-                clienteSelect.tomselect.clear(true);
-              } else if (clienteSelect) {
-                clienteSelect.value = '';
-              }
+            if (clienteSelect?.tomselect) {
+              clienteSelect.tomselect.clear(true);
+            } else if (clienteSelect) {
+              clienteSelect.value = '';
+            }
 
-              if (entrenadorSelect) {
-                entrenadorSelect.value = '';
-              }
+            if (servicioSelect) {
+              servicioSelect.value = '';
+            }
+
+            if (entrenadorSelect) {
+              entrenadorSelect.value = '';
+            }
 
               if (responsableSelect?.tomselect) {
                 responsableSelect.tomselect.clear(true);
@@ -361,15 +419,16 @@ document.addEventListener('DOMContentLoaded', () => {
               modal.show();
             },
             dateClick: (info) => {
-              if (eventIdInput) {
-                eventIdInput.value = '';
-              }
-              disableCancelButton();
-              hideCancelButton();
+            if (eventIdInput) {
+              eventIdInput.value = '';
+            }
+            disableCancelButton();
+            hideCancelButton();
+            hideCuentaInfo();
 
-              if (fechaInput) {
-                fechaInput.value = info.dateStr;
-              }
+            if (fechaInput) {
+              fechaInput.value = info.dateStr;
+            }
 
               if (typeSelect) {
                 typeSelect.value = 'Reserva';
@@ -392,6 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const ev = info.event;
               const props = ev.extendedProps || {};
               const type = props.type || 'Reserva';
+              hideCuentaInfo();
 
               if (eventIdInput) {
                 eventIdInput.value = ev.id;
@@ -401,6 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 typeSelect.value = type;
                 refreshCancelButtonTextForType(type);
                 switchFields(type);
+              }
+
+              if (servicioSelect) {
+                const servicioId = props.servicio_id ? String(props.servicio_id) : '';
+                servicioSelect.value = servicioId;
               }
 
               if (methodInput) {
@@ -444,6 +509,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
               } else if (responsableSelect) {
                 responsableSelect.value = props.responsable_id || '';
+              }
+
+              if (props.cuenta_label && props.cuenta_url) {
+                showCuentaInfo(props.cuenta_label, props.cuenta_url);
               }
 
               const eventStart = ev.start;
@@ -578,6 +647,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
           calendar.render();
 
+          const scheduleCalendarResize = () => {
+            try {
+              calendar.updateSize();
+            } catch (error) {
+              console.warn('No se pudo actualizar el tamaño del calendario', error);
+            }
+          };
+
+          let resizeTimeoutId;
+          const queueCalendarResize = () => {
+            window.clearTimeout(resizeTimeoutId);
+            resizeTimeoutId = window.setTimeout(() => {
+              scheduleCalendarResize();
+            }, 150);
+          };
+
+          scheduleCalendarResize();
+          window.setTimeout(scheduleCalendarResize, 250);
+          window.addEventListener('orientationchange', queueCalendarResize);
+          window.addEventListener('resize', queueCalendarResize);
+
+          if (typeof ResizeObserver !== 'undefined') {
+            const resizeObserver = new ResizeObserver(() => {
+              queueCalendarResize();
+            });
+            resizeObserver.observe(calendarEl);
+          }
+
           if (entrenadorFilter) {
             entrenadorFilter.addEventListener('change', () => {
               calendar.refetchEvents();
@@ -665,6 +762,10 @@ document.addEventListener('DOMContentLoaded', () => {
               methodInput.value = 'POST';
             }
             form.setAttribute('action', defaultReservaAction);
+
+            if (servicioSelect) {
+              servicioSelect.value = '';
+            }
             if (typeSelect) {
               typeSelect.value = 'Reserva';
               refreshCancelButtonTextForType('Reserva');

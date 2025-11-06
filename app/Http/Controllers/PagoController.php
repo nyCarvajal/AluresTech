@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Pago;
 use App\Models\Banco;
+use App\Models\OrdenDeCompra;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PagoController extends Controller
@@ -41,10 +43,27 @@ class PagoController extends Controller
     /**
      * Formulario para crear nuevo pago.
      */
-    public function create()
+    public function create(Request $request)
     {
         $bancos = Banco::all();
-        return view('pagos.create', compact('bancos'));
+        $cuentaId = $request->integer('cuenta');
+
+        $saldoPendiente = null;
+
+        if ($cuentaId) {
+            $orden = OrdenDeCompra::with(['ventas', 'pagos'])->find($cuentaId);
+
+            if ($orden) {
+                $subtotal = optional($orden->ventas)->sum('valor_total') ?? 0;
+                $pagado   = optional($orden->pagos)->sum('valor') ?? 0;
+
+                $saldoPendiente = max(0, $subtotal - $pagado);
+            }
+        }
+
+        $defaultDate = Carbon::now('America/Bogota')->format('Y-m-d\TH:i');
+
+        return view('pagos.create', compact('bancos', 'saldoPendiente', 'defaultDate'));
     }
 
   /**
@@ -70,6 +89,12 @@ class PagoController extends Controller
 
         // Crear el pago
         Pago::create($data);
+
+        if ($request->boolean('redirect_to_order')) {
+            return redirect()
+                ->route('orden_de_compras.show', ['orden_de_compra' => $data['cuenta']])
+                ->with('success', 'Pago registrado correctamente.');
+        }
 
         return redirect()
             ->back()
