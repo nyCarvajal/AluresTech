@@ -90,6 +90,12 @@ class PagoController extends Controller
         // Crear el pago
         Pago::create($data);
 
+        if ($request->boolean('redirect_to_order')) {
+            return redirect()
+                ->route('orden_de_compras.show', ['orden_de_compra' => $data['cuenta']])
+                ->with('success', 'Pago registrado correctamente.');
+        }
+
         return redirect()
             ->back()
             ->with('success', 'Pago registrado correctamente.');

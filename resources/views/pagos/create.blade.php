@@ -26,6 +26,7 @@
 
     <form action="{{ route('pagos.store') }}" method="POST" id="pago-form">
         @csrf
+        <input type="hidden" name="redirect_to_order" value="1">
 
         @include('pagos._form', [
             'saldoPendiente' => $saldoPendiente ?? null,

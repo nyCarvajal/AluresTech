@@ -71,7 +71,7 @@
 @endphp
 
          <!-- {{ $stylistLabelSingular }} -->
-         <div id="fieldEntrenador" class="mb-3 d-none">
+        <div id="fieldEntrenador" class="mb-3">
            <label for="entrenador" class="form-label">{{ $stylistLabelSingular }}</label>
             <select id="entrenador"
                     name="entrenador_id"
@@ -84,12 +84,11 @@
             </div>
 
           <!-- Cliente -->
-       <div id="fieldClientes" class="mb-3 d-none">
+       <div id="fieldClientes" class="mb-3">
   <label for="clientes" class="form-label">Cliente</label>
   <select id="clientes"
           name="cliente_id"
-          class="form-select"
-                  required>
+          class="form-select">
     @foreach(\App\Models\Cliente::orderBy('nombres')->get() as $al)
       <option value="{{ $al->id }}">
         {{ $al->nombres }} {{ $al->apellidos }}
@@ -99,7 +98,7 @@
 </div>
 
           <!-- Servicio -->
-          <div id="fieldServicio" class="mb-3 d-none">
+          <div id="fieldServicio" class="mb-3">
             <label for="servicio" class="form-label">Servicio</label>
             <select id="servicio"
                     name="servicio_id"
@@ -114,7 +113,7 @@
 
 
 <!-- Torneo : responsable -->
-<div id="fieldResponsable" class="mb-3 d-none">
+<div id="fieldResponsable" class="mb-3">
   <label for="responsable" class="form-label">Responsable</label>
 
   {{-- TomSelect busca remotamente en /api/clientes --}}
