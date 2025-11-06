@@ -40,6 +40,30 @@ class ClientesController extends Controller
         return view('clientes.index', compact('clientes'));
     }
 
+    public function reengage()
+    {
+        $threshold = Carbon::now()->subMonth();
+
+        $clientes = Cliente::with(['reservas' => function ($query) {
+                $query->latest('fecha')->limit(1);
+            }])
+            ->whereDoesntHave('reservas', function ($query) use ($threshold) {
+                $query->where('fecha', '>=', $threshold);
+            })
+            ->orderBy('nombres')
+            ->orderBy('apellidos')
+            ->get();
+
+        $mensajeBase = optional(optional(Auth::user())->peluqueria)->msj_recordatorio ??
+            'Hola {{nombre}}, tenemos disponibilidad hoy. ¿Te gustaría agendar tu próxima cita?';
+
+        return view('clientes.reengage', [
+            'clientes' => $clientes,
+            'mensajeBase' => $mensajeBase,
+            'threshold' => $threshold,
+        ]);
+    }
+
     public function birthdays()
     {
         $today = Carbon::today();

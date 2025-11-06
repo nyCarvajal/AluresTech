@@ -47,8 +47,13 @@ class Venta extends Model
     {
         return $this->belongsTo(\App\Models\OrdenDeCompra::class, 'cuenta');
     }
-	public function usuarioComision()
+        public function usuarioComision()
     {
-        return $this->belongsTo(User::class, 'usuario_id');
+        return $this->belongsTo(Usuario::class, 'usuario_id');
+    }
+
+        public function barbero()
+    {
+        return $this->belongsTo(Usuario::class, 'usuario_id');
     }
 }
