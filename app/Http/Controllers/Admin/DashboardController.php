@@ -20,7 +20,9 @@ class DashboardController extends Controller
             return redirect()->route('auth.signin');
         }
 
-        $now = now();
+        $timezone = 'America/Bogota';
+        $now = now($timezone);
+        $now->setTimezone($timezone);
         $today = $now->copy()->startOfDay();
         $endOfDay = $now->copy()->endOfDay();
         $windowEnd = $now->copy()->addHours(5);
@@ -124,7 +126,7 @@ class DashboardController extends Controller
         $huecosDestacados = $huecos->take(3);
         $totalHuecosDisponibles = $huecos->count();
 
-        $fechaHoyLegible = $now->locale('es')
+        $fechaHoyLegible = $now->copy()->setTimezone($timezone)->locale('es')
             ->translatedFormat('l d \d\e F');
 
         return view('admin.index', [
@@ -162,7 +164,8 @@ class DashboardController extends Controller
         $cursor = $windowStart->copy();
 
         foreach ($reservasOrdenadas as $reserva) {
-            $inicio = Carbon::parse($reserva->fecha);
+            $inicio = Carbon::parse($reserva->fecha, $windowStart->getTimezone())
+                ->setTimezone($windowStart->getTimezone());
             $duracion = (int) ($reserva->duracion ?? 30);
             if ($duracion <= 0) {
                 $duracion = 30;
