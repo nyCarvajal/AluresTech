@@ -9,6 +9,7 @@ use App\Models\Cliente;
 use App\Models\Peluqueria;
 use App\Models\Reserva;
 use App\Models\Tipocita;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
