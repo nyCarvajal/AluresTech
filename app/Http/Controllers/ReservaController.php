@@ -22,6 +22,7 @@ use App\Notifications\OneMsgTemplateNotification;
 use Illuminate\Support\Facades\Log;
 use App\Support\RoleLabelResolver;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 
 class ReservaController extends Controller
@@ -238,6 +239,8 @@ class ReservaController extends Controller
 
         $reserva->estado = 'Confirmada';
         $reserva->save();
+
+        $this->notifyClientReservationConfirmed($reserva);
 
         return redirect()
             ->back()
@@ -597,6 +600,69 @@ public function update(Request $request, Reserva $reserva)
         return redirect()
             ->route('reservas.horario')
             ->with('success', 'Reserva cancelada correctamente.');
+    }
+
+    private function notifyClientReservationConfirmed(Reserva $reserva): void
+    {
+        $user = Auth::user();
+        $peluqueria = $user?->peluqueria;
+
+        if (! $peluqueria) {
+            return;
+        }
+
+        $reserva->loadMissing('cliente');
+        $cliente = $reserva->cliente;
+
+        if (! $cliente || ! $cliente->whatsapp) {
+            return;
+        }
+
+        $mensaje = trim((string) ($peluqueria->msj_reserva_confirmada ?? ''));
+
+        if ($mensaje === '') {
+            return;
+        }
+
+        $telefono = trim((string) ($peluqueria->telefono ?? ''));
+
+        if ($telefono === '') {
+            return;
+        }
+
+        try {
+            $fecha = Carbon::parse($reserva->fecha);
+        } catch (Throwable $exception) {
+            Log::warning('No se pudo parsear la fecha de la reserva para la notificación de confirmación.', [
+                'reserva_id' => $reserva->id,
+                'fecha' => $reserva->fecha,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return;
+        }
+
+        $payload = [
+            ucfirst((string) $cliente->nombres),
+            ucfirst((string) ($reserva->tipo ?? 'Reserva')),
+            $fecha->format('d/m/Y H:i'),
+            ($reserva->duracion ?? 60) . ' min',
+            $mensaje,
+            "https://wa.me/{$telefono}?text=Hola",
+        ];
+
+        try {
+            $cliente->notify(new OneMsgTemplateNotification('reserva', array_merge(
+                $payload,
+                ['nombre' => $cliente->nombres]
+            )));
+        } catch (Throwable $exception) {
+            Log::warning('No se pudo enviar la confirmación por WhatsApp al cliente.', [
+                'reserva_id' => $reserva->id,
+                'cliente_id' => $cliente->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
     }
 
     protected function cancelReservation(Reserva $reserva): array
