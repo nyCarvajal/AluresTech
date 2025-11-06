@@ -112,20 +112,6 @@
 
 
 
-<!-- Torneo : responsable -->
-<div id="fieldResponsable" class="mb-3">
-  <label for="responsable" class="form-label">Responsable</label>
-
-  {{-- TomSelect busca remotamente en /api/clientes --}}
-  <select id="responsable"
-          name="responsable_id"   {{-- guarda el id del cliente --}}
-          class="form-select"
-          placeholder="Escribe para buscar…">
-  </select>
-</div>
-
-
-			
           <div id="fieldCuenta" class="alert alert-info d-none" role="status">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
               <span id="reservationCuentaLabel" class="fw-semibold"></span>
