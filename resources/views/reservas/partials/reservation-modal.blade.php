@@ -71,7 +71,7 @@
 @endphp
 
          <!-- {{ $stylistLabelSingular }} -->
-         <div id="fieldEntrenador" class="mb-3 d-none">
+        <div id="fieldEntrenador" class="mb-3">
            <label for="entrenador" class="form-label">{{ $stylistLabelSingular }}</label>
             <select id="entrenador"
                     name="entrenador_id"
@@ -84,12 +84,11 @@
             </div>
 
           <!-- Cliente -->
-       <div id="fieldClientes" class="mb-3 d-none">
+       <div id="fieldClientes" class="mb-3">
   <label for="clientes" class="form-label">Cliente</label>
   <select id="clientes"
           name="cliente_id"
-          class="form-select"
-                  required>
+          class="form-select">
     @foreach(\App\Models\Cliente::orderBy('nombres')->get() as $al)
       <option value="{{ $al->id }}">
         {{ $al->nombres }} {{ $al->apellidos }}
@@ -98,22 +97,34 @@
   </select>
 </div>
 
+          <!-- Servicio -->
+          <div id="fieldServicio" class="mb-3">
+            <label for="servicio" class="form-label">Servicio</label>
+            <select id="servicio"
+                    name="servicio_id"
+                    class="form-select">
+              <option value="">Selecciona un servicio</option>
+              @foreach($servicios as $servicio)
+                <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
+              @endforeach
+            </select>
+          </div>
 
 
-<!-- Torneo : responsable -->
-<div id="fieldResponsable" class="mb-3 d-none">
-  <label for="responsable" class="form-label">Responsable</label>
 
-  {{-- TomSelect busca remotamente en /api/clientes --}}
-  <select id="responsable"
-          name="responsable_id"   {{-- guarda el id del cliente --}}
-          class="form-select"
-          placeholder="Escribe para buscar…">
-  </select>
-</div>
+          <div id="fieldCuenta" class="alert alert-info d-none" role="status">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <span id="reservationCuentaLabel" class="fw-semibold"></span>
+              <a id="reservationCuentaLink"
+                 href="#"
+                 target="_blank"
+                 rel="noopener"
+                 class="btn btn-sm btn-primary">
+                Ver cuenta
+              </a>
+            </div>
+          </div>
 
-
-			
           </div>
           <div class="modal-footer d-flex justify-content-end">
             <div class="d-flex gap-2">

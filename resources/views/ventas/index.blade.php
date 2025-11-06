@@ -381,8 +381,8 @@
         background-color: #f8f9fa;
     }
     .table-gris tbody tr:nth-child(odd) {
-        background-color: #343a40;
-        color: #fff;
+        background-color: #ffffff;
+        color: #212529;
     }
 
     /* Estilos personalizados para el modal */
