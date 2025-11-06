@@ -8,7 +8,6 @@ use App\Mail\NuevaReservaPeluqueriaMail;
 use App\Models\Cliente;
 use App\Models\Peluqueria;
 use App\Models\Reserva;
-use App\Models\User;
 use App\Models\Tipocita;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -279,12 +278,7 @@ class BookingController extends Controller
             'entrenador_id' => $data['entrenador_id'],
         ]);
 
-        $recipients = User::where('peluqueria_id', $peluqueria->id)
-            ->pluck('email')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $recipients = $this->resolveSalonNotificationEmails($peluqueria);
 
         if (! empty($recipients)) {
             Mail::to($recipients)->send(new NuevaReservaPeluqueriaMail($peluqueria, $cliente, $reserva));
@@ -292,7 +286,29 @@ class BookingController extends Controller
 
         return redirect()
             ->route('public.booking.show', $peluqueria)
-            ->with('status', 'Tu solicitud fue enviada. Te confirmaremos por correo.');
+            ->with('status', 'Tu solicitud fue enviada. Te confirmaremos por WhatsApp.');
+    }
+
+    /**
+     * Obtiene los correos configurados para notificar a la peluquería.
+     */
+    private function resolveSalonNotificationEmails(Peluqueria $peluqueria): array
+    {
+        $candidateKeys = [
+            'correo',
+            'email',
+            'correo_contacto',
+            'email_contacto',
+            'correo_reservas',
+            'email_reservas',
+        ];
+
+        return collect($candidateKeys)
+            ->map(fn (string $key) => $peluqueria->{$key} ?? null)
+            ->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function verify(Request $request, Peluqueria $peluqueria)
