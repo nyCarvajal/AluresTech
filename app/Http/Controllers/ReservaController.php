@@ -10,6 +10,9 @@ use App\Models\Peluqueria;
 use App\Models\Cancha; 
 use App\Models\Cliente;
 use App\Models\Tipocita;
+use App\Models\Item;
+use App\Models\OrdenDeCompra;
+use App\Models\Venta;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,6 +21,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Notifications\OneMsgTemplateNotification;
 use Illuminate\Support\Facades\Log;
 use App\Support\RoleLabelResolver;
+use Illuminate\Support\Facades\DB;
 
 
 class ReservaController extends Controller
@@ -28,11 +32,15 @@ class ReservaController extends Controller
     $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
 
     $tipocitas    = Tipocita::all();
+    $servicios    = Item::where('tipo', '!=', 1)
+        ->orderBy('nombre')
+        ->get();
     $labels = RoleLabelResolver::forStylist();
 
     return view('reservas.calendar', [
         'entrenadores' => $entrenadores,
         'tipocitas' => $tipocitas,
+        'servicios' => $servicios,
         'stylistLabelSingular' => $labels['singular'],
         'stylistLabelPlural' => $labels['plural'],
     ]);
@@ -108,8 +116,10 @@ class ReservaController extends Controller
 	public function events(Request $request)
 {
     // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
-    $query = Reserva::with(['cliente', 'entrenador'])
-        ->where('estado', 'Confirmada');
+    $estadosVisibles = ['Confirmada', 'Pendiente', 'No Asistida', 'cobrada'];
+
+    $query = Reserva::with(['cliente', 'entrenador', 'servicio', 'orden'])
+        ->whereIn('estado', $estadosVisibles);
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
     }
@@ -127,14 +137,30 @@ class ReservaController extends Controller
         $end      = Carbon::parse($r->fecha)
                           ->addMinutes($r->duracion)
                           ->toIso8601String();
-						  
+
         $color = optional($r->entrenador)->color ?? '#6042F5';
         $textColor = '#121212';
 
         if ($r->estado === 'No Asistida') {
             $color = '#0d6efd';
             $textColor = '#ffffff';
+        } elseif ($r->estado === 'Pendiente') {
+            $color = '#ffc107';
+            $textColor = '#212529';
         }
+
+        $clienteNombre = trim(collect([
+            optional($r->cliente)->nombres,
+            optional($r->cliente)->apellidos,
+        ])->filter()->implode(' '));
+        $servicioNombre = optional($r->servicio)->nombre;
+        $titleParts = array_filter([
+            $clienteNombre,
+            $servicioNombre,
+        ]);
+        $title = count($titleParts)
+            ? implode("\n", $titleParts)
+            : ($servicioNombre ?: $clienteNombre ?: 'Reserva');
 
         $base = [
             'id'              => $r->id,
@@ -143,7 +169,7 @@ class ReservaController extends Controller
             'type'            => $r->tipo,
             'status'          => $r->estado,
             'duration'        => $r->duracion,
-            'title'           => optional($r->cliente)->nombres . ' ' . optional($r->cliente)->apellidos,
+            'title'           => $title,
             'borderColor'     => $color,
             'textColor'       => $textColor,
             'backgroundColor' => $color,
@@ -152,10 +178,22 @@ class ReservaController extends Controller
                 'estado'        => $r->estado,            // confirmada | pendiente
                 'entrenador_id' => $r->entrenador_id,
                 'cliente_id'    => $r->cliente_id,
+                'servicio_id'   => $r->servicio_id,
+                'servicio_nombre' => $servicioNombre,
+                'orden_id'      => $r->orden_id,
+                'venta_id'      => $r->venta_id,
+                'cuenta_url'    => $r->orden_id
+                    ? route('ventas.index', [
+                        'cliente_id' => $r->cliente_id,
+                        'orden_id'   => $r->orden_id,
+                    ])
+                    : null,
+                'cuenta_label'  => $r->orden_id ? 'Cuenta #' . $r->orden_id : null,
             ],
             'cancha_id'       => $r->cancha_id,
             'entrenador_id'   => $r->entrenador_id,
             'cliente_id'      => $r->cliente_id,
+            'orden_id'        => $r->orden_id,
         ];
 
       
@@ -229,55 +267,86 @@ public function store(Request $request)
         'entrenador_id'  => 'required_if:type,Clase|nullable',
         'estado'         => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
         'cliente_id'     => 'required_if:type,Reserva|integer|exists:clientes,id',
-      
-        
+        'servicio_id'    => [
+            Rule::requiredIf(in_array($request->input('type'), ['Reserva', 'Clase'])),
+            'nullable',
+            'integer',
+            'exists:items,id',
+        ],
     ]);
 
     // 2) Preparamos la serie de fechas
-    $start = Carbon::parse($data['start']);  
- 
+    $start = Carbon::parse($data['start']);
 
-   
-                $res = Reserva::create([
-                    'fecha'         => $start,
-                    'entrenador_id' => $data['entrenador_id'],
-                    'estado'        => $data['estado'],
-                    'duracion'      => $data['duration'] ?? 60,
-                    'tipo'          => $data['type'],
-                    'cliente_id'    => $data['cliente_id'],
-                    
-                ]);
-              
+    $reserva = null;
 
-          
-		  $peluqueria    = Auth::user()->peluqueria; // o where('id', …)
-    
+    DB::transaction(function () use (&$reserva, $data, $start) {
+        $orden = null;
+        $venta = null;
+        $servicio = null;
 
-            
-        $alId = $data['cliente_id'];
+        if (! empty($data['servicio_id'])) {
+            $servicio = Item::findOrFail($data['servicio_id']);
 
-                    $al = Cliente::find($alId);
-                     $payload = [
+            $orden = OrdenDeCompra::create([
+                'fecha_hora'  => $start,
+                'responsable' => Auth::id(),
+                'cliente'     => $data['cliente_id'] ?? null,
+                'activa'      => true,
+            ]);
+
+            $venta = new Venta([
+                'cuenta'               => $orden->id,
+                'producto'             => $servicio->id,
+                'cantidad'             => 1,
+                'descuento'            => 0,
+                'valor_unitario'       => $servicio->valor,
+                'valor_total'          => $servicio->valor,
+                'porcentaje_comision'  => 0,
+                'usuario_id'           => $data['entrenador_id'] ?? Auth::id(),
+            ]);
+            $venta->valor_total_venta = $servicio->valor;
+            $venta->comision = 0;
+            $venta->save();
+        }
+
+        $reserva = Reserva::create([
+            'fecha'         => $start,
+            'entrenador_id' => $data['entrenador_id'],
+            'estado'        => $data['estado'],
+            'duracion'      => $data['duration'] ?? 60,
+            'tipo'          => $data['type'],
+            'cliente_id'    => $data['cliente_id'] ?? null,
+            'responsable_id' => Auth::id(),
+            'servicio_id'   => $servicio?->id,
+            'orden_id'      => $orden?->id,
+            'venta_id'      => $venta?->id,
+        ]);
+    });
+
+    $peluqueria = Auth::user()->peluqueria; // o where('id', …)
+
+    $alId = $data['cliente_id'] ?? null;
+
+    $al = $alId ? Cliente::find($alId) : null;
+
+    if ($al && $peluqueria) {
+        $payload = [
             ucfirst($al->nombres),                     // {{0}} Tipo
             ucfirst($data['type']),                     // {{1}}
-            $start->format('d/m/Y H:i'),                   // {{2}}
+            $start->format('d/m/Y H:i'),                // {{2}}
             ($data['duration'] ?? 60).' min',           // {{3}}
             $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
             "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
         ];
 
-        $al = Cliente::find($alId);
-
-        if ($al && $al->whatsapp && $peluqueria->msj_reserva_confirmada) {
-
+        if ($al->whatsapp && $peluqueria->msj_reserva_confirmada) {
             $al->notify(new OneMsgTemplateNotification('reserva', array_merge(
                 $payload,
                 ['nombre'=>$al->nombres]
             )));
         }
-
-        
-    
+    }
 
     return redirect()
         ->route('reservas.calendar')
@@ -378,10 +447,16 @@ public function update(Request $request, Reserva $reserva)
             'start'         => 'required|date',
             'duration'      => 'integer|min:1',
             'estado'        => 'required|in:Confirmada,Pendiente,Cancelada,No Asistida',
-            
+
             'cliente_id'    => 'integer|exists:clientes,id',
             'entrenador_id' => 'integer|nullable',
-            
+            'servicio_id'   => [
+                Rule::requiredIf(in_array($request->input('type'), ['Reserva', 'Clase'])),
+                'nullable',
+                'integer',
+                'exists:items,id',
+            ],
+
         ]);
     
 	 $newEstado = $data['estado'];
@@ -389,35 +464,100 @@ public function update(Request $request, Reserva $reserva)
     
 	 
          $start = Carbon::parse($data['start']);
-         $alId = $data['cliente_id'];
-         $al = Cliente::find($alId);
-         $payload = [
-            ucfirst($al->nombres),                     // {{0}} Tipo
-            ucfirst($data['type']),                     // {{1}}
-            $start->format('d/m/Y H:i'),                   // {{2}}
-            ($data['duration'] ?? 60).' min',           // {{3}}
-            $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
-            "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
-        ];
+        $alId = in_array($data['type'], ['Reserva', 'Clase']) ? ($data['cliente_id'] ?? $reserva->cliente_id) : null;
+        $al = $alId ? Cliente::find($alId) : null;
 
-        if ($al && $al->whatsapp) {
-            $al->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
-                $payload,
-                ['nombre'=>$al->nombres]
-            )));
+        if ($al && $peluqueria) {
+            $payload = [
+                ucfirst($al->nombres),                     // {{0}} Tipo
+                ucfirst($data['type']),                     // {{1}}
+                $start->format('d/m/Y H:i'),                // {{2}}
+                ($data['duration'] ?? 60).' min',           // {{3}}
+                $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!', // {{4}}
+                "https://wa.me/{$peluqueria->telefono}?text=Hola"  // {{5}}
+            ];
+
+            if ($al->whatsapp) {
+                $al->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
+                    $payload,
+                    ['nombre'=>$al->nombres]
+                )));
+            }
         }
-	 
 
+        $clienteId = in_array($data['type'], ['Reserva', 'Clase'])
+            ? $data['cliente_id']
+            : $reserva->cliente_id;
 
-// 2) Actualizar los campos de la reserva
-    $reserva->fill([
-        'tipo'          => $data['type'],
-        'fecha'         => $data['start'],
-        'duracion'      => $data['duration'],
-        'estado'        => $data['estado'],
-       'cliente_id'    => in_array($data['type'], ['Reserva','Clase']) ? $data['cliente_id'] : $reserva->cliente_id,
-        'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
-    ])->save();
+        DB::transaction(function () use ($reserva, $data, $start, $clienteId) {
+            $servicio = ! empty($data['servicio_id']) ? Item::findOrFail($data['servicio_id']) : null;
+
+            $orden = $reserva->orden;
+            $venta = $reserva->venta;
+
+            if ($servicio) {
+                if (! $orden) {
+                    $orden = OrdenDeCompra::create([
+                        'fecha_hora'  => $start,
+                        'responsable' => Auth::id(),
+                        'cliente'     => $clienteId,
+                        'activa'      => true,
+                    ]);
+                } else {
+                    $orden->fecha_hora  = $start;
+                    $orden->responsable = Auth::id();
+                    $orden->cliente     = $clienteId;
+                    $orden->activa      = true;
+                    $orden->save();
+                }
+
+                if (! $venta) {
+                    $venta = new Venta([
+                        'cuenta'               => $orden->id,
+                        'producto'             => $servicio->id,
+                        'cantidad'             => 1,
+                        'descuento'            => 0,
+                        'valor_unitario'       => $servicio->valor,
+                        'valor_total'          => $servicio->valor,
+                        'porcentaje_comision'  => 0,
+                        'usuario_id'           => $data['entrenador_id'] ?? Auth::id(),
+                    ]);
+                } else {
+                    $venta->cuenta              = $orden->id;
+                    $venta->producto            = $servicio->id;
+                    $venta->cantidad            = 1;
+                    $venta->descuento           = 0;
+                    $venta->valor_unitario      = $servicio->valor;
+                    $venta->valor_total         = $servicio->valor;
+                    $venta->porcentaje_comision = 0;
+                    $venta->usuario_id          = $data['entrenador_id'] ?? $venta->usuario_id ?? Auth::id();
+                }
+
+                $venta->valor_total_venta = $servicio->valor;
+                $venta->comision = 0;
+                $venta->save();
+
+                $reserva->fill([
+                    'orden_id'    => $orden->id,
+                    'venta_id'    => $venta->id,
+                    'servicio_id' => $servicio->id,
+                ]);
+            } else {
+                $reserva->fill([
+                    'servicio_id' => null,
+                ]);
+            }
+
+            $reserva->fill([
+                'tipo'          => $data['type'],
+                'fecha'         => $data['start'],
+                'duracion'      => $data['duration'],
+                'estado'        => $data['estado'],
+                'cliente_id'    => $clienteId,
+                'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
+                'responsable_id' => Auth::id(),
+            ])->save();
+        });
 
    
 
