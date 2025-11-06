@@ -471,6 +471,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showCuentaInfo(props.cuenta_label, props.cuenta_url);
               }
 
+              if (props.cuenta_label && props.cuenta_url) {
+                showCuentaInfo(props.cuenta_label, props.cuenta_url);
+              }
+
               const eventStart = ev.start;
               let time = '';
               if (eventStart) {
