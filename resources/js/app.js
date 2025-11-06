@@ -216,49 +216,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           };
 
-          const setServicioRequirement = (enabled) => {
-            if (!servicioSelect) {
+          const setRequiredAttribute = (input, enabled) => {
+            if (!input) {
               return;
             }
 
             if (enabled) {
-              servicioSelect.setAttribute('required', 'required');
+              input.setAttribute('required', 'required');
             } else {
-              servicioSelect.removeAttribute('required');
-              servicioSelect.value = '';
+              input.removeAttribute('required');
             }
           };
 
           const switchFields = (type) => {
-            if (!clientesField || !entrenadorField || !responsableField) {
-              return;
+            const currentType = (type || '').trim();
+
+            if (clientesField) {
+              clientesField.classList.remove('d-none');
             }
 
-            const requiresServicio = type === 'Reserva' || type === 'Clase';
-
-            if (type === 'Reserva' || type === 'Clase') {
-              clientesField.classList.remove('d-none');
+            if (entrenadorField) {
               entrenadorField.classList.remove('d-none');
-              responsableField.classList.add('d-none');
-            } else if (type === 'Torneo') {
-              clientesField.classList.add('d-none');
-              entrenadorField.classList.add('d-none');
+            }
+
+            if (responsableField) {
               responsableField.classList.remove('d-none');
-            } else {
-              clientesField.classList.add('d-none');
-              entrenadorField.classList.add('d-none');
-              responsableField.classList.add('d-none');
             }
 
             if (servicioField) {
-              if (requiresServicio) {
-                servicioField.classList.remove('d-none');
-              } else {
-                servicioField.classList.add('d-none');
-              }
+              servicioField.classList.remove('d-none');
             }
 
-            setServicioRequirement(requiresServicio);
+            const requiresServicio = currentType === 'Reserva' || currentType === 'Clase';
+            setRequiredAttribute(servicioSelect, requiresServicio);
+            setRequiredAttribute(clienteSelect, currentType === 'Reserva');
+            setRequiredAttribute(entrenadorSelect, currentType === 'Clase');
           };
 
           const cargarSlots = () => {
