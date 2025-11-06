@@ -122,7 +122,7 @@ class DashboardController extends Controller
         $huecosDestacados = $huecos->take(3);
         $totalHuecosDisponibles = $huecos->count();
 
-        $fechaHoyLegible = $now->locale(app()->getLocale())
+        $fechaHoyLegible = $now->locale('es')
             ->translatedFormat('l d \d\e F');
 
         return view('admin.index', [

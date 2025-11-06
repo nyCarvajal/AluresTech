@@ -4,6 +4,13 @@
 @section('content')
 <div class="container py-3">
 
+    @php
+        $subtotal = optional($orden->ventas)->sum('valor_total') ?? 0;
+        $pagado   = optional($orden->pagos)->sum('valor') ?? 0;
+        $saldo    = max(0, $subtotal - $pagado);
+        $fmt      = fn($v) => number_format($v, 0, ',', '.');
+    @endphp
+
     {{-- Encabezado + Acciones --}}
     <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
@@ -20,6 +27,12 @@
                target="_blank" rel="noopener">
                 Descargar PDF
             </a>
+            @if($saldo > 0)
+                <a class="btn btn-outline-success"
+                   href="{{ route('pagos.create', ['cuenta' => $orden->id]) }}">
+                    Registrar pago
+                </a>
+            @endif
             <button class="btn btn-primary"
                     data-bs-toggle="modal"
                     data-bs-target="#enviarCorreoModal">
@@ -29,13 +42,6 @@
     </div>
 
     {{-- Resumen de totales --}}
-    @php
-        $subtotal = optional($orden->ventas)->sum('valor_total') ?? 0;
-        $pagado   = optional($orden->pagos)->sum('valor') ?? 0;
-        $saldo    = max(0, $subtotal - $pagado);
-        $fmt = fn($v) => number_format($v, 0, ',', '.');
-    @endphp
-
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
