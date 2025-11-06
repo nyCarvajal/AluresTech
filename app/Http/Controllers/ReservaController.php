@@ -625,20 +625,8 @@ public function update(Request $request, Reserva $reserva)
             return;
         }
 
-        $mensaje = trim((string) ($peluqueria->msj_reserva_confirmada ?? ''));
-
-        if ($mensaje === '') {
-            return;
-        }
-
-        $telefono = trim((string) ($peluqueria->telefono ?? ''));
-
-        if ($telefono === '') {
-            return;
-        }
-
         try {
-            $fecha = Carbon::parse($reserva->fecha);
+            $start = Carbon::parse($reserva->fecha);
         } catch (Throwable $exception) {
             Log::warning('No se pudo parsear la fecha de la reserva para la notificación de confirmación.', [
                 'reserva_id' => $reserva->id,
@@ -649,17 +637,22 @@ public function update(Request $request, Reserva $reserva)
             return;
         }
 
+        $telefono = trim((string) ($peluqueria->telefono ?? ''));
+        $whatsAppLink = $telefono !== ''
+            ? "https://wa.me/{$telefono}?text=Hola"
+            : 'https://wa.me/?text=Hola';
+
         $payload = [
             ucfirst((string) $cliente->nombres),
             ucfirst((string) ($reserva->tipo ?? 'Reserva')),
-            $fecha->format('d/m/Y H:i'),
+            $start->format('d/m/Y H:i'),
             ($reserva->duracion ?? 60) . ' min',
-            $mensaje,
-            "https://wa.me/{$telefono}?text=Hola",
+            $peluqueria->msj_reserva_confirmada ?? '¡Te esperamos!',
+            $whatsAppLink,
         ];
 
         try {
-            $cliente->notify(new OneMsgTemplateNotification('reserva', array_merge(
+            $cliente->notify(new OneMsgTemplateNotification('cambio_clase', array_merge(
                 $payload,
                 ['nombre' => $cliente->nombres]
             )));
