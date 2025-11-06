@@ -1,5 +1,23 @@
 @extends('layouts.vertical', ['subtitle' => 'Calendario de Reservas'])
 
+@push('styles')
+  <style>
+    .wrapper-calendar {
+      min-height: 420px;
+    }
+
+    @media (max-width: 576px) {
+      .wrapper-calendar,
+      #calendar,
+      #calendar .fc-view-harness,
+      #calendar .fc-scrollgrid,
+      #calendar .fc-view-harness-active {
+        min-height: 520px;
+      }
+    }
+  </style>
+@endpush
+
 
 @php
     $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);

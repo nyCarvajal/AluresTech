@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany; // <—— ESTE es el 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use App\Models\Item;
+use App\Models\OrdenDeCompra;
+use App\Models\Venta;
 
 
 class Reserva extends Model
@@ -29,21 +32,23 @@ class Reserva extends Model
                     ->firstOrFail();
     }
     protected $fillable = [
-    'fecha',
-    'end',
-    'type',
-    'cliente_id',
+        'fecha',
+        'end',
+        'type',
+        'cliente_id',
         'entrenador_id',
-    'cancha_id',
-    'estado',
+        'cancha_id',
+        'estado',
         'duracion',
         'tipo',
         'nota_cliente',
         'repeat_enabled',
         'repeat_until',
-
-    // …
-];
+        'servicio_id',
+        'orden_id',
+        'venta_id',
+        // …
+    ];
 
 
  public function canchas()
@@ -61,6 +66,21 @@ class Reserva extends Model
         // Aquí asumo que tienes un modelo Entrenador que representa a los entrenadores.
         // Si tu modelo se llama Usuario con rol "entrenador", recuerda usar ese modelo aquí.
         return $this->belongsTo(User::class);
+    }
+
+    public function servicio()
+    {
+        return $this->belongsTo(Item::class, 'servicio_id');
+    }
+
+    public function orden()
+    {
+        return $this->belongsTo(OrdenDeCompra::class, 'orden_id');
+    }
+
+    public function venta()
+    {
+        return $this->belongsTo(Venta::class, 'venta_id');
     }
 
  /**
