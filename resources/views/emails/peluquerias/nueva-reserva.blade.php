@@ -1,5 +1,5 @@
 @component('mail::message')
-# Nueva solicitud de reserva
+# Nueva Reserva registrada
 
 Hola {{ $peluqueria->nombre }},
 
@@ -14,8 +14,14 @@ Se ha registrado una nueva solicitud de cita desde la página pública.
 - **Nota del cliente:** {{ $reserva->nota_cliente }}
 @endisset
 
-@component('mail::button', ['url' => route('reservas.pending')])
-Revisar solicitudes
+Puedes confirmar la reserva haciendo clic en el siguiente botón para abrir AluresTech y aprobarla.
+
+@php
+    $confirmUrl = route('reservas.pending', ['reserva' => $reserva->id]);
+@endphp
+
+@component('mail::button', ['url' => $confirmUrl])
+Confirmar reserva en AluresTech
 @endcomponent
 
 Gracias,
