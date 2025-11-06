@@ -2,11 +2,11 @@
 
 @section('content')
 
-@include('layouts.partials/page-title', ['title' => 'Dashboard', 'subtitle' => 'Inicio'])
+@include('layouts.partials/page-title', ['title' => 'Panel de control', 'subtitle' => 'Inicio'])
 
 <div class="row">
     <div class="col-12">
-        <div class="card border-0 shadow-sm bg-soft-primary mb-4">
+        <div class="card shadow-sm mb-4" style="background-color: #ffffff; border: 2px solid #c8a2c8;">
             <div class="card-body d-flex flex-wrap align-items-start gap-4">
                 <div class="flex-grow-1">
                     <p class="text-uppercase text-muted fw-semibold mb-1">Hoy</p>
@@ -30,7 +30,7 @@
                     </div>
                 </div>
                 <div class="ms-auto">
-                    <div class="bg-white border rounded-3 p-3 shadow-sm text-end">
+                    <div class="bg-white rounded-3 p-3 shadow-sm text-end" style="border: 2px solid #0f4c5c;">
                         <p class="text-muted mb-1">Citas confirmadas hoy</p>
                         <h4 class="mb-2">{{ $confirmadasHoy }} / {{ $totalAgendadasHoy }}</h4>
                         <span class="badge bg-soft-primary text-primary">Huecos libres: {{ $totalHuecosDisponibles }}</span>
