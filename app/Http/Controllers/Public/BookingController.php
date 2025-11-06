@@ -8,8 +8,8 @@ use App\Mail\NuevaReservaPeluqueriaMail;
 use App\Models\Cliente;
 use App\Models\Peluqueria;
 use App\Models\Reserva;
-use App\Models\User;
 use App\Models\Tipocita;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +33,6 @@ class BookingController extends Controller
         $estilistas = $this->availableStylists($peluqueria);
         $proximasReservas = collect();
 
-        $captcha = $this->regenerateCaptcha($request, $peluqueria);
         $stylistLabels = $this->stylistLabels($peluqueria);
 
         if ($cliente) {
@@ -49,7 +48,6 @@ class BookingController extends Controller
             'tipocitas' => $tipocitas,
             'cliente' => $cliente,
             'proximasReservas' => $proximasReservas,
-            'captchaQuestion' => $captcha['question'],
             'defaultDuration' => self::DEFAULT_DURATION,
             'peluqueriaLogo' => $this->resolveLogoUrl($peluqueria),
             'estilistas' => $estilistas,
@@ -172,20 +170,6 @@ class BookingController extends Controller
     {
         $this->setTenantConnection($peluqueria);
 
-        $cliente = $this->currentClient($peluqueria);
-
-        if (! $cliente) {
-            return redirect()
-                ->route('public.booking.show', $peluqueria)
-                ->withErrors(['general' => 'Debes iniciar sesión para agendar.'], 'appointment');
-        }
-
-        if (! $cliente->email_verified_at) {
-            return redirect()
-                ->route('public.booking.show', $peluqueria)
-                ->withErrors(['general' => 'Verifica tu correo para poder agendar.'], 'appointment');
-        }
-
         if ($request->has('entrenador_id')) {
             $request->merge([
                 'entrenador_id' => $this->normalizeStylistId($request->input('entrenador_id')),
@@ -195,6 +179,9 @@ class BookingController extends Controller
         $stylistLabels = $this->stylistLabels($peluqueria);
 
         $validator = Validator::make($request->all(), [
+            'nombres' => ['required', 'string', 'max:200'],
+            'apellidos' => ['nullable', 'string', 'max:200'],
+            'whatsapp' => ['required', 'string', 'max:200'],
             'fecha' => ['required', 'date_format:Y-m-d'],
             'hora' => ['required', 'date_format:H:i'],
             'tipocita_id' => ['nullable', 'integer', 'exists:tipocita,id'],
@@ -209,6 +196,13 @@ class BookingController extends Controller
                 },
             ],
         ], [
+            'nombres.required' => 'Ingresa tu nombre.',
+            'nombres.max' => 'El nombre no puede superar 200 caracteres.',
+            'apellidos.max' => 'Los apellidos no pueden superar 200 caracteres.',
+            'whatsapp.required' => 'Indica tu número de WhatsApp.',
+            'whatsapp.max' => 'El número de WhatsApp no puede superar 200 caracteres.',
+            'fecha.required' => 'Selecciona la fecha de tu cita.',
+            'hora.required' => 'Selecciona la hora de tu cita.',
             'tipocita_id.exists' => 'El tipo de cita seleccionado no es válido.',
             'entrenador_id.required' => 'Selecciona a tu ' . $stylistLabels['singular_lower'] . ' que atenderá tu cita.',
         ]);
@@ -221,6 +215,20 @@ class BookingController extends Controller
         }
 
         $data = $validator->validated();
+
+        $cliente = Cliente::where('whatsapp', $data['whatsapp'])->first();
+
+        if (! $cliente) {
+            $cliente = new Cliente();
+        }
+
+        $cliente->fill([
+            'nombres' => $data['nombres'],
+            'apellidos' => $data['apellidos'] ?? null,
+            'whatsapp' => $data['whatsapp'],
+        ]);
+
+        $cliente->save();
 
         $inicio = Carbon::createFromFormat('Y-m-d H:i', $data['fecha'] . ' ' . $data['hora']);
         if ($inicio->isPast()) {
@@ -271,12 +279,7 @@ class BookingController extends Controller
             'entrenador_id' => $data['entrenador_id'],
         ]);
 
-        $recipients = User::where('peluqueria_id', $peluqueria->id)
-            ->pluck('email')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $recipients = $this->resolveSalonNotificationEmails($peluqueria);
 
         if (! empty($recipients)) {
             Mail::to($recipients)->send(new NuevaReservaPeluqueriaMail($peluqueria, $cliente, $reserva));
@@ -284,7 +287,29 @@ class BookingController extends Controller
 
         return redirect()
             ->route('public.booking.show', $peluqueria)
-            ->with('status', 'Tu solicitud fue enviada. Te confirmaremos por correo.');
+            ->with('status', 'Tu solicitud fue enviada. Te confirmaremos por WhatsApp.');
+    }
+
+    /**
+     * Obtiene los correos configurados para notificar a la peluquería.
+     */
+    private function resolveSalonNotificationEmails(Peluqueria $peluqueria): array
+    {
+        $candidateKeys = [
+            'correo',
+            'email',
+            'correo_contacto',
+            'email_contacto',
+            'correo_reservas',
+            'email_reservas',
+        ];
+
+        return collect($candidateKeys)
+            ->map(fn (string $key) => $peluqueria->{$key} ?? null)
+            ->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function verify(Request $request, Peluqueria $peluqueria)

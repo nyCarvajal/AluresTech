@@ -23,7 +23,7 @@ class NuevaReservaPeluqueriaMail extends Mailable
     public function build(): self
     {
         return $this
-            ->subject('Nueva solicitud de reserva')
+            ->subject('Nueva Reserva [AluresTech]')
             ->markdown('emails.peluquerias.nueva-reserva');
     }
 }
