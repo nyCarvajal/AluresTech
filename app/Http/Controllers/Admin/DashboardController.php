@@ -20,29 +20,37 @@ class DashboardController extends Controller
             return redirect()->route('auth.signin');
         }
 
-        $today = Carbon::today();
-        $now = Carbon::now();
+        $timezone = 'America/Bogota';
+        $now = now($timezone);
+        $now->setTimezone($timezone);
+        $today = $now->copy()->startOfDay();
+        $endOfDay = $now->copy()->endOfDay();
         $windowEnd = $now->copy()->addHours(5);
-        $windowEnd = $windowEnd->greaterThan($today->copy()->endOfDay())
-            ? $today->copy()->endOfDay()
+        $windowEnd = $windowEnd->greaterThan($endOfDay)
+            ? $endOfDay
             : $windowEnd;
+
+        $inicioMes = $now->copy()->startOfMonth();
+        $finMes = $now->copy()->endOfMonth();
 
         $totalClientes = Cliente::count();
 
-        $totalPagosMes = Pago::whereYear('fecha_hora', $today->year)
-            ->whereMonth('fecha_hora', $today->month)
+        $totalPagosMes = Pago::whereBetween('fecha_hora', [$inicioMes, $finMes])
             ->whereHas('ordenDeCompra', function ($query) {
                 $query->where('activa', 1);
             })
             ->sum('valor');
 
-        $pagosHoy = Pago::whereDate('fecha_hora', $today)
+        $pagosHoy = Pago::whereBetween('fecha_hora', [$today, $endOfDay])
             ->whereHas('ordenDeCompra', function ($query) {
                 $query->where('activa', 1);
             })
             ->sum('valor');
 
-        $pagosAyer = Pago::whereDate('fecha_hora', $today->copy()->subDay())
+        $ayerInicio = $today->copy()->subDay();
+        $ayerFin = $ayerInicio->copy()->endOfDay();
+
+        $pagosAyer = Pago::whereBetween('fecha_hora', [$ayerInicio, $ayerFin])
             ->whereHas('ordenDeCompra', function ($query) {
                 $query->where('activa', 1);
             })
@@ -52,7 +60,7 @@ class DashboardController extends Controller
 
         $ordenesHoy = OrdenDeCompra::with(['ventas', 'pagos'])
             ->where('activa', 1)
-            ->whereDate('fecha_hora', $today)
+            ->whereBetween('fecha_hora', [$today, $endOfDay])
             ->get();
 
         $ingresosPendientesHoy = (int) $ordenesHoy->sum(function ($orden) {
@@ -63,7 +71,7 @@ class DashboardController extends Controller
         });
 
         $reservasHoy = Reserva::with('entrenador')
-            ->whereDate('fecha', $today)
+            ->whereBetween('fecha', [$today, $endOfDay])
             ->get();
 
         $confirmadasHoy = $reservasHoy->where('estado', 'Confirmada')->count();
@@ -83,23 +91,19 @@ class DashboardController extends Controller
             ->where('estado', 'Confirmada')
             ->count();
 
-        $totalReservas = Reserva::where('tipo', 'Reserva')
+        $totalReservas = Reserva::whereBetween('fecha', [$inicioMes, $finMes])
             ->where('estado', '!=', 'Cancelada')
-            ->whereYear('fecha', $today->year)
-            ->whereMonth('fecha', $today->month)
             ->count();
 
         $totalClases = Reserva::where('tipo', 'Clase')
             ->where('estado', '!=', 'Cancelada')
-            ->whereYear('fecha', $today->year)
-            ->whereMonth('fecha', $today->month)
+            ->whereBetween('fecha', [$inicioMes, $finMes])
             ->count();
 
         $clientes = Cliente::latest()->take(10)->get();
 
         $cuentas = OrdenDeCompra::with('clienterel')
-            ->whereYear('fecha_hora', $today->year)
-            ->whereMonth('fecha_hora', $today->month)
+            ->whereBetween('fecha_hora', [$inicioMes, $finMes])
             ->whereNotNull('cliente')
             ->where('activa', 1)
             ->whereHas('clienterel')
@@ -109,7 +113,7 @@ class DashboardController extends Controller
             ->get(['id', 'fecha_hora']);
 
         $teamPerformance = Venta::selectRaw('usuario_id, SUM(valor_total) as total_cobrado, COUNT(*) as servicios')
-            ->whereDate('created_at', $today)
+            ->whereBetween('created_at', [$today, $endOfDay])
             ->whereNotNull('usuario_id')
             ->groupBy('usuario_id')
             ->with('barbero')
@@ -122,7 +126,7 @@ class DashboardController extends Controller
         $huecosDestacados = $huecos->take(3);
         $totalHuecosDisponibles = $huecos->count();
 
-        $fechaHoyLegible = $now->locale('es')
+        $fechaHoyLegible = $now->copy()->setTimezone($timezone)->locale('es')
             ->translatedFormat('l d \d\e F');
 
         return view('admin.index', [
@@ -152,79 +156,97 @@ class DashboardController extends Controller
     {
         $slots = collect();
 
-        $reservasFiltradas = $reservasHoy->filter(function ($reserva) use ($windowEnd) {
-            if (! $reserva->fecha) {
-                return false;
+        $reservasOrdenadas = $reservasHoy
+            ->filter(fn ($reserva) => ! empty($reserva->fecha))
+            ->sortBy('fecha')
+            ->values();
+
+        $cursor = $windowStart->copy();
+
+        foreach ($reservasOrdenadas as $reserva) {
+            $inicio = Carbon::parse($reserva->fecha, $windowStart->getTimezone())
+                ->setTimezone($windowStart->getTimezone());
+            $duracion = (int) ($reserva->duracion ?? 30);
+            if ($duracion <= 0) {
+                $duracion = 30;
+            }
+            $fin = $inicio->copy()->addMinutes($duracion);
+
+            if ($fin->lessThanOrEqualTo($windowStart)) {
+                continue;
             }
 
-            $inicio = Carbon::parse($reserva->fecha);
-
-            return $inicio->lessThan($windowEnd);
-        });
-
-        $reservasAgrupadas = $reservasFiltradas->groupBy('entrenador_id');
-
-        foreach ($reservasAgrupadas as $reservasBarbero) {
-            $reservasOrdenadas = $reservasBarbero->sortBy('fecha')->values();
-
-            $cursor = $windowStart->copy();
-
-            foreach ($reservasOrdenadas as $reserva) {
-                $inicio = Carbon::parse($reserva->fecha);
-                $duracion = (int) ($reserva->duracion ?? 30);
-                if ($duracion <= 0) {
-                    $duracion = 30;
-                }
-                $fin = $inicio->copy()->addMinutes($duracion);
-
-                if ($fin->lessThanOrEqualTo($windowStart)) {
-                    $cursor = $cursor->max($fin);
-                    continue;
-                }
-
-                if ($inicio->greaterThan($cursor)) {
-                    $inicioHueco = $cursor->copy();
-                    $finHueco = $inicio->copy();
-
-                    if ($inicioHueco->lessThan($windowEnd)) {
-                        $finHueco = $finHueco->min($windowEnd);
-                        $duracionHueco = $inicioHueco->diffInMinutes($finHueco);
-
-                        if ($duracionHueco >= 30) {
-                            $slots->push((object) [
-                                'inicio' => $inicioHueco->copy(),
-                                'duracion' => min($duracionHueco, 60),
-                                'barbero' => optional($reserva->entrenador)->nombre ?? 'Equipo',
-                                'servicio' => $this->sugerirServicioPorDuracion($duracionHueco),
-                            ]);
-                        }
-                    }
-                }
-
-                $cursor = $cursor->max($fin);
-
-                if ($cursor->greaterThanOrEqualTo($windowEnd)) {
-                    break;
-                }
+            if ($inicio->greaterThanOrEqualTo($windowEnd)) {
+                break;
             }
 
-            if ($cursor->lessThan($windowEnd)) {
+            if ($inicio->greaterThan($cursor)) {
                 $inicioHueco = $cursor->copy();
-                $finHueco = $windowEnd->copy();
+                $finHueco = $inicio->copy()->min($windowEnd);
                 $duracionHueco = $inicioHueco->diffInMinutes($finHueco);
 
                 if ($duracionHueco >= 30) {
                     $slots->push((object) [
                         'inicio' => $inicioHueco,
                         'duracion' => min($duracionHueco, 60),
-                        'barbero' => optional($reservasOrdenadas->last()->entrenador)->nombre ?? 'Equipo',
+                        'barbero' => $this->obtenerNombreBarbero($reserva->entrenador),
                         'servicio' => $this->sugerirServicioPorDuracion($duracionHueco),
                     ]);
                 }
             }
+
+            if ($fin->greaterThan($cursor)) {
+                $cursor = $fin->copy();
+            }
+
+            if ($cursor->greaterThanOrEqualTo($windowEnd)) {
+                break;
+            }
         }
 
-        return $slots->sortByDesc('duracion')->values();
+        if ($cursor->lessThan($windowEnd)) {
+            $duracionHueco = $cursor->diffInMinutes($windowEnd);
+
+            if ($duracionHueco >= 30) {
+                $ultimoBarbero = optional($reservasOrdenadas->last())->entrenador;
+
+                $slots->push((object) [
+                    'inicio' => $cursor->copy(),
+                    'duracion' => min($duracionHueco, 60),
+                    'barbero' => $this->obtenerNombreBarbero($ultimoBarbero),
+                    'servicio' => $this->sugerirServicioPorDuracion($duracionHueco),
+                ]);
+            }
+        }
+
+        if ($slots->isEmpty()) {
+            $duracionHueco = $windowStart->diffInMinutes($windowEnd);
+
+            if ($duracionHueco >= 30) {
+                $slots->push((object) [
+                    'inicio' => $windowStart->copy(),
+                    'duracion' => min($duracionHueco, 60),
+                    'barbero' => 'Equipo',
+                    'servicio' => $this->sugerirServicioPorDuracion($duracionHueco),
+                ]);
+            }
+        }
+
+        return $slots->sortBy('inicio')->values();
+    }
+
+    private function obtenerNombreBarbero($barbero = null): string
+    {
+        if (! $barbero) {
+            return 'Equipo';
+        }
+
+        $nombre = $barbero->nombre_completo
+            ?? $barbero->nombre
+            ?? $barbero->nombres
+            ?? null;
+
+        return $nombre ? trim($nombre) : 'Equipo';
     }
 
     private function sugerirServicioPorDuracion(int $minutos): string
