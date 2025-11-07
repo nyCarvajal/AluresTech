@@ -44,6 +44,7 @@ class Reserva extends Model
         'nota_cliente',
         'repeat_enabled',
         'repeat_until',
+        'responsable_id',
         'servicio_id',
         'orden_id',
         'venta_id',

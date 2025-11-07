@@ -117,8 +117,10 @@ class ReservaController extends Controller
 	public function events(Request $request)
 {
     // 1) Trae y filtra la consulta (mejor en base de datos, no en colección)
+    $estadosVisibles = ['Confirmada', 'Pendiente', 'No Asistida', 'cobrada'];
+
     $query = Reserva::with(['cliente', 'entrenador', 'servicio', 'orden'])
-        ->where('estado', 'Confirmada');
+        ->whereIn('estado', $estadosVisibles);
     if ($request->filled('cancha_id')) {
         $query->where('cancha_id', $request->cancha_id);
     }
@@ -143,6 +145,9 @@ class ReservaController extends Controller
         if ($r->estado === 'No Asistida') {
             $color = '#0d6efd';
             $textColor = '#ffffff';
+        } elseif ($r->estado === 'Pendiente') {
+            $color = '#ffc107';
+            $textColor = '#212529';
         }
 
         $clienteNombre = trim(collect([
@@ -315,6 +320,7 @@ public function store(Request $request)
             'duracion'      => $data['duration'] ?? 60,
             'tipo'          => $data['type'],
             'cliente_id'    => $data['cliente_id'] ?? null,
+            'responsable_id' => Auth::id(),
             'servicio_id'   => $servicio?->id,
             'orden_id'      => $orden?->id,
             'venta_id'      => $venta?->id,
@@ -552,6 +558,7 @@ public function update(Request $request, Reserva $reserva)
                 'estado'        => $data['estado'],
                 'cliente_id'    => $clienteId,
                 'entrenador_id' => $data['entrenador_id'] ?? $reserva->entrenador_id,
+                'responsable_id' => Auth::id(),
             ])->save();
         });
 
