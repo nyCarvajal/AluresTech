@@ -32,7 +32,7 @@
                          <span class="nav-icon">
                               <iconify-icon icon="mingcute:home-3-line"></iconify-icon>
                          </span>
-                         <span class="nav-text"> Inicio </span>
+                         <span class="nav-text"> Resumen De Hoy</span>
                          
                     </a>
                </li>
@@ -41,7 +41,7 @@
                          <span class="nav-icon">
                               <iconify-icon icon="solar:cart-large-4-bold-duotone"></iconify-icon>
                          </span>
-                         <span class="nav-text"> Facturación </span>
+                         <span class="nav-text"> Ventas </span>
                          
                     </a>
                </li>
@@ -70,18 +70,10 @@
                     <a class="nav-link" href="{{ route('reservas.calendar') }}">
                          <span class="nav-icon">
                               <i class="bx  bx-calendar-alt"  ></i> </span>
-                         <span class="nav-text"> Citas </span>
+                         <span class="nav-text"> Agenda & Huecos </span>
                     </a>
                </li>
-			     <li class="nav-item">
-                    <a class="nav-link" href="{{ route('items.index') }}">
-                         <span class="nav-icon">
-						 <i class="bx bx-dock-left"></i> 
-                               </span>
-                         <span class="nav-text"> Productos/Servicios </span>
-                    </a>
-               </li>
-			   
+			     
 			   
 			   <li class="menu-title">Configuración</li>
 
@@ -119,6 +111,16 @@
                          <span class="nav-text"> Personalizar Peluqueria  </span>
                     </a>
                </li>
+
+               <li class="nav-item">
+                    <a class="nav-link" href="{{ route('items.index') }}">
+                         <span class="nav-icon">
+						 <i class="bx bx-dock-left"></i> 
+                               </span>
+                         <span class="nav-text"> Productos/Servicios </span>
+                    </a>
+               </li>
+			   
 			   
 
                <li class="nav-item">
@@ -127,7 +129,7 @@
                          <span class="nav-icon">
                               <iconify-icon icon="mingcute:user-3-line"></iconify-icon>
                          </span>
-                         <span class="nav-text"> Usuarios </span>
+                         <span class="nav-text"> Usuarios & Roles</span>
                     </a>
                     <div class="collapse" id="sidebarAuthentication">
                          <ul class="nav sub-navbar-nav">
@@ -155,12 +157,12 @@
                     <a class="nav-link menu-arrow" href="#sidebarBaseUI" data-bs-toggle="collapse" role="button"
                          aria-expanded="false" aria-controls="sidebarBaseUI">
                          <span class="nav-icon"><i class="bx bx-money-withdraw"></i></span>
-                         <span class="nav-text"> Caja </span>
+                         <span class="nav-text"> Arqueo de Caja </span>
                     </a>
                     <div class="collapse" id="sidebarBaseUI">
                          <ul class="nav sub-navbar-nav">
                               <li class="sub-nav-item">
-                                   <a class="sub-nav-link" href="{{ route ('cajas.index') }}">Caja de hoy</a>
+                                   <a class="sub-nav-link" href="{{ route ('cajas.index') }}">Arqueo De Caja</a>
                               </li>
                               <li class="sub-nav-item">
                                    <a class="sub-nav-link" href="{{ route ('cajas.index') }}">Listar Cajas</a>
@@ -181,7 +183,7 @@
                          <span class="nav-icon">
                               <iconify-icon icon="mingcute:chart-bar-line"></iconify-icon>
                          </span>
-                         <span class="nav-text"> Informes Administrativos </span>
+                         <span class="nav-text"> Reportes Rápidos </span>
                     </a>
                </li>
 			   <li class="nav-item">
