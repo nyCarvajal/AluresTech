@@ -86,11 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const clientesField = form.querySelector('#fieldClientes');
           const entrenadorField = form.querySelector('#fieldEntrenador');
-          const responsableField = form.querySelector('#fieldResponsable');
           const servicioField = form.querySelector('#fieldServicio');
           const clienteSelect = form.querySelector('#clientes');
           const entrenadorSelect = form.querySelector('#entrenador');
-          const responsableSelect = form.querySelector('#responsable');
           const servicioSelect = form.querySelector('#servicio');
           const cuentaInfo = form.querySelector('#fieldCuenta');
           const cuentaLink = form.querySelector('#reservationCuentaLink');
@@ -239,10 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
               entrenadorField.classList.remove('d-none');
             }
 
-            if (responsableField) {
-              responsableField.classList.remove('d-none');
-            }
-
             if (servicioField) {
               servicioField.classList.remove('d-none');
             }
@@ -317,27 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
           }
 
-          if (responsableSelect && !responsableSelect.tomselect) {
-            new TomSelect(responsableSelect, {
-              valueField: 'id',
-              labelField: 'nombre',
-              searchField: ['nombre'],
-              loadingClass: 'is-loading',
-              placeholder: 'Escribe para buscar…',
-              load(query, callback) {
-                if (!query.length) {
-                  callback();
-                  return;
-                }
-
-                fetch(`/clientesb?q=${encodeURIComponent(query)}`)
-                  .then((response) => response.json())
-                  .then((json) => callback(json))
-                  .catch(() => callback());
-              },
-            });
-          }
-
           switchFields(typeSelect?.value || 'Reserva');
           refreshCancelButtonTextForType(typeSelect?.value);
           disableCancelButton();
@@ -398,12 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (entrenadorSelect) {
               entrenadorSelect.value = '';
             }
-
-              if (responsableSelect?.tomselect) {
-                responsableSelect.tomselect.clear(true);
-              } else if (responsableSelect) {
-                responsableSelect.value = '';
-              }
 
               if (fechaInput) {
                 fechaInput.value = info.startStr.split('T')[0];
@@ -500,15 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 clienteSelect.value = props.cliente_id || '';
               }
 
-              if (responsableSelect?.tomselect) {
-                const rs = responsableSelect.tomselect;
-                rs.clear(true);
-                if (props.responsable_id && props.responsable_nombre) {
-                  rs.addOption({ id: String(props.responsable_id), nombre: props.responsable_nombre });
-                  rs.setValue(String(props.responsable_id), true);
-                }
-              } else if (responsableSelect) {
-                responsableSelect.value = props.responsable_id || '';
+              if (props.cuenta_label && props.cuenta_url) {
+                showCuentaInfo(props.cuenta_label, props.cuenta_url);
               }
 
               if (props.cuenta_label && props.cuenta_url) {
