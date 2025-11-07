@@ -292,12 +292,14 @@ class BookingController extends Controller
                         'peluqueria_id' => $peluqueria->id,
                         'reserva_id' => $reserva->id,
                         'destinatarios_fallidos' => $failures,
+                        'mail_debug' => $this->mailDebugContext(),
                     ]);
                 } else {
                     Log::info('Correo de nueva reserva enviado a la peluquería.', [
                         'peluqueria_id' => $peluqueria->id,
                         'reserva_id' => $reserva->id,
                         'destinatarios' => $recipients,
+                        'mail_debug' => $this->mailDebugContext(),
                     ]);
                 }
             } catch (\Throwable $exception) {
@@ -306,6 +308,7 @@ class BookingController extends Controller
                     'reserva_id' => $reserva->id,
                     'destinatarios' => $recipients,
                     'mensaje' => $exception->getMessage(),
+                    'mail_debug' => $this->mailDebugContext(),
                 ]);
             }
         } else {
@@ -335,6 +338,27 @@ class BookingController extends Controller
         }
 
         return [];
+    }
+
+    private function mailDebugContext(): array
+    {
+        $defaultMailer = config('mail.default');
+        $mailers = config('mail.mailers', []);
+        $selectedMailer = $mailers[$defaultMailer] ?? null;
+
+        return [
+            'app_env' => config('app.env'),
+            'environment_file' => app()->environmentFile(),
+            'environment_path' => app()->environmentPath(),
+            'mail_default' => $defaultMailer,
+            'mailer_configuration' => $selectedMailer,
+            'from' => config('mail.from'),
+            'mail_host' => data_get($selectedMailer, 'host'),
+            'mail_username' => data_get($selectedMailer, 'username'),
+            'mail_from_address' => data_get(config('mail.from'), 'address'),
+            'env_file_exists' => file_exists(base_path('.env')),
+            'dev_file_exists' => file_exists(base_path('.dev')),
+        ];
     }
 
     /**
