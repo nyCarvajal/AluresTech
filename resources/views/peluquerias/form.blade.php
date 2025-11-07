@@ -68,6 +68,20 @@
 </div>
 
 <div class="mb-3">
+  <label>Correo electrónico</label>
+  <input
+    type="email"
+    name="email"
+    value="{{ old('email', $peluqueria->email ?? '') }}"
+    class="form-control @error('email') is-invalid @enderror"
+    placeholder="nombre@dominio.com"
+  >
+  @error('email')
+    <div class="invalid-feedback">{{ $message }}</div>
+  @enderror
+</div>
+
+<div class="mb-3">
   <label class="form-label" for="logo">Logo</label>
   <input
     type="file"
