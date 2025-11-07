@@ -111,7 +111,7 @@
             </div>
             <div>
                 <h1 class="fw-bold mb-3">Reserva tu próximo servicio en {{ $peluqueria->nombre }}</h1>
-                <p class="lead mb-0">Crea tu cuenta, verifica tu correo e ingresa cuando quieras para agendar la cita que necesitas.</p>
+                <p class="lead mb-0">Completa tus datos y solicita tu cita en pocos pasos. Nosotros nos encargamos del resto.</p>
             </div>
         </div>
     </div>
@@ -130,7 +130,6 @@
     @endif
 
     @php
-        $pendingVerification = session('public_cliente_pending_' . $peluqueria->id);
         $appointmentErrors = $errors->appointment ?? null;
         $defaultStylistId = old('entrenador_id');
         if (is_string($defaultStylistId) && str_contains($defaultStylistId, ':')) {
@@ -142,186 +141,100 @@
         }
     @endphp
 
-    <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card card-shadow h-100">
-                <div class="card-body p-4">
-                    <ul class="nav nav-pills nav-fill mb-4" id="authTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="register-tab" data-bs-toggle="pill" data-bs-target="#register" type="button" role="tab" aria-controls="register" aria-selected="true">Registrarme</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="login-tab" data-bs-toggle="pill" data-bs-target="#login" type="button" role="tab" aria-controls="login" aria-selected="false">Iniciar sesión</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content" id="authTabsContent">
-                        <div class="tab-pane fade show active" id="register" role="tabpanel" aria-labelledby="register-tab">
-                            <form method="POST" action="{{ route('public.booking.register', $peluqueria) }}">
-                                @csrf
-                                <div class="mb-3">
-                                    <label class="form-label" for="register-nombres">Nombre</label>
-                                    <input type="text" class="form-control @error('nombres', 'register') is-invalid @enderror" id="register-nombres" name="nombres" value="{{ old('nombres') }}" required>
-                                    @error('nombres', 'register')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="register-apellidos">Apellidos</label>
-                                    <input type="text" class="form-control @error('apellidos', 'register') is-invalid @enderror" id="register-apellidos" name="apellidos" value="{{ old('apellidos') }}">
-                                    @error('apellidos', 'register')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="register-correo">Correo electrónico</label>
-                                    <input type="email" class="form-control @error('correo', 'register') is-invalid @enderror" id="register-correo" name="correo" value="{{ old('correo') }}" required>
-                                    @error('correo', 'register')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="register-whatsapp">WhatsApp</label>
-                                    <input type="text" class="form-control @error('whatsapp', 'register') is-invalid @enderror" id="register-whatsapp" name="whatsapp" value="{{ old('whatsapp') }}">
-                                    @error('whatsapp', 'register')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label" for="register-password">Contraseña</label>
-                                    <input type="password" class="form-control @error('password', 'register') is-invalid @enderror" id="register-password" name="password" required>
-                                    @error('password', 'register')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label" for="register-password-confirmation">Confirmar contraseña</label>
-                                    <input type="password" class="form-control" id="register-password-confirmation" name="password_confirmation" required>
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label" for="register-captcha">Verificación anti-spam</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ $captchaQuestion }}</span>
-                                        <input type="number" class="form-control @error('captcha', 'register') is-invalid @enderror" id="register-captcha" name="captcha" inputmode="numeric" pattern="[0-9]*" placeholder="Resultado" required>
-                                    </div>
-                                    @error('captcha', 'register')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                    <small class="text-muted">Escribe el resultado para demostrar que no eres un robot.</small>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100">Crear cuenta</button>
-                            </form>
-                        </div>
-                        <div class="tab-pane fade" id="login" role="tabpanel" aria-labelledby="login-tab">
-                            <form method="POST" action="{{ route('public.booking.login', $peluqueria) }}">
-                                @csrf
-                                <div class="mb-3">
-                                    <label class="form-label" for="login-correo">Correo electrónico</label>
-                                    <input type="email" class="form-control @error('correo', 'login') is-invalid @enderror" id="login-correo" name="correo" value="{{ old('correo') }}" required>
-                                    @error('correo', 'login')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="mb-4">
-                                    <label class="form-label" for="login-password">Contraseña</label>
-                                    <input type="password" class="form-control @error('password', 'login') is-invalid @enderror" id="login-password" name="password" required>
-                                    @error('password', 'login')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-                            </form>
-                        </div>
-                    </div>
-                    @if ($pendingVerification)
-                        <div class="alert alert-warning mt-4" role="alert">
-                            Hemos enviado un enlace de verificación a <strong>{{ $pendingVerification }}</strong>. Revisa tu bandeja de entrada o correo no deseado.
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card card-shadow h-100">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card card-shadow">
                 <div class="card-body p-4">
                     <h2 class="h4 fw-bold mb-4">Agenda tu cita</h2>
-                    @if ($cliente)
-                        <div class="alert alert-info" role="alert">
-                            Hola {{ $cliente->nombres }}. @if(! $cliente->email_verified_at) Tu correo aún no está verificado. Revisa tu correo para confirmar tu cuenta. @else ¡Ya puedes solicitar tu cita! @endif
-                        </div>
-                        <form method="POST" action="{{ route('public.booking.appointment', $peluqueria) }}" class="mb-4">
-                            @csrf
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label" for="appointment-stylist">{{ $trainerLabelSingular }}</label>
-                                    <select class="form-select @if($appointmentErrors?->has('entrenador_id')) is-invalid @endif" id="appointment-stylist" name="entrenador_id" @if(($estilistas ?? collect())->isEmpty()) disabled @endif required>
-                                        <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($trainerLabelSingular) }}</option>
-                                        @foreach($estilistas ?? [] as $estilista)
-                                            @php
-                                                $estilistaId = $estilista->id;
-                                                if (is_string($estilistaId) && str_contains($estilistaId, ':')) {
-                                                    $idParts = array_values(array_filter(explode(':', $estilistaId), fn ($segment) => $segment !== ''));
-                                                    $estilistaId = end($idParts) ?: reset($idParts);
-                                                }
-                                            @endphp
-                                            <option value="{{ $estilistaId }}" @selected((string) $defaultStylistId === (string) $estilistaId)>{{ trim($estilista->nombre . ' ' . ($estilista->apellidos ?? '')) }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if(($estilistas ?? collect())->isEmpty())
-                                        <div class="form-text text-danger">No hay {{ \Illuminate\Support\Str::lower($trainerLabelPlural) }} disponibles por ahora.</div>
-                                    @endif
-                                    @if($appointmentErrors?->has('entrenador_id'))
-                                        <div class="invalid-feedback">{{ $appointmentErrors->first('entrenador_id') }}</div>
-                                    @endif
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="appointment-date">Fecha</label>
-                                    <input type="date" class="form-control @if($appointmentErrors?->has('fecha')) is-invalid @endif" id="appointment-date" name="fecha" value="{{ old('fecha') ?? now()->format('Y-m-d') }}" required>
-                                    @if($appointmentErrors?->has('fecha'))
-                                        <div class="invalid-feedback">{{ $appointmentErrors->first('fecha') }}</div>
-                                    @endif
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="appointment-time">Hora</label>
-                                    <select class="form-select @if($appointmentErrors?->has('hora')) is-invalid @endif" id="appointment-time" name="hora" required>
-                                        <option value="">Selecciona un horario</option>
-                                    </select>
-                                    @if($appointmentErrors?->has('hora'))
-                                        <div class="invalid-feedback">{{ $appointmentErrors->first('hora') }}</div>
-                                    @endif
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label d-block">Duración</label>
-                                    <p class="form-control-plaintext fw-semibold text-muted mb-0">{{ $defaultDuration }} minutos</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="appointment-tipocita">Servicio</label>
-                                    <select class="form-select @if($appointmentErrors?->has('tipocita_id')) is-invalid @endif" id="appointment-tipocita" name="tipocita_id">
-                                        <option value="">Selecciona una opción</option>
-                                        @foreach($tipocitas as $tipo)
-                                            <option value="{{ $tipo->id }}" @selected(old('tipocita_id') == $tipo->id)>{{ $tipo->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                    @if($appointmentErrors?->has('tipocita_id'))
-                                        <div class="invalid-feedback">{{ $appointmentErrors->first('tipocita_id') }}</div>
-                                    @endif
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label" for="appointment-note">Notas adicionales</label>
-                                    <textarea class="form-control @if($appointmentErrors?->has('nota_cliente')) is-invalid @endif" id="appointment-note" name="nota_cliente" rows="3" placeholder="Cuéntanos detalles que debamos saber">{{ old('nota_cliente') }}</textarea>
-                                    @if($appointmentErrors?->has('nota_cliente'))
-                                        <div class="invalid-feedback">{{ $appointmentErrors->first('nota_cliente') }}</div>
-                                    @endif
-                                </div>
+                    <p class="text-muted mb-4">Déjanos tus datos básicos y elige el horario que mejor te funcione. Te contactaremos para confirmar tu reserva.</p>
+                    <form method="POST" action="{{ route('public.booking.appointment', $peluqueria) }}">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-first-name">Nombre</label>
+                                <input type="text" class="form-control @if($appointmentErrors?->has('nombres')) is-invalid @endif" id="appointment-first-name" name="nombres" value="{{ old('nombres', $cliente->nombres ?? '') }}" required>
+                                @if($appointmentErrors?->has('nombres'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('nombres') }}</div>
+                                @endif
                             </div>
-                            <button type="submit" class="btn btn-primary mt-4 w-100" @if(! $cliente->email_verified_at) disabled @endif>Solicitar cita</button>
-                        </form>
-                        <form method="POST" action="{{ route('public.booking.logout', $peluqueria) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-danger w-100">Cerrar sesión</button>
-                        </form>
-                    @else
-                        <p class="text-muted">Regístrate o inicia sesión para agendar una cita. Si ya hiciste tu registro recuerda verificar el enlace que enviamos a tu correo.</p>
-                    @endif
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-last-name">Apellidos</label>
+                                <input type="text" class="form-control @if($appointmentErrors?->has('apellidos')) is-invalid @endif" id="appointment-last-name" name="apellidos" value="{{ old('apellidos', $cliente->apellidos ?? '') }}">
+                                @if($appointmentErrors?->has('apellidos'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('apellidos') }}</div>
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-whatsapp">WhatsApp</label>
+                                <input type="text" class="form-control @if($appointmentErrors?->has('whatsapp')) is-invalid @endif" id="appointment-whatsapp" name="whatsapp" value="{{ old('whatsapp', $cliente->whatsapp ?? '') }}" required>
+                                @if($appointmentErrors?->has('whatsapp'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('whatsapp') }}</div>
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-stylist">{{ $trainerLabelSingular }}</label>
+                                <select class="form-select @if($appointmentErrors?->has('entrenador_id')) is-invalid @endif" id="appointment-stylist" name="entrenador_id" @if(($estilistas ?? collect())->isEmpty()) disabled @endif required>
+                                    <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($trainerLabelSingular) }}</option>
+                                    @foreach($estilistas ?? [] as $estilista)
+                                        @php
+                                            $estilistaId = $estilista->id;
+                                            if (is_string($estilistaId) && str_contains($estilistaId, ':')) {
+                                                $idParts = array_values(array_filter(explode(':', $estilistaId), fn ($segment) => $segment !== ''));
+                                                $estilistaId = end($idParts) ?: reset($idParts);
+                                            }
+                                        @endphp
+                                        <option value="{{ $estilistaId }}" @selected((string) $defaultStylistId === (string) $estilistaId)>{{ trim($estilista->nombre . ' ' . ($estilista->apellidos ?? '')) }}</option>
+                                    @endforeach
+                                </select>
+                                @if(($estilistas ?? collect())->isEmpty())
+                                    <div class="form-text text-danger">No hay {{ \Illuminate\Support\Str::lower($trainerLabelPlural) }} disponibles por ahora.</div>
+                                @endif
+                                @if($appointmentErrors?->has('entrenador_id'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('entrenador_id') }}</div>
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-date">Fecha</label>
+                                <input type="date" class="form-control @if($appointmentErrors?->has('fecha')) is-invalid @endif" id="appointment-date" name="fecha" value="{{ old('fecha') ?? now()->format('Y-m-d') }}" required>
+                                @if($appointmentErrors?->has('fecha'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('fecha') }}</div>
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-time">Hora</label>
+                                <select class="form-select @if($appointmentErrors?->has('hora')) is-invalid @endif" id="appointment-time" name="hora" required>
+                                    <option value="">Selecciona un horario</option>
+                                </select>
+                                @if($appointmentErrors?->has('hora'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('hora') }}</div>
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label d-block">Duración</label>
+                                <p class="form-control-plaintext fw-semibold text-muted mb-0">{{ $defaultDuration }} minutos</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="appointment-tipocita">Servicio</label>
+                                <select class="form-select @if($appointmentErrors?->has('tipocita_id')) is-invalid @endif" id="appointment-tipocita" name="tipocita_id">
+                                    <option value="">Selecciona una opción</option>
+                                    @foreach($tipocitas as $tipo)
+                                        <option value="{{ $tipo->id }}" @selected(old('tipocita_id') == $tipo->id)>{{ $tipo->nombre }}</option>
+                                    @endforeach
+                                </select>
+                                @if($appointmentErrors?->has('tipocita_id'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('tipocita_id') }}</div>
+                                @endif
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="appointment-note">Notas adicionales</label>
+                                <textarea class="form-control @if($appointmentErrors?->has('nota_cliente')) is-invalid @endif" id="appointment-note" name="nota_cliente" rows="3" placeholder="Cuéntanos detalles que debamos saber">{{ old('nota_cliente') }}</textarea>
+                                @if($appointmentErrors?->has('nota_cliente'))
+                                    <div class="invalid-feedback">{{ $appointmentErrors->first('nota_cliente') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-4 w-100">Solicitar cita</button>
+                    </form>
                 </div>
             </div>
         </div>
