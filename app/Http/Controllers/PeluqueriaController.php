@@ -46,6 +46,7 @@ class PeluqueriaController extends Controller
             'trainer_label_plural'    => 'nullable|string|max:191',
             'nit'                     => 'nullable|string',
             'direccion'               => 'nullable|string',
+            'email'                   => 'nullable|email|max:191',
             'municipio'               => 'nullable|string',
             'trainer_label_singular'  => 'nullable|string|max:191',
             'trainer_label_plural'    => 'nullable|string|max:191',
