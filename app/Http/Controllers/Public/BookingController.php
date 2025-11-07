@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -282,7 +283,36 @@ class BookingController extends Controller
         $recipients = $this->resolveSalonNotificationEmails($peluqueria);
 
         if (! empty($recipients)) {
-            Mail::to($recipients)->send(new NuevaReservaPeluqueriaMail($peluqueria, $cliente, $reserva));
+            try {
+                Mail::to($recipients)->send(new NuevaReservaPeluqueriaMail($peluqueria, $cliente, $reserva));
+
+                $failures = Mail::failures();
+                if (! empty($failures)) {
+                    Log::warning('Fallo al enviar correo de nueva reserva a la peluquería.', [
+                        'peluqueria_id' => $peluqueria->id,
+                        'reserva_id' => $reserva->id,
+                        'destinatarios_fallidos' => $failures,
+                    ]);
+                } else {
+                    Log::info('Correo de nueva reserva enviado a la peluquería.', [
+                        'peluqueria_id' => $peluqueria->id,
+                        'reserva_id' => $reserva->id,
+                        'destinatarios' => $recipients,
+                    ]);
+                }
+            } catch (\Throwable $exception) {
+                Log::error('Error al enviar correo de nueva reserva a la peluquería.', [
+                    'peluqueria_id' => $peluqueria->id,
+                    'reserva_id' => $reserva->id,
+                    'destinatarios' => $recipients,
+                    'mensaje' => $exception->getMessage(),
+                ]);
+            }
+        } else {
+            Log::info('Reserva creada sin correo de notificación para la peluquería: no hay destinatarios configurados.', [
+                'peluqueria_id' => $peluqueria->id,
+                'reserva_id' => $reserva->id,
+            ]);
         }
 
         return redirect()
