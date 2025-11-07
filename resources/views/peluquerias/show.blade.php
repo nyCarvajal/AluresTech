@@ -31,6 +31,7 @@
             <div class="border p-2 mb-3" style="white-space: pre-wrap;">{{ $peluqueria->msj_bienvenida }}</div>
             <p><strong>NIT:</strong> {{ $peluqueria->nit }}</p>
             <p><strong>Dirección:</strong> {{ $peluqueria->direccion }}</p>
+            <p><strong>Correo electrónico:</strong> {{ $peluqueria->email ?? '—' }}</p>
             <p><strong>Color del menú:</strong>
                 @if($peluqueria->menu_color)
                     <span class="badge" style="background-color: {{ $peluqueria->menu_color }}; color: #fff;">
