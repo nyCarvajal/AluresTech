@@ -286,7 +286,7 @@ class BookingController extends Controller
             try {
                 Mail::to($recipients)->send(new NuevaReservaPeluqueriaMail($peluqueria, $cliente, $reserva));
 
-                $failures = Mail::failures();
+                $failures = $this->resolveMailFailures();
                 if (! empty($failures)) {
                     Log::warning('Fallo al enviar correo de nueva reserva a la peluquería.', [
                         'peluqueria_id' => $peluqueria->id,
@@ -318,6 +318,23 @@ class BookingController extends Controller
         return redirect()
             ->route('public.booking.show', $peluqueria)
             ->with('status', 'Tu solicitud fue enviada. Te confirmaremos por WhatsApp.');
+    }
+
+    /**
+     * Intenta recuperar los destinatarios que el mailer reporta como fallidos.
+     *
+     * Algunos drivers no implementan el método "failures", por lo que en ese
+     * caso devolvemos un arreglo vacío para evitar excepciones al consultar.
+     */
+    private function resolveMailFailures(): array
+    {
+        $mailer = Mail::getFacadeRoot();
+
+        if ($mailer && method_exists($mailer, 'failures')) {
+            return $mailer->failures();
+        }
+
+        return [];
     }
 
     /**
