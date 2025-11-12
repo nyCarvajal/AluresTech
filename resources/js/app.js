@@ -132,7 +132,7 @@ const initializeCalendar = () => {
   const clientesField = form.querySelector('#fieldClientes');
   const entrenadorField = form.querySelector('#fieldEntrenador');
   const servicioField = form.querySelector('#fieldServicio');
-  const clienteSelect = form.querySelector('#clientes');
+  let clienteSelect = form.querySelector('#clientes');
   const entrenadorSelect = form.querySelector('#entrenador');
   const servicioSelect = form.querySelector('#servicio');
   const cuentaInfo = form.querySelector('#fieldCuenta');
@@ -370,11 +370,48 @@ const initializeCalendar = () => {
     }
   };
 
-  if (clienteSelect) {
-    initClienteSelect(clienteSelect);
-  } else {
-    console.warn('No se encontró el selector de clientes, se omite TomSelect.');
-  }
+  const resolveClienteSelect = () => {
+    if (clienteSelect instanceof HTMLElement) {
+      return clienteSelect;
+    }
+
+    const refreshed = form.querySelector('#clientes');
+    if (refreshed instanceof HTMLElement) {
+      clienteSelect = refreshed;
+      return clienteSelect;
+    }
+
+    return null;
+  };
+
+  let clienteSelectControl = null;
+  let warnedMissingClienteSelect = false;
+
+  const ensureClienteSelectControl = () => {
+    if (clienteSelectControl) {
+      return clienteSelectControl;
+    }
+
+    const element = resolveClienteSelect();
+    if (!(element instanceof HTMLElement)) {
+      if (!warnedMissingClienteSelect) {
+        warnedMissingClienteSelect = true;
+        console.warn('No se encontró el selector de clientes, se omite TomSelect.');
+      }
+      return null;
+    }
+
+    const instance = initClienteSelect(element);
+    if (instance) {
+      clienteSelectControl = instance;
+    }
+
+    return clienteSelectControl;
+  };
+
+  modalEl.addEventListener('shown.bs.modal', () => {
+    ensureClienteSelectControl();
+  });
 
   switchFields(typeSelect?.value || 'Reserva');
   refreshCancelButtonTextForType(typeSelect?.value);
