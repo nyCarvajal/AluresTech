@@ -346,7 +346,18 @@ const initializeCalendar = () => {
   }
 
   const isElementReadyForTomSelect = (element) => {
-    if (!(element instanceof HTMLSelectElement)) {
+    if (!element || typeof element !== 'object') {
+      return false;
+    }
+
+    const isSelect = (() => {
+      if (typeof window !== 'undefined' && window.HTMLSelectElement) {
+        return element instanceof window.HTMLSelectElement;
+      }
+      return element.tagName?.toUpperCase?.() === 'SELECT';
+    })();
+
+    if (!isSelect) {
       return false;
     }
 
@@ -357,9 +368,15 @@ const initializeCalendar = () => {
     return document.body.contains(element);
   };
 
+  let warnedInvalidClienteSelectElement = false;
+  let warnedMissingTomSelectConstructor = false;
+
   const initClienteSelect = (element) => {
-    if (!(element instanceof HTMLElement)) {
-      console.warn('El selector de clientes no es un elemento HTML válido, se omite TomSelect.');
+    if (!element || typeof element !== 'object') {
+      if (!warnedInvalidClienteSelectElement) {
+        warnedInvalidClienteSelectElement = true;
+        console.warn('El selector de clientes no es un elemento HTML válido, se omite TomSelect.');
+      }
       return null;
     }
 
@@ -367,8 +384,16 @@ const initializeCalendar = () => {
       return null;
     }
 
-    if (element.tomselect) {
+    if (element && element.tomselect) {
       return element.tomselect;
+    }
+
+    if (typeof TomSelect !== 'function') {
+      if (!warnedMissingTomSelectConstructor) {
+        warnedMissingTomSelectConstructor = true;
+        console.warn('TomSelect no está disponible en esta página, se omite la mejora del selector de clientes.');
+      }
+      return null;
     }
 
     try {
@@ -411,7 +436,7 @@ const initializeCalendar = () => {
     }
 
     const element = resolveClienteSelect();
-    if (!(element instanceof HTMLElement)) {
+    if (!element || !(element instanceof HTMLElement)) {
       if (!warnedMissingClienteSelect) {
         warnedMissingClienteSelect = true;
         console.warn('No se encontró el selector de clientes, se omite TomSelect.');
@@ -487,8 +512,9 @@ const initializeCalendar = () => {
         durationSelect.value = '60';
       }
 
-      if (clienteSelect?.tomselect) {
-        clienteSelect.tomselect.clear(true);
+      const clienteControl = ensureClienteSelectControl();
+      if (clienteControl) {
+        clienteControl.clear(true);
       } else if (clienteSelect) {
         clienteSelect.value = '';
       }
@@ -584,13 +610,13 @@ const initializeCalendar = () => {
         entrenadorSelect.value = props.entrenador_id || '';
       }
 
-      if (clienteSelect?.tomselect) {
-        const ts = clienteSelect.tomselect;
-        ts.clear(true);
+      const clienteControl = ensureClienteSelectControl();
+      if (clienteControl) {
+        clienteControl.clear(true);
         if (props.cliente_id) {
           const nombre = props.title || ev.title || '';
-          ts.addOption({ value: String(props.cliente_id), text: nombre });
-          ts.setValue(String(props.cliente_id), true);
+          clienteControl.addOption({ value: String(props.cliente_id), text: nombre });
+          clienteControl.setValue(String(props.cliente_id), true);
         }
       } else if (clienteSelect) {
         clienteSelect.value = props.cliente_id || '';
