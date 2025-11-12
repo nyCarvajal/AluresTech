@@ -301,11 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
 
           const initClienteSelect = (element) => {
-            if (!element) {
-              console.warn('No se encontró el selector de clientes, se omite TomSelect.');
-              return null;
-            }
-
             if (!(element instanceof HTMLElement)) {
               console.warn('El selector de clientes no es un elemento HTML válido, se omite TomSelect.');
               return null;
@@ -330,7 +325,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           };
 
-          initClienteSelect(clienteSelect);
+          if (clienteSelect) {
+            initClienteSelect(clienteSelect);
+          } else {
+            console.warn('No se encontró el selector de clientes, se omite TomSelect.');
+          }
 
           switchFields(typeSelect?.value || 'Reserva');
           refreshCancelButtonTextForType(typeSelect?.value);
