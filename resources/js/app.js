@@ -33,6 +33,78 @@ window.intlTelInput = intlTelInput;
 import TomSelect from 'tom-select';
 import 'tom-select/dist/css/tom-select.default.css';
 
+const createTomSelectFallbackInstance = () => {
+  const basePrototype = (TomSelect && TomSelect.prototype) || Object.prototype;
+  const fallback = Object.create(basePrototype);
+  const noop = () => {};
+
+  const methodsToStub = [
+    'destroy',
+    'clear',
+    'load',
+    'on',
+    'off',
+    'trigger',
+    'open',
+    'close',
+    'focus',
+    'blur',
+    'sync',
+    'setValue',
+    'refreshOptions',
+  ];
+
+  methodsToStub.forEach((method) => {
+    if (typeof fallback[method] !== 'function') {
+      fallback[method] = noop;
+    }
+  });
+
+  return fallback;
+};
+
+const isViableTomSelectElement = (value) => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  if (typeof value.nodeType === 'number') {
+    return true;
+  }
+
+  return typeof value.tagName === 'string';
+};
+
+const buildSafeTomSelectConstructor = () => {
+  if (typeof Proxy !== 'function') {
+    return TomSelect;
+  }
+
+  return new Proxy(TomSelect, {
+    construct(target, args, newTarget) {
+      const [element] = Array.isArray(args) ? args : [];
+
+      if (!isViableTomSelectElement(element)) {
+        console.warn('TomSelect recibió un elemento inválido; se omite la inicialización.', element);
+        return createTomSelectFallbackInstance();
+      }
+
+      try {
+        return Reflect.construct(target, args, newTarget);
+      } catch (error) {
+        console.error('TomSelect lanzó una excepción al inicializar; se devuelve un stub seguro.', error);
+        return createTomSelectFallbackInstance();
+      }
+    },
+  });
+};
+
+const SafeTomSelect = buildSafeTomSelectConstructor();
+
+if (typeof window !== 'undefined') {
+  window.TomSelect = SafeTomSelect;
+}
+
 //calendario
 
 
@@ -388,7 +460,7 @@ const initializeCalendar = () => {
       return element.tomselect;
     }
 
-    if (typeof TomSelect !== 'function') {
+    if (typeof SafeTomSelect !== 'function') {
       if (!warnedMissingTomSelectConstructor) {
         warnedMissingTomSelectConstructor = true;
         console.warn('TomSelect no está disponible en esta página, se omite la mejora del selector de clientes.');
@@ -397,7 +469,7 @@ const initializeCalendar = () => {
     }
 
     try {
-      return new TomSelect(element, {
+      return new SafeTomSelect(element, {
         maxItems: 1,
         valueField: 'value',
         labelField: 'text',
