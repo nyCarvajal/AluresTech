@@ -30,7 +30,7 @@ import 'intl-tel-input/build/css/intlTelInput.css';
 // Exponer la función en window para que tus componentes la encuentren
 window.intlTelInput = intlTelInput;
 
-import TomSelect from 'tom-select';
+import SafeTomSelect from './lib/safe-tom-select';
 import 'tom-select/dist/css/tom-select.default.css';
 
 const createTomSelectFallbackInstance = () => {
