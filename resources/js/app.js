@@ -300,16 +300,37 @@ document.addEventListener('DOMContentLoaded', () => {
             });
           }
 
-          if (clienteSelect && !clienteSelect.tomselect) {
-            new TomSelect(clienteSelect, {
-              maxItems: 1,
-              valueField: 'value',
-              labelField: 'text',
-              searchField: 'text',
-              placeholder: 'Selecciona un cliente',
-              create: false,
-            });
-          }
+          const initClienteSelect = (element) => {
+            if (!element) {
+              console.warn('No se encontró el selector de clientes, se omite TomSelect.');
+              return null;
+            }
+
+            if (!(element instanceof HTMLElement)) {
+              console.warn('El selector de clientes no es un elemento HTML válido, se omite TomSelect.');
+              return null;
+            }
+
+            if (element.tomselect) {
+              return element.tomselect;
+            }
+
+            try {
+              return new TomSelect(element, {
+                maxItems: 1,
+                valueField: 'value',
+                labelField: 'text',
+                searchField: 'text',
+                placeholder: 'Selecciona un cliente',
+                create: false,
+              });
+            } catch (error) {
+              console.error('No se pudo inicializar TomSelect para clientes.', error);
+              return null;
+            }
+          };
+
+          initClienteSelect(clienteSelect);
 
           switchFields(typeSelect?.value || 'Reserva');
           refreshCancelButtonTextForType(typeSelect?.value);
