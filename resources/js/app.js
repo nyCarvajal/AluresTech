@@ -345,9 +345,25 @@ const initializeCalendar = () => {
     });
   }
 
+  const isElementReadyForTomSelect = (element) => {
+    if (!(element instanceof HTMLSelectElement)) {
+      return false;
+    }
+
+    if (typeof element.isConnected === 'boolean') {
+      return element.isConnected;
+    }
+
+    return document.body.contains(element);
+  };
+
   const initClienteSelect = (element) => {
     if (!(element instanceof HTMLElement)) {
       console.warn('El selector de clientes no es un elemento HTML válido, se omite TomSelect.');
+      return null;
+    }
+
+    if (!isElementReadyForTomSelect(element)) {
       return null;
     }
 
@@ -387,6 +403,8 @@ const initializeCalendar = () => {
   let clienteSelectControl = null;
   let warnedMissingClienteSelect = false;
 
+  let pendingClienteSelectRetry = false;
+
   const ensureClienteSelectControl = () => {
     if (clienteSelectControl) {
       return clienteSelectControl;
@@ -404,13 +422,22 @@ const initializeCalendar = () => {
     const instance = initClienteSelect(element);
     if (instance) {
       clienteSelectControl = instance;
+      pendingClienteSelectRetry = false;
+    } else if (!pendingClienteSelectRetry) {
+      pendingClienteSelectRetry = true;
+      window.requestAnimationFrame(() => {
+        pendingClienteSelectRetry = false;
+        ensureClienteSelectControl();
+      });
     }
 
     return clienteSelectControl;
   };
 
   modalEl.addEventListener('shown.bs.modal', () => {
-    ensureClienteSelectControl();
+    window.setTimeout(() => {
+      ensureClienteSelectControl();
+    }, 0);
   });
 
   switchFields(typeSelect?.value || 'Reserva');
