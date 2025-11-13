@@ -760,6 +760,22 @@ const initializeCalendar = () => {
     eventIdInput.addEventListener('input', updateCancelButtonVisibility);
     eventIdInput.addEventListener('change', updateCancelButtonVisibility);
   }
+  initializeCalendar();
+});
+
+if (typeof window !== 'undefined') {
+  window.bootstrapCalendar = (config) => {
+    if (config && typeof config === 'object') {
+      window.CalendarConfig = config;
+    }
+    initializeCalendar();
+  };
+}
+
+initializeCalendar();
+
+const bootReservationUi = () => {
+  initializeCalendar();
 
   if (methodInput) {
     methodInput.addEventListener('change', updateCancelButtonVisibility);
