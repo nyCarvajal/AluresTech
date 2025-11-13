@@ -1,4 +1,4 @@
-import BaseTomSelect from 'tom-select/dist/js/tom-select.complete.js';
+import BaseTomSelect from '@alures/tom-select-source';
 
 const noop = () => {};
 
@@ -29,7 +29,7 @@ const METHODS_TO_STUB = [
 ];
 
 const isDomLikeElement = (value) => {
-  if (!value || typeof value !== 'object') {
+  if (!value) {
     return false;
   }
 
@@ -42,6 +42,47 @@ const isDomLikeElement = (value) => {
   }
 
   return false;
+};
+
+const resolveElement = (raw) => {
+  if (isDomLikeElement(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === 'string') {
+    if (typeof document === 'undefined' || !raw.trim()) {
+      return null;
+    }
+    return document.querySelector(raw.trim());
+  }
+
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  if (Array.isArray(raw)) {
+    for (const candidate of raw) {
+      const element = resolveElement(candidate);
+      if (element) {
+        return element;
+      }
+    }
+    return null;
+  }
+
+  if (typeof raw.jquery === 'string' && typeof raw.length === 'number') {
+    return resolveElement(raw[0]);
+  }
+
+  if (typeof raw.length === 'number' && raw.length > 0) {
+    return resolveElement(raw[0]);
+  }
+
+  if (typeof raw.el === 'object' && raw.el) {
+    return resolveElement(raw.el);
+  }
+
+  return null;
 };
 
 const createFallbackInstance = (target, newTarget) => {
@@ -67,21 +108,23 @@ let warnedInvalidElement = false;
 let warnedConstructorFailure = false;
 
 const instantiateSafely = (target, args, newTarget) => {
-  const [element] = Array.isArray(args) ? args : [];
+  const normalizedArgs = Array.isArray(args) ? args : [];
+  const [elementLike, ...rest] = normalizedArgs;
+  const element = resolveElement(elementLike);
 
   if (!isDomLikeElement(element)) {
     if (!warnedInvalidElement) {
       warnedInvalidElement = true;
       console.warn(
-        'TomSelect recibió un elemento inválido y se omitió la inicialización.',
-        element,
+        'TomSelect recibió un objetivo inválido y se omitió la inicialización.',
+        elementLike,
       );
     }
     return createFallbackInstance(target, newTarget);
   }
 
   try {
-    return Reflect.construct(target, args, newTarget);
+    return Reflect.construct(target, [element, ...rest], newTarget);
   } catch (error) {
     if (!warnedConstructorFailure) {
       warnedConstructorFailure = true;
@@ -122,4 +165,4 @@ if (typeof window !== 'undefined') {
 
 export const OriginalTomSelect = BaseTomSelect;
 export default SafeTomSelect;
-export * from 'tom-select/dist/js/tom-select.complete.js';
+export * from '@alures/tom-select-source';

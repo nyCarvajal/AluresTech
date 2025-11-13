@@ -9,6 +9,14 @@ export default defineConfig({
                 find: /^tom-select$/,
                 replacement: path.resolve(__dirname, 'resources/js/lib/safe-tom-select.js'),
             },
+            {
+                find: /^tom-select\/dist\/js\/tom-select\.complete(?:\.min)?\.js$/,
+                replacement: path.resolve(__dirname, 'resources/js/lib/safe-tom-select.js'),
+            },
+            {
+                find: /^@alures\/tom-select-source$/,
+                replacement: path.resolve(__dirname, 'node_modules/tom-select/dist/js/tom-select.complete.js'),
+            },
         ],
     },
     plugins: [
