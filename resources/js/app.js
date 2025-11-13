@@ -30,8 +30,6 @@ import 'intl-tel-input/build/css/intlTelInput.css';
 // Exponer la función en window para que tus componentes la encuentren
 window.intlTelInput = intlTelInput;
 
-import SafeTomSelect from './lib/safe-tom-select';
-import 'tom-select/dist/css/tom-select.default.css';
 
 const createTomSelectFallbackInstance = () => {
   const basePrototype = (TomSelect && TomSelect.prototype) || Object.prototype;
@@ -201,10 +199,9 @@ const initializeCalendar = () => {
   };
   const estadoSelect = form.querySelector('#reservaEstado');
 
-  const clientesField = form.querySelector('#fieldClientes');
   const entrenadorField = form.querySelector('#fieldEntrenador');
   const servicioField = form.querySelector('#fieldServicio');
-  let clienteSelect = form.querySelector('#clientes');
+  const clienteInput = form.querySelector('#clienteId');
   const entrenadorSelect = form.querySelector('#entrenador');
   const servicioSelect = form.querySelector('#servicio');
   const cuentaInfo = form.querySelector('#fieldCuenta');
@@ -346,10 +343,6 @@ const initializeCalendar = () => {
   const switchFields = (type) => {
     const currentType = (type || '').trim();
 
-    if (clientesField) {
-      clientesField.classList.remove('d-none');
-    }
-
     if (entrenadorField) {
       entrenadorField.classList.remove('d-none');
     }
@@ -360,7 +353,6 @@ const initializeCalendar = () => {
 
     const requiresServicio = currentType === 'Reserva' || currentType === 'Clase';
     setRequiredAttribute(servicioSelect, requiresServicio);
-    setRequiredAttribute(clienteSelect, currentType === 'Reserva');
     setRequiredAttribute(entrenadorSelect, currentType === 'Clase');
   };
 
@@ -417,126 +409,6 @@ const initializeCalendar = () => {
     });
   }
 
-  const isElementReadyForTomSelect = (element) => {
-    if (!element || typeof element !== 'object') {
-      return false;
-    }
-
-    const isSelect = (() => {
-      if (typeof window !== 'undefined' && window.HTMLSelectElement) {
-        return element instanceof window.HTMLSelectElement;
-      }
-      return element.tagName?.toUpperCase?.() === 'SELECT';
-    })();
-
-    if (!isSelect) {
-      return false;
-    }
-
-    if (typeof element.isConnected === 'boolean') {
-      return element.isConnected;
-    }
-
-    return document.body.contains(element);
-  };
-
-  let warnedInvalidClienteSelectElement = false;
-  let warnedMissingTomSelectConstructor = false;
-
-  const initClienteSelect = (element) => {
-    if (!element || typeof element !== 'object') {
-      if (!warnedInvalidClienteSelectElement) {
-        warnedInvalidClienteSelectElement = true;
-        console.warn('El selector de clientes no es un elemento HTML válido, se omite TomSelect.');
-      }
-      return null;
-    }
-
-    if (!isElementReadyForTomSelect(element)) {
-      return null;
-    }
-
-    if (element && element.tomselect) {
-      return element.tomselect;
-    }
-
-    if (typeof SafeTomSelect !== 'function') {
-      if (!warnedMissingTomSelectConstructor) {
-        warnedMissingTomSelectConstructor = true;
-        console.warn('TomSelect no está disponible en esta página, se omite la mejora del selector de clientes.');
-      }
-      return null;
-    }
-
-    try {
-      return new SafeTomSelect(element, {
-        maxItems: 1,
-        valueField: 'value',
-        labelField: 'text',
-        searchField: 'text',
-        placeholder: 'Selecciona un cliente',
-        create: false,
-      });
-    } catch (error) {
-      console.error('No se pudo inicializar TomSelect para clientes.', error);
-      return null;
-    }
-  };
-
-  const resolveClienteSelect = () => {
-    if (clienteSelect instanceof HTMLElement) {
-      return clienteSelect;
-    }
-
-    const refreshed = form.querySelector('#clientes');
-    if (refreshed instanceof HTMLElement) {
-      clienteSelect = refreshed;
-      return clienteSelect;
-    }
-
-    return null;
-  };
-
-  let clienteSelectControl = null;
-  let warnedMissingClienteSelect = false;
-
-  let pendingClienteSelectRetry = false;
-
-  const ensureClienteSelectControl = () => {
-    if (clienteSelectControl) {
-      return clienteSelectControl;
-    }
-
-    const element = resolveClienteSelect();
-    if (!element || !(element instanceof HTMLElement)) {
-      if (!warnedMissingClienteSelect) {
-        warnedMissingClienteSelect = true;
-        console.warn('No se encontró el selector de clientes, se omite TomSelect.');
-      }
-      return null;
-    }
-
-    const instance = initClienteSelect(element);
-    if (instance) {
-      clienteSelectControl = instance;
-      pendingClienteSelectRetry = false;
-    } else if (!pendingClienteSelectRetry) {
-      pendingClienteSelectRetry = true;
-      window.requestAnimationFrame(() => {
-        pendingClienteSelectRetry = false;
-        ensureClienteSelectControl();
-      });
-    }
-
-    return clienteSelectControl;
-  };
-
-  modalEl.addEventListener('shown.bs.modal', () => {
-    window.setTimeout(() => {
-      ensureClienteSelectControl();
-    }, 0);
-  });
-
   switchFields(typeSelect?.value || 'Reserva');
   refreshCancelButtonTextForType(typeSelect?.value);
   disableCancelButton();
@@ -584,11 +456,8 @@ const initializeCalendar = () => {
         durationSelect.value = '60';
       }
 
-      const clienteControl = ensureClienteSelectControl();
-      if (clienteControl) {
-        clienteControl.clear(true);
-      } else if (clienteSelect) {
-        clienteSelect.value = '';
+      if (clienteInput) {
+        clienteInput.value = '';
       }
 
       if (servicioSelect) {
@@ -682,16 +551,8 @@ const initializeCalendar = () => {
         entrenadorSelect.value = props.entrenador_id || '';
       }
 
-      const clienteControl = ensureClienteSelectControl();
-      if (clienteControl) {
-        clienteControl.clear(true);
-        if (props.cliente_id) {
-          const nombre = props.title || ev.title || '';
-          clienteControl.addOption({ value: String(props.cliente_id), text: nombre });
-          clienteControl.setValue(String(props.cliente_id), true);
-        }
-      } else if (clienteSelect) {
-        clienteSelect.value = props.cliente_id || '';
+      if (clienteInput) {
+        clienteInput.value = props.cliente_id ? String(props.cliente_id) : '';
       }
 
       if (props.cuenta_label && props.cuenta_url) {
@@ -957,6 +818,9 @@ const initializeCalendar = () => {
     if (typeSelect) {
       typeSelect.value = 'Reserva';
       refreshCancelButtonTextForType('Reserva');
+    }
+    if (clienteInput) {
+      clienteInput.value = '';
     }
     switchFields('Reserva');
   });
