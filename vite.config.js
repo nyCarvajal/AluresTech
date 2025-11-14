@@ -10,7 +10,11 @@ export default defineConfig({
                 replacement: path.resolve(__dirname, 'resources/js/lib/safe-tom-select.js'),
             },
             {
-                find: /^tom-select\/dist\/js\/tom-select\.complete(?:\.min)?\.js$/,
+                find: /^tom-select\/dist\/js\/tom-select\.(?:complete(?:\.min)?|min)?\.js$/,
+                replacement: path.resolve(__dirname, 'resources/js/lib/safe-tom-select.js'),
+            },
+            {
+                find: /^tom-select\/dist\/js\/tom-select\.(?:base(?:\.min)?|standalone(?:\.min)?)\.js$/,
                 replacement: path.resolve(__dirname, 'resources/js/lib/safe-tom-select.js'),
             },
             {
