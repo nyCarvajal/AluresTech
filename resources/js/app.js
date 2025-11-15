@@ -4,6 +4,11 @@ import bootstrap from 'bootstrap/dist/js/bootstrap'
 window.bootstrap = bootstrap;
 import 'iconify-icon';
 import 'simplebar/dist/simplebar'
+import SafeTomSelect from './lib/safe-tom-select';
+
+if (typeof window !== 'undefined' && typeof window.TomSelect === 'undefined') {
+  window.TomSelect = SafeTomSelect;
+}
 // resources/js/app.js
 import './pages/dashboard.js';
 import './pages/chart';
@@ -762,6 +767,54 @@ const initializeCalendar = () => {
     eventIdInput.addEventListener('input', updateCancelButtonVisibility);
     eventIdInput.addEventListener('change', updateCancelButtonVisibility);
   }
+};
+
+window.addEventListener('alures:calendar-config-ready', (event) => {
+  if (event?.detail && typeof event.detail === 'object') {
+    window.CalendarConfig = { ...window.CalendarConfig, ...event.detail };
+  }
+  initializeCalendar();
+});
+
+if (typeof window !== 'undefined') {
+  window.bootstrapCalendar = (config) => {
+    if (config && typeof config === 'object') {
+      window.CalendarConfig = config;
+    }
+    initializeCalendar();
+  };
+}
+
+initializeCalendar();
+
+const bootReservationUi = () => {
+  initializeCalendar();
+
+  if (methodInput) {
+    methodInput.addEventListener('change', updateCancelButtonVisibility);
+  }
+};
+
+window.addEventListener('alures:calendar-config-ready', (event) => {
+  if (event?.detail && typeof event.detail === 'object') {
+    window.CalendarConfig = { ...window.CalendarConfig, ...event.detail };
+  }
+  initializeCalendar();
+});
+
+if (typeof window !== 'undefined') {
+  window.bootstrapCalendar = (config) => {
+    if (config && typeof config === 'object') {
+      window.CalendarConfig = config;
+    }
+    initializeCalendar();
+  };
+}
+
+initializeCalendar();
+
+const bootReservationUi = () => {
+  initializeCalendar();
 
   if (methodInput) {
     methodInput.addEventListener('change', updateCancelButtonVisibility);
