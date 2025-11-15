@@ -14,8 +14,13 @@
 		  
  <label for="eventType" class="form-label">Tipo de Cita</label>
             <input type="hidden" id="eventId" name="id">
-                        <select id="eventType" name="type" class="form-select mb-3">
- @foreach($tipocitas as $tc)
+            <input type="hidden" id="clienteId" name="cliente_id" value="">
+            {{-- Dummy select kept hidden to satisfy legacy TomSelect initializers in production builds --}}
+            <select id="clientes" class="d-none" aria-hidden="true" tabindex="-1">
+                <option value=""></option>
+            </select>
+            <select id="eventType" name="type" class="form-select mb-3">
+@foreach($tipocitas as $tc)
   <option value="{{ $tc->nombre }}">{{ $tc->nombre }}</option>
  @endforeach
 </select>
@@ -82,20 +87,6 @@
                 @endforeach
               </select>
             </div>
-
-          <!-- Cliente -->
-       <div id="fieldClientes" class="mb-3">
-  <label for="clientes" class="form-label">Cliente</label>
-  <select id="clientes"
-          name="cliente_id"
-          class="form-select">
-    @foreach(\App\Models\Cliente::orderBy('nombres')->get() as $al)
-      <option value="{{ $al->id }}">
-        {{ $al->nombres }} {{ $al->apellidos }}
-      </option>
-    @endforeach
-  </select>
-</div>
 
           <!-- Servicio -->
           <div id="fieldServicio" class="mb-3">
