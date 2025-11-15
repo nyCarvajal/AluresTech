@@ -44,6 +44,41 @@ const isDomLikeElement = (value) => {
   return false;
 };
 
+const warnedObjectTargets = new WeakSet();
+const warnedPrimitiveTargets = new Set();
+
+const shouldWarnForTarget = (target) => {
+  if (target && (typeof target === 'object' || typeof target === 'function')) {
+    if (warnedObjectTargets.has(target)) {
+      return false;
+    }
+    warnedObjectTargets.add(target);
+    return true;
+  }
+
+  const key = typeof target === 'string' ? target : String(target);
+  if (warnedPrimitiveTargets.has(key)) {
+    return false;
+  }
+  warnedPrimitiveTargets.add(key);
+  return true;
+};
+
+const warnInvalidTarget = (target, reason, error) => {
+  if (!shouldWarnForTarget(target || reason || 'invalid-target')) {
+    return;
+  }
+
+  const message =
+    reason || 'TomSelect recibió un objetivo inválido y se omitió la inicialización.';
+
+  if (error) {
+    console.warn(message, target, error);
+  } else {
+    console.warn(message, target);
+  }
+};
+
 const resolveElement = (raw) => {
   if (isDomLikeElement(raw)) {
     return raw;
@@ -53,7 +88,25 @@ const resolveElement = (raw) => {
     if (typeof document === 'undefined' || !raw.trim()) {
       return null;
     }
-    return document.querySelector(raw.trim());
+
+    const selector = raw.trim();
+    try {
+      const element = document.querySelector(selector);
+      if (!element) {
+        warnInvalidTarget(
+          selector,
+          'TomSelect omitido: no se encontró ningún elemento para el selector proporcionado.',
+        );
+      }
+      return element;
+    } catch (error) {
+      warnInvalidTarget(
+        selector,
+        'TomSelect omitido: el selector proporcionado no es válido.',
+        error,
+      );
+      return null;
+    }
   }
 
   if (!raw || typeof raw !== 'object') {
@@ -67,6 +120,11 @@ const resolveElement = (raw) => {
         return element;
       }
     }
+
+    warnInvalidTarget(
+      raw,
+      'TomSelect omitido: no se encontró ningún elemento en el arreglo proporcionado.',
+    );
     return null;
   }
 
@@ -82,6 +140,7 @@ const resolveElement = (raw) => {
     return resolveElement(raw.el);
   }
 
+  warnInvalidTarget(raw, 'TomSelect omitido: no se pudo resolver el objetivo proporcionado.');
   return null;
 };
 
@@ -104,7 +163,6 @@ const createFallbackInstance = (target) => {
   return fallback;
 };
 
-let warnedInvalidElement = false;
 let warnedConstructorFailure = false;
 
 class GuardedTomSelect extends BaseTomSelect {
@@ -112,13 +170,10 @@ class GuardedTomSelect extends BaseTomSelect {
     const element = resolveElement(elementLike);
 
     if (!isDomLikeElement(element)) {
-      if (!warnedInvalidElement) {
-        warnedInvalidElement = true;
-        console.warn(
-          'TomSelect recibió un objetivo inválido y se omitió la inicialización.',
-          elementLike,
-        );
-      }
+      warnInvalidTarget(
+        elementLike,
+        'TomSelect recibió un objetivo inválido y se omitió la inicialización.',
+      );
       return createFallbackInstance(GuardedTomSelect);
     }
 
