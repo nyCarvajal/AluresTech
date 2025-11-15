@@ -14,8 +14,8 @@
 		  
  <label for="eventType" class="form-label">Tipo de Cita</label>
             <input type="hidden" id="eventId" name="id">
-            <input type="hidden" id="clienteId" name="cliente_id" value="">
-                        <select id="eventType" name="type" class="form-select mb-3">
+            
+              <select id="eventType" name="type" class="form-select mb-3">
  @foreach($tipocitas as $tc)
   <option value="{{ $tc->nombre }}">{{ $tc->nombre }}</option>
  @endforeach
