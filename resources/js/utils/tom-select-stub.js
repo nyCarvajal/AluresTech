@@ -1,13 +1,60 @@
 const noop = () => {};
 
+const warnedObjectTargets = new WeakSet();
+const warnedPrimitiveTargets = new Set();
+
+const shouldWarnForTarget = (target) => {
+  if (target && (typeof target === 'object' || typeof target === 'function')) {
+    if (warnedObjectTargets.has(target)) {
+      return false;
+    }
+    warnedObjectTargets.add(target);
+    return true;
+  }
+
+  const key = typeof target === 'string' ? target : String(target);
+  if (warnedPrimitiveTargets.has(key)) {
+    return false;
+  }
+  warnedPrimitiveTargets.add(key);
+  return true;
+};
+
+const warnInvalidTarget = (target, reason, error) => {
+  if (!shouldWarnForTarget(target || reason || 'invalid-target')) {
+    return;
+  }
+  const message =
+    reason || 'TomSelectStub: se intentó inicializar sin un elemento válido. Se omitirá.';
+  if (error) {
+    console.warn(message, target, error);
+  } else {
+    console.warn(message, target);
+  }
+};
+
 const resolveNode = (target) => {
-  if (!target) return null;
-  if (target instanceof Element) return target;
+  if (!target) {
+    warnInvalidTarget(target, 'TomSelectStub: se recibió un objetivo vacío.');
+    return null;
+  }
+  if (typeof Element !== 'undefined' && target instanceof Element) return target;
   if (typeof target === 'string') {
     try {
-      return document.querySelector(target);
+      const node = document.querySelector(target);
+      if (!node) {
+        warnInvalidTarget(
+          target,
+          'TomSelectStub: no se encontró ningún elemento para el selector proporcionado.',
+        );
+      }
+      return node;
     } catch (error) {
-      console.warn('TomSelect stub no pudo buscar el selector proporcionado:', target, error);
+      warnInvalidTarget(
+        target,
+        'TomSelect stub no pudo buscar el selector proporcionado.',
+        error,
+      );
       return null;
     }
   }
@@ -17,6 +64,7 @@ const resolveNode = (target) => {
   if (typeof target === 'object' && 'length' in target) {
     return resolveNode(target[0]);
   }
+  warnInvalidTarget(target, 'TomSelectStub: no se pudo resolver el objetivo proporcionado.');
   return null;
 };
 
@@ -29,7 +77,10 @@ class TomSelectStub {
     this.settings = options;
 
     if (!this.input) {
-      console.warn('TomSelectStub: se intentó inicializar sin un elemento válido.');
+      warnInvalidTarget(
+        target,
+        'TomSelectStub: se intentó inicializar sin un elemento válido. Se usará un stub.',
+      );
     }
   }
 
