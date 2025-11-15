@@ -1,3 +1,5 @@
+import './utils/tom-select-stub';
+
 import bootstrap from 'bootstrap/dist/js/bootstrap'
 window.bootstrap = bootstrap;
 import 'iconify-icon';
@@ -764,6 +766,12 @@ const initializeCalendar = () => {
   if (eventIdInput) {
     eventIdInput.addEventListener('input', updateCancelButtonVisibility);
     eventIdInput.addEventListener('change', updateCancelButtonVisibility);
+  }
+};
+
+window.addEventListener('alures:calendar-config-ready', (event) => {
+  if (event?.detail && typeof event.detail === 'object') {
+    window.CalendarConfig = { ...window.CalendarConfig, ...event.detail };
   }
   initializeCalendar();
 });
