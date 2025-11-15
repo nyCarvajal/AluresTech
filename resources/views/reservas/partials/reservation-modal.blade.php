@@ -15,8 +15,12 @@
  <label for="eventType" class="form-label">Tipo de Cita</label>
             <input type="hidden" id="eventId" name="id">
             <input type="hidden" id="clienteId" name="cliente_id" value="">
-                        <select id="eventType" name="type" class="form-select mb-3">
- @foreach($tipocitas as $tc)
+            {{-- Dummy select kept hidden to satisfy legacy TomSelect initializers in production builds --}}
+            <select id="clientes" class="d-none" aria-hidden="true" tabindex="-1">
+                <option value=""></option>
+            </select>
+            <select id="eventType" name="type" class="form-select mb-3">
+@foreach($tipocitas as $tc)
   <option value="{{ $tc->nombre }}">{{ $tc->nombre }}</option>
  @endforeach
 </select>
