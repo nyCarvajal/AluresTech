@@ -58,15 +58,37 @@
 
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // FullCalendar ya se inicializa en app.js, solo envía la URL correcta:
-      window.CalendarConfig = {
+    (function () {
+      const calendarConfig = {
         selector: '#calendar',
         eventsUrl: '{{ route('reservas.events') }}',
         modalSelector: '#reservationModal',
-        filterSelector: '#entrenadorFilter'
+        filterSelector: '#entrenadorFilter',
       };
-    });
+
+      window.CalendarConfig = calendarConfig;
+
+      const broadcastConfig = () => {
+        try {
+          window.dispatchEvent(new CustomEvent('alures:calendar-config-ready', { detail: calendarConfig }));
+        } catch (error) {
+          if (window.dispatchEvent && document.createEvent) {
+            const fallbackEvent = document.createEvent('Event');
+            fallbackEvent.initEvent('alures:calendar-config-ready', true, true);
+            fallbackEvent.detail = calendarConfig;
+            window.dispatchEvent(fallbackEvent);
+          }
+        }
+      };
+
+      window.setTimeout(() => {
+        if (typeof window.bootstrapCalendar === 'function') {
+          window.bootstrapCalendar(calendarConfig);
+        } else {
+          broadcastConfig();
+        }
+      }, 0);
+    })();
   </script>
   {{-- Asegúrate de compilar app.js que importa FullCalendar --}}
   @vite('resources/js/app.js')
