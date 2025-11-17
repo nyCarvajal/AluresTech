@@ -12,14 +12,6 @@
           </div>
           <div class="modal-body">
 		  
- <label for="eventType" class="form-label">Tipo de Cita</label>
-            <input type="hidden" id="eventId" name="id">
-            
-              <select id="eventType" name="type" class="form-select mb-3">
- @foreach($tipocitas as $tc)
-  <option value="{{ $tc->nombre }}">{{ $tc->nombre }}</option>
- @endforeach
-</select>
 
 
 {{-- Fecha y hora de inicio --}}
