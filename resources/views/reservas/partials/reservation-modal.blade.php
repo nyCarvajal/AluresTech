@@ -54,7 +54,7 @@
                 <option value="Pendiente">Pendiente</option>
                 <option value="Confirmada">Confirmada</option>
                 <option value="No Asistida">No Asistida</option>
-                                 <option value="Cancelada">Cancelada</option>
+                <option value="Cancelada">Cancelada</option>
               </select>
             </div>
 			
@@ -76,7 +76,7 @@
             <select id="entrenador"
                     name="entrenador_id"
                     class="form-select">
-                <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($stylistLabelSingular) }}</option>
+             <!--   <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($stylistLabelSingular) }}</option> -->
                 @foreach($entrenadores as $u)
                   <option value="{{ $u->id }}">{{ $u->nombre }}</option>
                 @endforeach
