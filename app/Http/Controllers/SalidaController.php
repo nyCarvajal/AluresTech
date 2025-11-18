@@ -89,10 +89,6 @@ class SalidaController extends Controller
             ],
             'valor'         => 'required|integer|min:0',
             'observaciones' => 'nullable|string',
-            'responsable'   => [
-                'required',
-                Rule::exists(User::class, 'id'),
-            ],
             'tercero_id' => [
                 'nullable',
                 Rule::exists(Proveedor::class, 'id'),
