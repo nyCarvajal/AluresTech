@@ -4,11 +4,7 @@ import bootstrap from 'bootstrap/dist/js/bootstrap'
 window.bootstrap = bootstrap;
 import 'iconify-icon';
 import 'simplebar/dist/simplebar'
-import SafeTomSelect from './lib/safe-tom-select';
 
-if (typeof window !== 'undefined' && typeof window.TomSelect === 'undefined') {
-  window.TomSelect = SafeTomSelect;
-}
 // resources/js/app.js
 import './pages/dashboard.js';
 import './pages/chart';
