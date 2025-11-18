@@ -145,39 +145,7 @@
     >{{ old('observaciones', $editando ? $salida->observaciones : '') }}</textarea>
 </div>
 
-{{-- Responsable --}}
-<div class="mb-3">
-    <label class="form-label">Responsable</label>
-    @if($editando)
-        <select name="responsable" class="form-select" required>
-            <option value="" disabled {{ old('responsable', $salida->responsable) === null ? 'selected' : '' }}>
-                — Selecciona usuario —
-            </option>
-            @foreach($usuarios as $usuario)
-                <option
-                    value="{{ $usuario->id }}"
-                    {{ (string) old('responsable', $salida->responsable) === (string) $usuario->id ? 'selected' : '' }}
-                >
-      {{ $usuario->nombre }}
 
-                </option>
-            @endforeach
-        </select>
-    @else
-        <input
-            type="text"
-            class="form-control"
- value="{{ optional($usuarioAutenticado)->nombre }}"
-
-            disabled
-        >
-        <input
-            type="hidden"
-            name="responsable"
-            value="{{ old('responsable', optional($usuarioAutenticado)->id) }}"
-        >
-    @endif
-</div>
 
 @push('scripts')
 <script>
