@@ -36,12 +36,16 @@ class ReservaController extends Controller
     $servicios    = Item::where('tipo', '!=', 1)
         ->orderBy('nombre')
         ->get();
+    $clientes     = Cliente::orderBy('nombres')
+        ->orderBy('apellidos')
+        ->get();
     $labels = RoleLabelResolver::forStylist();
 
     return view('reservas.calendar', [
         'entrenadores' => $entrenadores,
         'tipocitas' => $tipocitas,
         'servicios' => $servicios,
+        'clientes' => $clientes,
         'stylistLabelSingular' => $labels['singular'],
         'stylistLabelPlural' => $labels['plural'],
     ]);
