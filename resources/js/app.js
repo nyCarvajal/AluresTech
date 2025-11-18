@@ -1,4 +1,4 @@
-import './utils/tom-select-stub';
+
 
 import bootstrap from 'bootstrap/dist/js/bootstrap'
 window.bootstrap = bootstrap;
