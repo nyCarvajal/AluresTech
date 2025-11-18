@@ -11,37 +11,40 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-		  
+            <div class="mb-3">
+              <label for="eventType" class="form-label">Tipo de cita</label>
+              <select id="eventType" name="type" class="form-select" required>
+                <option value="" selected disabled>Selecciona un tipo</option>
+                @foreach($tipocitas as $tipocita)
+                  <option value="{{ $tipocita->nombre }}">{{ $tipocita->nombre }}</option>
+                @endforeach
+              </select>
+            </div>
 
+            <div class="row g-3 mb-3">
+              <div class="col-sm-6">
+                <label for="reservaFecha" class="form-label">Fecha</label>
+                <input type="date" id="reservaFecha" name="fecha" class="form-control" required>
+              </div>
+              <div class="col-sm-6">
+                <label for="reservaHora" class="form-label">Hora</label>
+                <select id="reservaHora" name="hora" class="form-select" required>
+                  <option value="" selected disabled>-- Elige hora --</option>
+                </select>
+              </div>
+            </div>
+            <input type="hidden" name="start" id="start">
 
+            <div class="mb-3">
+              <label for="reservaDuracion" class="form-label">Duración</label>
+              <select id="reservaDuracion" name="duration" class="form-select" required>
+                <option value="60">60 minutos</option>
+                <option value="90">90 minutos</option>
+                <option value="120">120 minutos</option>
+                <option value="180">180 minutos</option>
+              </select>
+            </div>
 
-{{-- Fecha y hora de inicio --}}
-{{-- Fecha --}}
- <label>Fecha y hora</label>
-<input type="date" id="reservaFecha" name="fecha" class="form-control" />
-
-{{-- Hora --}}
-<select id="reservaHora" name="hora" class="form-select" required>
-  <option value="">-- Elige hora --</option>
-</select>
-{{-- Campo oculto que realmente irá al controlador --}}
-<input type="hidden" name="start" id="start">
-
-
-{{-- Duración --}}
-<div class="mb-3">
-  <label for="reservaDuracion" class="form-label">Duración</label>
-  <select id="reservaDuracion" name="duration" class="form-select" required>
-    <option value="60">60 minutos</option>
-    <option value="90">90 minutos</option>
-    <option value="120">120 minutos</option>
-    <option value="180">180 minutos</option>
-    <!-- añade más si quieres -->
-  </select>
-</div>
-
-	
-			
             <div class="mb-3">
               <label for="reservaEstado" class="form-label">Estado</label>
               <select id="reservaEstado" name="estado" class="form-select" required>
@@ -51,60 +54,63 @@
                 <option value="Cancelada">Cancelada</option>
               </select>
             </div>
-			
-			
 
+            <div class="mb-3">
+              <label for="clienteId" class="form-label">Cliente</label>
+              <select id="clienteId" name="cliente_id" class="form-select">
+                <option value="" selected disabled>Selecciona un cliente</option>
+                @foreach($clientes as $cliente)
+                  <option value="{{ $cliente->id }}">{{ $cliente->nombres }} {{ $cliente->apellidos }}</option>
+                @endforeach
+              </select>
+            </div>
 
+            <!-- Cita & Clase: clientes -->
 
-<!-- Cita & Clase: clientes -->
+            <!-- === CAMPOS PARA “Clase” === -->
+            @php
+                $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
+                $stylistLabelPlural = $stylistLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
+            @endphp
 
- <!-- === CAMPOS PARA “Clase” === -->
-@php
-    $stylistLabelSingular = $stylistLabelSingular ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST);
-    $stylistLabelPlural = $stylistLabelPlural ?? \App\Models\Peluqueria::defaultRoleLabel(\App\Models\Peluqueria::ROLE_STYLIST, true);
-@endphp
-
-         <!-- {{ $stylistLabelSingular }} -->
-        <div id="fieldEntrenador" class="mb-3">
-           <label for="entrenador" class="form-label">{{ $stylistLabelSingular }}</label>
-            <select id="entrenador"
-                    name="entrenador_id"
-                    class="form-select">
-               <option value="">Selecciona a tu {{ \Illuminate\Support\Str::lower($stylistLabelSingular) }}</option>
+            <!-- {{ $stylistLabelSingular }} -->
+            <div id="fieldEntrenador" class="mb-3">
+              <label for="entrenador" class="form-label">{{ $stylistLabelSingular }}</label>
+              <select id="entrenador"
+                      name="entrenador_id"
+                      class="form-select">
+                <option value="" selected disabled>Selecciona a tu {{ \Illuminate\Support\Str::lower($stylistLabelSingular) }}</option>
                 @foreach($entrenadores as $u)
                   <option value="{{ $u->id }}">{{ $u->nombre }}</option>
                 @endforeach
               </select>
             </div>
 
-          <!-- Servicio -->
-          <div id="fieldServicio" class="mb-3">
-            <label for="servicio" class="form-label">Servicio</label>
-            <select id="servicio"
-                    name="servicio_id"
-                    class="form-select">
-              <option value="">Selecciona un servicio</option>
-              @foreach($servicios as $servicio)
-                <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
-              @endforeach
-            </select>
-          </div>
-
-
-
-          <div id="fieldCuenta" class="alert alert-info d-none" role="status">
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-              <span id="reservationCuentaLabel" class="fw-semibold"></span>
-              <a id="reservationCuentaLink"
-                 href="#"
-                 target="_blank"
-                 rel="noopener"
-                 class="btn btn-sm btn-primary">
-                Ver cuenta
-              </a>
+            <!-- Servicio -->
+            <div id="fieldServicio" class="mb-3">
+              <label for="servicio" class="form-label">Servicio</label>
+              <select id="servicio"
+                      name="servicio_id"
+                      class="form-select">
+                <option value="" selected disabled>Selecciona un servicio</option>
+                @foreach($servicios as $servicio)
+                  <option value="{{ $servicio->id }}">{{ $servicio->nombre }}</option>
+                @endforeach
+              </select>
             </div>
-          </div>
 
+            <div id="fieldCuenta" class="alert alert-info d-none" role="status">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span id="reservationCuentaLabel" class="fw-semibold"></span>
+                <a id="reservationCuentaLink"
+                   href="#"
+                   target="_blank"
+                   rel="noopener"
+                   class="btn btn-sm btn-primary">
+                  Ver cuenta
+                </a>
+              </div>
+            </div>
           </div>
           <div class="modal-footer d-flex justify-content-end">
             <div class="d-flex gap-2">

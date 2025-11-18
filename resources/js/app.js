@@ -289,6 +289,7 @@ const initializeCalendar = () => {
     const requiresServicio = currentType === 'Reserva' || currentType === 'Clase';
     setRequiredAttribute(servicioSelect, requiresServicio);
     setRequiredAttribute(entrenadorSelect, currentType === 'Clase');
+    setRequiredAttribute(clienteInput, currentType === 'Reserva');
   };
 
   const cargarSlots = () => {
