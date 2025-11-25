@@ -530,16 +530,22 @@ const initializeCalendar = () => {
       method: 'GET',
       extraParams: () => ({ entrenador_id: entrenadorFilter ? entrenadorFilter.value : '' }),
     },
-    eventDataTransform: (raw) => ({
-      id: raw.id,
-      title: raw.title,
-      start: raw.start,
-      end: raw.end,
-      backgroundColor: raw.backgroundColor,
-      borderColor: raw.borderColor,
-      display: 'block',
-      extendedProps: raw,
-    }),
+    eventDataTransform: (raw) => {
+      const accentColor = raw.accentColor || raw.borderColor || raw.backgroundColor || '#6366f1';
+
+      return {
+        id: raw.id,
+        title: raw.title,
+        start: raw.start,
+        end: raw.end,
+        backgroundColor: '#ffffff',
+        borderColor: '#e5e7eb',
+        display: 'block',
+        textColor: '#111827',
+        classNames: ['fc-event--card'],
+        extendedProps: { ...raw, accentColor },
+      };
+    },
     datesSet: (info) => {
       const date = info.startStr.split('T')[0];
       axios
@@ -570,9 +576,18 @@ const initializeCalendar = () => {
       };
       const estadoClasses = estadoBadgeClasses[estado] || ['bg-secondary'];
 
+      const accentColor = arg.event.extendedProps.accentColor || '#6366f1';
+
       if (esLista) {
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('fc-event-card', 'd-flex', 'align-items-start', 'gap-2');
+
+        const accentBar = document.createElement('span');
+        accentBar.classList.add('fc-event-accent', 'mt-1');
+        accentBar.style.backgroundColor = accentColor;
+
         const cont = document.createElement('div');
-        cont.classList.add('d-flex', 'flex-column', 'gap-1');
+        cont.classList.add('d-flex', 'flex-column', 'gap-1', 'flex-grow-1');
 
         const fila1 = document.createElement('div');
         fila1.innerHTML = `<span class="fw-bold">${lineas[0]}</span>`;
@@ -593,11 +608,21 @@ const initializeCalendar = () => {
           cont.appendChild(badge);
         }
 
-        return { domNodes: [cont] };
+        wrapper.appendChild(accentBar);
+        wrapper.appendChild(cont);
+
+        return { domNodes: [wrapper] };
       }
 
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('fc-event-card', 'd-flex', 'align-items-start', 'gap-2', 'position-relative');
+
+      const accentBar = document.createElement('span');
+      accentBar.classList.add('fc-event-accent');
+      accentBar.style.backgroundColor = accentColor;
+
       const container = document.createElement('div');
-      container.classList.add('d-flex', 'flex-column', 'align-items-start', 'position-relative');
+      container.classList.add('d-flex', 'flex-column', 'align-items-start', 'position-relative', 'flex-grow-1');
 
       if (timeText) {
         const timeBadge = document.createElement('span');
@@ -621,7 +646,10 @@ const initializeCalendar = () => {
         container.appendChild(span);
       });
 
-      return { domNodes: [container] };
+      wrapper.appendChild(accentBar);
+      wrapper.appendChild(container);
+
+      return { domNodes: [wrapper] };
     },
   });
 
