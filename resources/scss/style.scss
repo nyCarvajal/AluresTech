@@ -193,27 +193,70 @@
 
 /* === Eventos === */
 #calendar .fc-event {
-
- 
   font-size: 0.80rem;
   font-weight: 500;
   letter-spacing: .2px;
-
- 
- 
- // box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
- // font-size: 0.85rem !important;
- // padding: 0.2rem 0.4rem !important;
- // border: 2px solid rgba(0,0,0,0.1) !important;
-//  background-color: var(--fc-event-bg-color) !important;
-  border-color: none !important;
-  //color: var(--fc-event-text-color) !important;
- // transition: transform 0.1s, opacity 0.1s;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: #111827 !important;
 }
 
-#calendar .fc-event:hover {
-  transform: scale(1.02);
-  opacity: 0.9;
+#calendar .fc-event--card {
+  height: 100%;
+}
+
+#calendar .fc-event-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.65rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  min-height: 100%;
+}
+
+#calendar .fc-daygrid-event .fc-event-card {
+  overflow: hidden;
+}
+
+#calendar .fc-event-card--month {
+  padding: 0.5rem 0.65rem;
+}
+
+#calendar .fc-event-card__body--month {
+  min-width: 0;
+}
+
+#calendar .fc-event-card--month .fw-bold,
+#calendar .fc-event-card--month .text-muted {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#calendar .fc-event-card--month .badge {
+  position: static;
+  align-self: flex-start;
+  margin-left: 0;
+}
+
+#calendar .fc-event-accent {
+  display: inline-block;
+  min-height: 100%;
+  width: 4px;
+  border-radius: 999px;
+  background-color: #6366f1;
+  align-self: stretch;
+}
+
+#calendar .fc-event:hover .fc-event-card {
+  transform: scale(1.01);
+  opacity: 0.98;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* Ajustar puntito indicador en vista mes */
