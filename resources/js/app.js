@@ -561,6 +561,7 @@ const initializeCalendar = () => {
     },
     eventContent: (arg) => {
       const esLista = arg.view.type.startsWith('list');
+      const esMes = arg.view.type === 'dayGridMonth';
 
       let rawTitle = arg.event.title || '';
       rawTitle = rawTitle.replace(/\n/g, "\n");
@@ -616,6 +617,7 @@ const initializeCalendar = () => {
 
       const wrapper = document.createElement('div');
       wrapper.classList.add('fc-event-card', 'd-flex', 'align-items-start', 'gap-2', 'position-relative');
+      if (esMes) wrapper.classList.add('fc-event-card--month');
 
       const accentBar = document.createElement('span');
       accentBar.classList.add('fc-event-accent');
@@ -623,6 +625,7 @@ const initializeCalendar = () => {
 
       const container = document.createElement('div');
       container.classList.add('d-flex', 'flex-column', 'align-items-start', 'position-relative', 'flex-grow-1');
+      if (esMes) container.classList.add('fc-event-card__body--month');
 
       if (timeText) {
         const timeBadge = document.createElement('span');

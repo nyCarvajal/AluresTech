@@ -216,6 +216,33 @@
   min-height: 100%;
 }
 
+#calendar .fc-daygrid-event .fc-event-card {
+  overflow: hidden;
+}
+
+#calendar .fc-event-card--month {
+  padding: 0.5rem 0.65rem;
+}
+
+#calendar .fc-event-card__body--month {
+  min-width: 0;
+}
+
+#calendar .fc-event-card--month .fw-bold,
+#calendar .fc-event-card--month .text-muted {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#calendar .fc-event-card--month .badge {
+  position: static;
+  align-self: flex-start;
+  margin-left: auto;
+}
+
 #calendar .fc-event-accent {
   display: inline-block;
   min-height: 100%;
