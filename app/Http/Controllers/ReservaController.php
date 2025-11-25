@@ -144,14 +144,13 @@ class ReservaController extends Controller
                           ->toIso8601String();
 
         $color = optional($r->entrenador)->color ?? '#6042F5';
-        $textColor = '#121212';
+        $accentColor = $color;
+        $textColor = '#111827';
 
         if ($r->estado === 'No Asistida') {
-            $color = '#0d6efd';
-            $textColor = '#ffffff';
+            $accentColor = '#0d6efd';
         } elseif ($r->estado === 'Pendiente') {
-            $color = '#ffc107';
-            $textColor = '#212529';
+            $accentColor = '#ffc107';
         }
 
         $clienteNombre = trim(collect([
@@ -175,9 +174,10 @@ class ReservaController extends Controller
             'status'          => $r->estado,
             'duration'        => $r->duracion,
             'title'           => $title,
-            'borderColor'     => $color,
+            'borderColor'     => '#e5e7eb',
             'textColor'       => $textColor,
-            'backgroundColor' => $color,
+            'backgroundColor' => '#ffffff',
+            'accentColor'     => $accentColor,
             'extendedProps'   => [
                 'tipo'          => $r->tipo,              // reserva | torneo | clase
                 'estado'        => $r->estado,            // confirmada | pendiente
@@ -187,6 +187,7 @@ class ReservaController extends Controller
                 'servicio_nombre' => $servicioNombre,
                 'orden_id'      => $r->orden_id,
                 'venta_id'      => $r->venta_id,
+                'accentColor'   => $accentColor,
                 'cuenta_url'    => $r->orden_id
                     ? route('ventas.index', [
                         'cliente_id' => $r->cliente_id,
