@@ -30,7 +30,10 @@ class ReservaController extends Controller
 	
         public function calendar()
 {
-    $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
+    $peluqueriaId = optional(Auth::user())->peluqueria_id;
+    $entrenadores = User::when($peluqueriaId, function ($query) use ($peluqueriaId) {
+        return $query->where('peluqueria_id', $peluqueriaId);
+    })->get();
 
     $tipocitas    = Tipocita::all();
     $servicios    = Item::where('tipo', '!=', 1)
@@ -58,7 +61,10 @@ class ReservaController extends Controller
         $date = $request->input('date', Carbon::today()->toDateString());
         $prevDate = Carbon::parse($date)->subDay()->toDateString();
         $nextDate = Carbon::parse($date)->addDay()->toDateString();
-                 $entrenadores = User::all(); // o tu filtro de usuarios con rol “entrenador”
+        $peluqueriaId = optional(Auth::user())->peluqueria_id;
+        $entrenadores = User::when($peluqueriaId, function ($query) use ($peluqueriaId) {
+            return $query->where('peluqueria_id', $peluqueriaId);
+        })->get();
 
         $canchas = Cancha::all();
         $canchaIds = $canchas->pluck('id')->toArray();
