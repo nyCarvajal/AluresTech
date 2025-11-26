@@ -627,19 +627,28 @@ const initializeCalendar = () => {
       container.classList.add('d-flex', 'flex-column', 'align-items-start', 'position-relative', 'flex-grow-1');
       if (esMes) container.classList.add('fc-event-card__body--month');
 
+      const badgeStack = document.createElement('div');
+      badgeStack.classList.add('d-flex', esMes ? 'flex-column' : 'flex-row', 'gap-1', 'w-100');
+
       if (timeText) {
         const timeBadge = document.createElement('span');
-        timeBadge.classList.add('badge', 'bg-primary', 'mb-1', 'fs-7');
+        timeBadge.classList.add('badge', 'bg-primary', 'fs-7');
+        if (!esMes) timeBadge.classList.add('mb-1');
         timeBadge.innerText = timeText;
-        container.appendChild(timeBadge);
+        badgeStack.appendChild(timeBadge);
       }
 
       if (estado) {
         const badge = document.createElement('span');
-        badge.classList.add('badge', 'ms-auto', 'position-absolute', 'top-0', 'end-0', 'me-1', 'mt-1', 'fs-8');
+        badge.classList.add('badge', 'fs-8');
+        if (!esMes) badge.classList.add('ms-auto', 'position-absolute', 'top-0', 'end-0', 'me-1', 'mt-1');
         estadoClasses.forEach((cls) => badge.classList.add(cls));
         badge.innerText = estado;
-        container.appendChild(badge);
+        badgeStack.appendChild(badge);
+      }
+
+      if (badgeStack.childElementCount > 0) {
+        container.appendChild(badgeStack);
       }
 
       lineas.forEach((linea, idx) => {
