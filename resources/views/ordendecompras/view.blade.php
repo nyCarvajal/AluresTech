@@ -138,27 +138,41 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Artículo</th>
+                                <th>Estilista</th>
                                 <th class="text-end">Cantidad</th>
                                 <th class="text-end">Descuento</th>
                                 <th class="text-end">Precio</th>
+                                <th class="text-end">Comisión</th>
                                 <th class="text-end">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($orden->ventas as $venta)
+                                @php
+                                    $estilista = optional($venta->barbero);
+                                    $nombreEstilista = trim(($estilista->nombre ?? '') . ' ' . ($estilista->apellidos ?? ''));
+                                    $porcentajeComision = $venta->porcentaje_comision;
+                                    $comisionTexto = is_null($venta->comision)
+                                        ? '—'
+                                        : 'COP ' . $fmt($venta->comision) . ($porcentajeComision !== null
+                                            ? " (" . rtrim(rtrim(number_format($porcentajeComision, 2, ',', '.'), '0'), ',') . "%)"
+                                            : '');
+                                @endphp
                                 <tr>
                                     <td>{{ $venta->id }}</td>
                                     <td>{{ optional($venta->item)->nombre ?? '—' }}</td>
+                                    <td>{{ $nombreEstilista !== '' ? $nombreEstilista : '—' }}</td>
                                     <td class="text-end">{{ $venta->cantidad }}</td>
                                     <td class="text-end">{{ rtrim(rtrim(number_format($venta->descuento ?? 0, 2, ',', '.'), '0'), ',') }}%</td>
                                     <td class="text-end">COP {{ $fmt($venta->valor_unitario) }}</td>
+                                    <td class="text-end">{{ $comisionTexto }}</td>
                                     <td class="text-end fw-semibold">COP {{ $fmt($venta->valor_total) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <th colspan="5" class="text-end">Subtotal</th>
+                                <th colspan="6" class="text-end">Subtotal</th>
                                 <th class="text-end">COP {{ $fmt($subtotal) }}</th>
                             </tr>
                         </tfoot>
