@@ -86,7 +86,7 @@ class AdministrativeReportController extends Controller
                 $ventasHasta = $currentMonthEnd->toDateString();
             }
 
-            $ventasQuery = Venta::with(['item', 'orden.clienterel'])
+            $ventasQuery = Venta::with(['item', 'orden.clienterel', 'barbero'])
                 ->when($ventasDesde, function ($query) use ($ventasDesde) {
                     return $query->whereDate('created_at', '>=', Carbon::parse($ventasDesde));
                 })

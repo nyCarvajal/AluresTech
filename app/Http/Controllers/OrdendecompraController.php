@@ -70,7 +70,7 @@ class OrdenDeCompraController extends Controller
 
     public function show(OrdenDeCompra $ordenDeCompra)
     {
-        $ordenDeCompra->loadMissing(['ventas.item', 'pagos']);
+        $ordenDeCompra->loadMissing(['ventas.item', 'ventas.barbero', 'pagos']);
 
         return view('ordendecompras.view', [
             'orden' => $ordenDeCompra,

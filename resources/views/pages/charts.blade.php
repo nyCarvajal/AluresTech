@@ -123,9 +123,11 @@
                             <th>Fecha</th>
                             <th>Orden</th>
                             <th>Producto</th>
+                            <th>Estilista</th>
                             <th class="text-end">Cantidad</th>
                             <th class="text-end">Valor unitario</th>
                             <th class="text-end">Valor total</th>
+                            <th class="text-end">Comisión</th>
                             <th>Cliente</th>
                         </tr>
                     </thead>
@@ -134,19 +136,29 @@
                             @php
                                 $clienteVenta = optional($venta->orden)->clienterel;
                                 $nombreClienteVenta = $clienteVenta ? trim(($clienteVenta->nombres ?? '') . ' ' . ($clienteVenta->apellidos ?? '')) : null;
+                                $estilista = optional($venta->barbero);
+                                $nombreEstilista = trim(($estilista->nombre ?? '') . ' ' . ($estilista->apellidos ?? ''));
+                                $porcentajeComision = $venta->porcentaje_comision;
+                                $comisionTexto = is_null($venta->comision)
+                                    ? '—'
+                                    : number_format($venta->comision, 0, ',', '.') . ($porcentajeComision !== null
+                                        ? " (" . rtrim(rtrim(number_format($porcentajeComision, 2, ',', '.'), '0'), ',') . "%)"
+                                        : '');
                             @endphp
                             <tr>
                                 <td>{{ optional($venta->created_at)->format('d/m/Y') }}</td>
                                 <td>#{{ $venta->cuenta }}</td>
                                 <td>{{ $venta->item->nombre ?? '—' }}</td>
+                                <td>{{ $nombreEstilista !== '' ? $nombreEstilista : '—' }}</td>
                                 <td class="text-end">{{ number_format($venta->cantidad, 0, ',', '.') }}</td>
                                 <td class="text-end">{{ number_format($venta->valor_unitario, 0, ',', '.') }}</td>
                                 <td class="text-end fw-semibold">{{ number_format($venta->valor_total, 0, ',', '.') }}</td>
+                                <td class="text-end">{{ $comisionTexto }}</td>
                                 <td>{{ $nombreClienteVenta ?: '—' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">No se encontraron ventas para los filtros seleccionados.</td>
+                                <td colspan="9" class="text-center text-muted">No se encontraron ventas para los filtros seleccionados.</td>
                             </tr>
                         @endforelse
                     </tbody>
